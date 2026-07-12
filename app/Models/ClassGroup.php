@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class ClassGroup extends Model
+{
+    use HasFactory, HasUuids;
+
+    protected $table = 'acd_class_groups';
+
+    protected $guarded = ['id'];
+
+    // NOTE: Ditambahkan karena kolom di migration adalah `concentration_id`
+    // (bukan `major_id`), sehingga relasi ini yang dipakai oleh fitur Rombongan Belajar.
+    public function concentration(): BelongsTo
+    {
+        return $this->belongsTo(CoreConcentration::class);
+    }
+
+    public function homeroomTeacher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'homeroom_teacher_id');
+    }
+
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'acd_class_group_students')
+            ->withPivot('entry_date', 'exit_date', 'status')
+            ->withTimestamps();
+    }
+
+    /**
+     * Siswa yang statusnya benar-benar masih aktif DI ROMBEL INI:
+     * - baris pivot berstatus 'active'
+     * - data siswa (acd_students) juga berstatus 'active'
+     *
+     * PENTING: sengaja TIDAK memfilter exit_date. Saat proses kenaikan kelas/kelulusan
+     * (lihat ClassGroupPromotionController::promote()/graduate()), exit_date pada baris
+     * lama diisi lebih dulu sebagai JADWAL pindah ke semester berikutnya — bukan berarti
+     * siswa sudah keluar dari rombel ini SEKARANG. Semester aktif di sistem belum tentu
+     * langsung berganti begitu proses kenaikan kelas dijalankan, jadi siswa masih resmi
+     * jadi anggota rombel ini sampai semester benar-benar berganti. Kalau exit_date ikut
+     * difilter, siswa akan langsung "hilang" dari tampilan rombel meski data aslinya
+     * belum berubah — itu bug yang pernah terjadi sebelumnya.
+     *
+     * Yang membuat siswa benar-benar hilang dari rombel hanya perubahan status pivot itu
+     * sendiri (mis. jadi 'graduated' saat lulus), konsisten dengan Student::activeClassGroup()
+     * dan ClassGroupPromotionController::activeCandidates().
+     */
+    public function activeStudents(): BelongsToMany
+    {
+        return $this->students()
+            ->where('acd_students.status', 'active')
+            ->wherePivot('status', 'active');
+    }
+
+    public function classGroupTeachers(): HasMany
+    {
+        return $this->hasMany(ClassGroupTeacher::class);
+    }
+
+    public function mutations(): HasMany
+    {
+        return $this->hasMany(StudentMutation::class);
+    }
+
+    public function semester(): BelongsTo
+    {
+        return $this->belongsTo(CoreSemester::class, 'semester_id');
+    }
+}
