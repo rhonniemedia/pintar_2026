@@ -24,9 +24,11 @@ class ClassGroup extends Model
         return $this->belongsTo(CoreConcentration::class);
     }
 
-    public function homeroomTeacher(): BelongsTo
+    // Di dalam file App\Models\ClassGroup.php
+    public function homeroomTeacher()
     {
-        return $this->belongsTo(User::class, 'homeroom_teacher_id');
+        // Pastikan ini mengarah ke model Data, bukan User
+        return $this->belongsTo(Data::class, 'homeroom_teacher_id');
     }
 
     public function students(): BelongsToMany

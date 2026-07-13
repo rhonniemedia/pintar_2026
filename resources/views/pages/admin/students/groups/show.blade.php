@@ -117,7 +117,13 @@
     <div id="modal-container"></div>
 
     {{-- 2. RINGKASAN STATS CARD (Wali Kelas & Anggota) --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div id="stats-cards-container"
+        hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
+        hx-trigger="refreshClassData from:body"
+        hx-select="#stats-cards-container"
+        hx-swap="outerHTML"
+        class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
         <div class="relative overflow-hidden flex flex-col rounded-2xl border border-border p-5 gap-4 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5 cursor-default">
             <div class="flex items-center gap-2">
                 <div class="size-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
@@ -200,7 +206,7 @@
                         value="{{ $search }}"
                         placeholder="Cari nama atau NIS..."
                         hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
-                        hx-trigger="keyup changed delay:400ms, search"
+                        hx-trigger="keyup changed delay:400ms, search, refreshClassData from:body"
                         hx-target="#students-container"
                         hx-select="#students-container"
                         hx-include="[name='filter_gender']"

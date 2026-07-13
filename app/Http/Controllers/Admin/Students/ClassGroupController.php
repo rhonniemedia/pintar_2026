@@ -8,7 +8,9 @@ use App\Models\ClassGroupStudent;
 use App\Models\CoreConcentration;
 use App\Models\CoreSemester;
 use App\Models\Data;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ClassGroupController extends Controller
 {
@@ -131,9 +133,39 @@ class ClassGroupController extends Controller
     public function destroy(Request $request, string $id)
     {
         $classGroup = ClassGroup::findOrFail($id);
-        $classGroup->delete();
 
-        return $this->index($request);
+        // Keamanan lapis kedua di sisi server: Cek apakah rombel masih punya siswa
+        if ($classGroup->students()->exists()) {
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'showAlert' => [
+                    'icon' => 'error',
+                    'title' => 'Tidak Bisa Dihapus!',
+                    'text' => 'Rombel ini masih memiliki siswa di dalamnya.'
+                ]
+            ]));
+        }
+
+        try {
+            $classGroup->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'showAlert' => [
+                    'icon' => 'error',
+                    'title' => 'Tidak Bisa Dihapus!',
+                    'text' => 'Rombel ini masih terhubung dengan data riwayat akademik.'
+                ]
+            ]));
+        }
+
+        // Trigger SweetAlert sukses dan refresh tabel (lewat classGroupSaved)
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'classGroupSaved' => true,
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Data rombongan belajar berhasil dihapus.'
+            ]
+        ]));
     }
 
     public function show(Request $request, string $id)
@@ -210,7 +242,14 @@ class ClassGroupController extends Controller
             ->withQueryString();
 
         if ($request->header('HX-Request') && !$request->header('HX-History-Restore-Request')) {
-            return view('pages.admin.students.groups.partials._students-table', compact('students'));
+
+            // PERBAIKAN: Hanya kembalikan tabel jika request benar-benar dari pencarian tabel
+            if ($request->header('HX-Target') === 'students-container') {
+                return view('pages.admin.students.groups.partials._students-table', compact('students', 'classGroup'));
+            }
+
+            // Jika request datang dari stats-cards-container, 
+            // biarkan proses berlanjut ke bawah agar mengembalikan full view.
         }
 
         return view('pages.admin.students.groups.show', compact('classGroup', 'students', 'search', 'filterGender'));
@@ -237,11 +276,26 @@ class ClassGroupController extends Controller
      */
     private function validateData(Request $request, $id = null)
     {
+        $activeSemester = CoreSemester::where('status', 'active')->first();
+        $semesterId = $activeSemester ? $activeSemester->id : null;
+
         return $request->validate([
             'name' => 'nullable|string|max:255',
             'grade_level' => 'required|string|in:10,11,12',
             'concentration_id' => 'required|exists:core_concentrations,id',
-            'homeroom_teacher_id' => 'nullable', // sesuaikan: 'nullable|exists:users,id'
+            'group_number' => 'required|integer|min:1',
+
+            // Memastikan satu guru hanya memegang satu rombel di semester aktif
+            'homeroom_teacher_id' => [
+                'nullable',
+                'exists:staff_data,id',
+                Rule::unique('acd_class_groups', 'homeroom_teacher_id')
+                    ->where('semester_id', $semesterId)
+                    ->ignore($id) // Sangat penting agar tidak error saat proses Update rombel itu sendiri
+            ],
+        ], [
+            // Pesan error kustom agar pengguna paham penyebab validasi gagal
+            'homeroom_teacher_id.unique' => 'Guru ini sudah terdaftar sebagai wali kelas di rombel lain pada semester saat ini.'
         ]);
     }
 
@@ -260,9 +314,15 @@ class ClassGroupController extends Controller
 
         ClassGroup::create($data);
 
-        // Kembalikan response kosong dengan header trigger HTMX
-        // Ini akan memberitahu halaman index untuk refresh tabel dan menutup modal
-        return response()->noContent()->header('HX-Trigger', 'classGroupSaved');
+        // Mengirim multiple trigger dalam bentuk JSON
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'classGroupSaved' => true,
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Data rombongan belajar berhasil ditambahkan.'
+            ]
+        ]));
     }
 
     public function edit($id)
@@ -280,7 +340,70 @@ class ClassGroupController extends Controller
         $classGroup = ClassGroup::findOrFail($id);
         $classGroup->update($data);
 
-        // Trigger event yang sama saat update sukses
-        return response()->noContent()->header('HX-Trigger', 'classGroupSaved');
+        // Mengirim multiple trigger dalam bentuk JSON
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'classGroupSaved' => true,
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Diperbarui!',
+                'text' => 'Data rombongan belajar berhasil diperbarui.'
+            ]
+        ]));
+    }
+
+    /**
+     * Menampilkan Modal Form Pindah Kelas
+     */
+    public function moveClassForm(string $classGroupId, string $studentId)
+    {
+        $currentClass = ClassGroup::findOrFail($classGroupId);
+        // Sesuaikan nama model Siswa dengan yang ada di aplikasi Anda
+        $student = Student::findOrFail($studentId);
+
+        // Ambil daftar kelas dengan TINGKAT & SEMESTER yang sama, KECUALI kelas saat ini
+        $availableClasses = ClassGroup::with('concentration')
+            ->where('semester_id', $currentClass->semester_id)
+            ->where('grade_level', $currentClass->grade_level)
+            ->where('id', '!=', $currentClass->id)
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return view('pages.admin.students.groups.partials._modal-move-class', compact('currentClass', 'student', 'availableClasses'));
+    }
+
+    /**
+     * Memproses Perpindahan Kelas
+     */
+    public function moveClass(Request $request, string $classGroupId, string $studentId)
+    {
+        $request->validate([
+            'target_class_group_id' => 'required|exists:acd_class_groups,id'
+        ], [
+            'target_class_group_id.required' => 'Pilih kelas tujuan terlebih dahulu.'
+        ]);
+
+        $currentClass = ClassGroup::findOrFail($classGroupId);
+        $targetClass = ClassGroup::findOrFail($request->target_class_group_id);
+
+        // Validasi Keamanan: Tolak jika mencoba pindah lintas tingkat secara paksa
+        if ($currentClass->grade_level !== $targetClass->grade_level) {
+            return response()->json(['message' => 'Pelanggaran sistem: Tidak diizinkan pindah lintas tingkat.'], 422);
+        }
+
+        // Proses pindah: Update ID rombel pada tabel pivot yang statusnya masih aktif
+        ClassGroupStudent::where('student_id', $studentId)
+            ->where('class_group_id', $classGroupId)
+            ->where('status', 'active')
+            ->update(['class_group_id' => $targetClass->id]);
+
+        // Kirim trigger SweetAlert DAN trigger refresh data secara bersamaan
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil Pindah!',
+                'text' => 'Siswa berhasil dipindahkan ke ' . $targetClass->name
+            ],
+            'refreshClassData' => true // Trigger kustom untuk refresh partial
+        ]));
     }
 }

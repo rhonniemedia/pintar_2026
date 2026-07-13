@@ -59,6 +59,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/group/{id}/show', [ClassGroupController::class, 'show'])->name('group.show');
         Route::delete('/group/{id}', [ClassGroupController::class, 'destroy'])->name('group.destroy');
 
+        // Route untuk Pindah Kelas
+        Route::get('/group/{classGroup}/student/{student}/move', [ClassGroupController::class, 'moveClassForm'])
+            ->name('group.student.move-form');
+        Route::post('/group/{classGroup}/student/{student}/move', [ClassGroupController::class, 'moveClass'])
+            ->name('group.student.move');
+
         // Route untuk Kenaikan Kelas
         Route::get('/group/{classGroup}/promotion', [ClassGroupPromotionController::class, 'promotionForm'])
             ->name('group.promotion.form');

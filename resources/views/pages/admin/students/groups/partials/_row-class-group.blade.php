@@ -34,18 +34,49 @@ $femaleStudents = $g->female_students_count ?? 0;
     </td>
 
     <td class="px-4 py-4">
-        <div class="text-sm font-semibold text-foreground">
-            {{ $homeroomName ?? 'Belum ada wali kelas' }}
+        {{-- Nama Wali Kelas --}}
+        <div class="text-sm font-semibold text-foreground mb-1.5">
+            @if($homeroomName)
+            {{ $homeroomName }}
+            @else
+            <span class="text-secondary/70 italic font-medium">Belum ada wali kelas</span>
+            @endif
         </div>
-        <div class="text-xs text-secondary mt-0.5">
-            {{ number_format($totalStudents, 0, ',', '.') }} Orang
-            &middot; <span class="text-blue-600">Laki-laki {{ $maleStudents }}</span>
-            &middot; <span class="text-pink-600">Perempuan {{ $femaleStudents }}</span>
+
+        {{-- Statistik Siswa --}}
+        <div class="flex items-center gap-4 text-xs">
+
+            {{-- Total --}}
+            <div class="flex items-center gap-1.5" title="Total Siswa">
+                <i data-lucide="users" class="size-3.5 text-slate-500"></i>
+                <span class="text-slate-600 font-medium">Total: {{ $totalStudents }}</span>
+            </div>
+
+            {{-- Laki-laki (Menggunakan SVG Simbol Laki-laki / Mars) --}}
+            <div class="flex items-center gap-1.5" title="Laki-laki">
+                <svg class="size-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="14" r="5"></circle>
+                    <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                    <polyline points="15 4 20 4 20 9"></polyline>
+                </svg>
+                <span class="text-blue-600 font-medium">L: {{ $maleStudents }}</span>
+            </div>
+
+            {{-- Perempuan (Menggunakan SVG Simbol Perempuan / Venus) --}}
+            <div class="flex items-center gap-1.5" title="Perempuan">
+                <svg class="size-3.5 text-pink-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="10" r="5"></circle>
+                    <line x1="12" y1="15" x2="12" y2="22"></line>
+                    <line x1="9" y1="19" x2="15" y2="19"></line>
+                </svg>
+                <span class="text-pink-600 font-medium">P: {{ $femaleStudents }}</span>
+            </div>
+
         </div>
     </td>
 
     <td class="px-4 py-4">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2" x-data="{}">
             <button type="button" title="Edit"
                 @click="formModalOpen = true"
                 hx-get="{{ route('admin.students.group.edit', $g->id) }}"
@@ -54,13 +85,26 @@ $femaleStudents = $g->female_students_count ?? 0;
                 <i data-lucide="file-pen-line" class="size-4 pointer-events-none"></i>
             </button>
 
+            {{-- Tombol Hapus: Ditampilkan hanya jika tidak ada siswa --}}
+            @if($totalStudents == 0)
             <button type="button" title="Hapus"
-                hx-delete="{{ route('admin.students.group.destroy', $g->id) }}"
-                hx-target="#class-groups-container" hx-select="#class-groups-container" hx-swap="outerHTML"
-                hx-confirm="Yakin ingin menghapus group {{ $displayName }}? Tindakan ini tidak dapat dibatalkan."
+                @click="
+                        ShowConfirm({
+                            title: 'Hapus Rombel?',
+                            message: 'Yakin ingin menghapus rombel \'{{ addslashes($displayName) }}\'? Tindakan ini tidak dapat dibatalkan.',
+                            confirmText: 'Ya, Hapus',
+                            cancelText: 'Batal',
+                        }, () => {
+                            htmx.ajax('DELETE', '{{ route('admin.students.group.destroy', $g->id) }}', { 
+                                target: '#class-groups-container', 
+                                swap: 'none' 
+                            });
+                        })
+                    "
                 class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-error hover:bg-error/10 transition-all cursor-pointer">
                 <i data-lucide="trash-2" class="size-4 pointer-events-none"></i>
             </button>
+            @endif
         </div>
     </td>
 </tr>

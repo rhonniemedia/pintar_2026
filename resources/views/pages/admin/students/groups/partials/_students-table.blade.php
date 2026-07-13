@@ -64,15 +64,17 @@
 
                     <td class="px-4 py-4">
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('admin.students.edit.personal', $r->id) }}" title="Edit"
+                            <!-- {{ route('admin.students.edit.personal', $r->id) }} -->
+                            <a href="#" title="Edit"
                                 class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
                                 <i data-lucide="file-pen-line" class="size-4 pointer-events-none"></i>
                             </a>
                             <button type="button" title="Pindah Kelas"
-                                hx-get="{{-- route('admin.students.move', $r->id) --}}"
-                                hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML"
-                                class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-warning/10 hover:text-warning-dark hover:border-warning/30 transition-colors cursor-pointer">
-                                <i data-lucide="repeat-2" class="size-4 pointer-events-none"></i>
+                                hx-get="{{ route('admin.students.group.student.move-form', ['classGroup' => $classGroup->id, 'student' => $r->id]) }}"
+                                hx-target="#modal-container"
+                                hx-swap="innerHTML"
+                                class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer">
+                                <i data-lucide="arrow-right-left" class="size-4 pointer-events-none"></i>
                             </button>
                         </div>
                     </td>

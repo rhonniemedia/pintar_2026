@@ -96,7 +96,7 @@
                 @php $isRombel = request()->routeIs('admin.students.group.*'); @endphp
                 <a href="{{ route('admin.students.group.index') }}" class="group cursor-pointer {{ $isRombel ? 'active' : '' }}">
                     <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isRombel ? 'bg-muted' : 'hover:bg-muted' }}">
-                        <i data-lucide="boxes" class="size-5 transition-all duration-300 {{ $isRombel ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
+                        <i data-lucide="component" class="size-5 transition-all duration-300 {{ $isRombel ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
                         <span class="text-sm transition-all duration-300 {{ $isRombel ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
                             Rombongan Belajar
                         </span>

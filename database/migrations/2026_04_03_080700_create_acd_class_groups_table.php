@@ -21,7 +21,8 @@ return new class extends Migration
             $table->foreignUuid('concentration_id')->constrained('core_concentrations');
 
             // Relasi ke wali kelas (opsional, bisa diisi nanti saat ploting)
-            $table->foreignUuid('homeroom_teacher_id')->nullable()->constrained('users');
+            // $table->foreignUuid('homeroom_teacher_id')->nullable()->constrained('users');
+            $table->foreignUuid('homeroom_teacher_id')->nullable()->constrained('staff_data');
 
             $table->string('grade_level'); // contoh: '10', '11', '12'
             $table->string('name')->nullable();        // contoh: 'X RPL 1'

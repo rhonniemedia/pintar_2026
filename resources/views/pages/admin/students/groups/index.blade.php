@@ -85,7 +85,7 @@
                         value="{{ $search }}"
                         placeholder="Cari rombel..."
                         hx-get="{{ route('admin.students.group.index') }}"
-                        hx-trigger="keyup changed delay:400ms, search"
+                        hx-trigger="keyup changed delay:400ms, search, classGroupSaved from:body"
                         hx-target="#class-groups-container"
                         hx-select="#class-groups-container"
                         hx-swap="outerHTML"
