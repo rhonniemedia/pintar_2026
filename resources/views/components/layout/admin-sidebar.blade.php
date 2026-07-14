@@ -113,13 +113,12 @@
                                 Mutasi Peserta Didik
                             </span>
                         </div>
-                        <i data-lucide="plus" class="size-4 transition-all duration-300 {{ $isMutasi ? 'text-secondary' : 'text-secondary/40 group-hover:text-secondary' }}"></i>
                     </div>
                 </a>
 
                 {{-- 4. Menu Riwayat Peserta Didik --}}
-                @php $isRiwayat = request()->routeIs('admin.students.riwayat.*'); @endphp
-                <a href="{{ route('admin.students.riwayat.index') }}" class="group cursor-pointer {{ $isRiwayat ? 'active' : '' }}">
+                @php $isRiwayat = request()->routeIs('admin.students.history.*'); @endphp
+                <a href="{{ route('admin.students.history.index') }}" class="group cursor-pointer {{ $isRiwayat ? 'active' : '' }}">
                     <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isRiwayat ? 'bg-muted' : 'hover:bg-muted' }}">
                         <i data-lucide="history" class="size-5 transition-all duration-300 {{ $isRiwayat ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
                         <span class="text-sm transition-all duration-300 {{ $isRiwayat ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">

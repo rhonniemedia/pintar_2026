@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\Master\MasterDataController;
 use App\Http\Controllers\Admin\Students\ClassGroupController;
 use App\Http\Controllers\Admin\Students\ClassGroupPromotionController;
 use App\Http\Controllers\Admin\Students\StudentController;
+use App\Http\Controllers\Admin\Students\StudentHistoryController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,7 +90,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Lainnya
         Route::get('/mutasi', fn() => 'Halaman Mutasi Peserta Didik')->name('mutasi.index');
-        Route::get('/riwayat', fn() => 'Halaman Riwayat Peserta Didik')->name('riwayat.index');
+        Route::get('/history', [StudentHistoryController::class, 'index'])->name('history.index');
     });
 
     /*
