@@ -42,9 +42,10 @@
 
     @include('pages.admin.students.history.partials._stats-cards', [
     'totalHistoryStats' => $totalHistoryStats,
-    'graduatedStats' => $graduatedStats,
+    'transferInStats' => $transferInStats,
+    'transferOutStats' => $transferOutStats,
     'droppedOutStats' => $droppedOutStats,
-    'transferredOutStats' => $transferredOutStats,
+    'deceasedStats' => $deceasedStats,
     ])
 
     <div class="bg-white rounded-2xl border border-border p-5">

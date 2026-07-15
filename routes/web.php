@@ -4,7 +4,10 @@ use App\Http\Controllers\Admin\Master\MasterDataController;
 use App\Http\Controllers\Admin\Students\ClassGroupController;
 use App\Http\Controllers\Admin\Students\ClassGroupPromotionController;
 use App\Http\Controllers\Admin\Students\StudentController;
+use App\Http\Controllers\Admin\Students\StudentGraduationController;
 use App\Http\Controllers\Admin\Students\StudentHistoryController;
+use App\Http\Controllers\Admin\Students\StudentMutationInController;
+use App\Http\Controllers\Admin\Students\StudentMutationOutController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
@@ -87,6 +90,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('group.graduation.cancel-form');
         Route::post('/group/{classGroup}/graduation/cancel', [ClassGroupPromotionController::class, 'cancelGraduation'])
             ->name('group.graduation.cancel');
+
+        // Route Mutasi
+        Route::prefix('transfer')->group(function () {
+
+            // Mutasi Masuk
+            Route::name('transfer.in.')->prefix('in')->group(function () {
+                Route::get('/', [StudentMutationInController::class, 'index'])->name('index');
+                Route::get('/create', [StudentMutationInController::class, 'create'])->name('create');
+                Route::post('/', [StudentMutationInController::class, 'store'])->name('store');
+            });
+
+            // Mutasi Keluar
+            Route::name('transfer.out.')->prefix('out')->group(function () {
+                Route::get('/', [StudentMutationOutController::class, 'index'])->name('index');
+            });
+        });
+
+        // Kelulusan
+        Route::name('graduates.')->prefix('graduates')->group(function () {
+            Route::get('/', [StudentGraduationController::class, 'index'])->name('index');
+            Route::get('/{id}', [StudentGraduationController::class, 'show'])->name('show');
+        });
 
         // Lainnya
         Route::get('/mutasi', fn() => 'Halaman Mutasi Peserta Didik')->name('mutasi.index');

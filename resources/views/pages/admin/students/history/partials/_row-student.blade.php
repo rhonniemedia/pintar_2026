@@ -1,43 +1,34 @@
 @php
-$genderLabel = $r->gender === 'L' ? 'Laki-laki' : 'Perempuan';
+$student = $r->student;
+$genderLabel = optional($student)->gender === 'L' ? 'Laki-laki' : 'Perempuan';
 
-$initials = strtoupper(substr($r->name, 0, 2));
+$initials = strtoupper(substr($student->name ?? 'U', 0, 2));
 $colors = ['linear-gradient(135deg,#FF1443,#FF6B6B)', 'linear-gradient(135deg,#3B82F6,#93C5FD)', 'linear-gradient(135deg,#F59E0B,#FCD34D)', 'linear-gradient(135deg,#8B5CF6,#A78BFA)'];
 $color = $colors[isset($loop) ? ($loop->index % 4) : 0];
 
-$nisn = $r->vault->nisn_encrypted ?? '-';
+$nisn = optional(optional($student)->vault)->nisn_encrypted ?? '-';
 
-// Rombel terakhir siswa ini (sudah diurutkan terbaru di controller).
-$lastGroup = $r->classGroupStudents->first();
-$rombel = optional($lastGroup?->classGroup)->name ?? '-';
-$jurusan = optional($lastGroup?->classGroup?->concentration)->name ?? '-';
+$rombel = optional($r->classGroup)->name ?? '-';
+$jurusan = optional(optional($r->classGroup)->concentration)->name ?? '-';
 
-// Mutasi terbaru (kalau ada) untuk alasan & tanggal keluar.
-$latestMutation = $r->mutations->first();
-
+// Menentukan label dan warna berdasarkan status Mutasi
 $mutationReasonMap = [
-'transfer_out' => 'Pindah',
-'dropped_out' => 'Keluar',
-'deceased' => 'Meninggal',
+'transfer_in' => 'Pindahan Masuk',
+'transfer_out' => 'Pindah Keluar',
+'dropped_out' => 'Putus Sekolah',
+'deceased' => 'Meninggal Dunia',
 ];
 
-if ($r->status === 'graduated') {
-$exitLabel = 'Lulus';
-$exitDate = $lastGroup?->exit_date;
-$exitBadgeClass = 'bg-success/10 text-success';
-} else {
-$exitLabel = $latestMutation
-? ($mutationReasonMap[$latestMutation->status] ?? ucfirst(str_replace('_', ' ', $latestMutation->status)))
-: ($r->status === 'transferred_out' ? 'Pindah' : 'Keluar');
-
-$exitDate = $latestMutation->mutation_date ?? $lastGroup?->exit_date;
+$exitLabel = $mutationReasonMap[$r->status] ?? ucfirst(str_replace('_', ' ', $r->status));
+$exitDate = $r->mutation_date;
 
 $exitBadgeClass = match ($r->status) {
-'transferred_out' => 'bg-blue-500/10 text-blue-600',
+'transfer_in' => 'bg-teal-500/10 text-teal-700',
+'transfer_out' => 'bg-blue-500/10 text-blue-600',
 'dropped_out' => 'bg-error/10 text-error',
+'deceased' => 'bg-gray-500/10 text-gray-700',
 default => 'bg-secondary/10 text-secondary',
 };
-}
 @endphp
 
 <tr id="row-student-history-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
@@ -48,9 +39,9 @@ default => 'bg-secondary/10 text-secondary',
                 {{ $initials }}
             </div>
             <div>
-                <div class="font-semibold text-foreground text-sm uppercase">{{ $r->name }}</div>
+                <div class="font-semibold text-foreground text-sm uppercase">{{ $student->name ?? '-' }}</div>
                 <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5">
-                    <span class="inline-block size-1.5 rounded-full {{ $r->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}"></span>
+                    <span class="inline-block size-1.5 rounded-full {{ optional($student)->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}"></span>
                     {{ $genderLabel }}
                 </div>
             </div>
@@ -59,8 +50,8 @@ default => 'bg-secondary/10 text-secondary',
 
     <td class="px-4 py-4">
         <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold font-mono">{{ $r->nis ?? '-' }}</span>
-            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold font-mono">{{ $nisn }}</span>
+            <span class="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-bold font-mono" title="NIS">{{ $student->nis ?? '-' }}</span>
+            <span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-700 text-xs font-bold font-mono" title="NISN">{{ $nisn }}</span>
         </div>
     </td>
 
@@ -72,7 +63,7 @@ default => 'bg-secondary/10 text-secondary',
     <td class="px-4 py-4">
         <span class="inline-block px-2 py-1 rounded-md text-xs font-bold {{ $exitBadgeClass }}">{{ $exitLabel }}</span>
         <div class="text-xs text-secondary mt-1">
-            {{ $exitDate ? \Illuminate\Support\Carbon::parse($exitDate)->translatedFormat('d F Y') : '-' }}
+            {{ $exitDate ? \Illuminate\Support\Carbon::parse($exitDate)->translatedFormat('d M Y') : '-' }}
         </div>
     </td>
 </tr>

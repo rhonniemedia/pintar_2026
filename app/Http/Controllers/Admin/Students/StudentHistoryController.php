@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Admin\Students;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClassGroupStudent;
 use App\Models\CoreConcentration;
-use App\Models\Student;
 use App\Models\StudentMutation;
 use Illuminate\Http\Request;
 
 class StudentHistoryController extends Controller
 {
     /**
-     * Status Student yang dianggap "riwayat" (sudah tidak aktif).
-     * Key = nilai kolom Student.status, Value = label tampilan.
+     * Opsi status berdasarkan enum di tabel acd_student_mutations.
      */
-    private const EXIT_STATUS_OPTIONS = [
-        'graduated'        => 'Lulus',
-        'dropped_out'      => 'Keluar',
-        'transferred_out'  => 'Pindah',
+    private const MUTATION_STATUS_OPTIONS = [
+        'transfer_in'     => 'Masuk (Pindahan)',
+        'transfer_out'    => 'Keluar (Pindah)',
+        'dropped_out'     => 'Putus Sekolah',
+        'deceased'        => 'Meninggal Dunia',
     ];
 
     public function index(Request $request)
@@ -28,47 +26,38 @@ class StudentHistoryController extends Controller
         $filterConcentration  = $request->input('filter_concentration');
         $filterExitYear       = $request->input('filter_exit_year');
 
-        $stats = $this->getStats();
-
-        $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
-        $exitYearOptions       = $this->getExitYearOptions();
-
-        $students = Student::with([
-            'vault',
-            // Rombel terakhir siswa (bukan dibatasi semester aktif seperti di StudentController,
-            // karena siswa riwayat bisa saja keluar/lulus di semester manapun di masa lalu).
-            'classGroupStudents' => fn($q) => $q->orderByDesc('entry_date')->with('classGroup.concentration'),
-            // Baris mutasi terbaru untuk keperluan alasan & tanggal keluar.
-            'mutations' => fn($q) => $q->orderByDesc('mutation_date'),
-        ])
-            ->whereIn('status', array_keys(self::EXIT_STATUS_OPTIONS))
+        // 1. Base Query langsung ke tabel Mutasi
+        $baseQuery = StudentMutation::with(['student.vault', 'classGroup.concentration'])
+            ->whereIn('status', array_keys(self::MUTATION_STATUS_OPTIONS))
             ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
+                $query->whereHas('student', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('nis', 'like', "%{$search}%");
                 });
             })
-            ->when($filterExitStatus, fn($q) => $q->where('status', $filterExitStatus))
-            // PERBAIKAN (mengikuti pola StudentController): acuan jurusan yang benar adalah
-            // concentration_id milik ROMBEL siswa (riwayat rombel), bukan kolom concentration_id
-            // di acd_students yang bisa saja tidak sinkron dengan rombel terakhirnya.
+            ->when($filterExitStatus, function ($q) use ($filterExitStatus) {
+                $q->where('status', $filterExitStatus);
+            })
             ->when($filterConcentration, function ($q) use ($filterConcentration) {
-                $q->whereHas('classGroupStudents.classGroup', function ($q2) use ($filterConcentration) {
+                // Filter jurusan berdasarkan rombel saat mutasi terjadi
+                $q->whereHas('classGroup', function ($q2) use ($filterConcentration) {
                     $q2->where('concentration_id', $filterConcentration);
                 });
             })
-            // Tahun keluar bisa bersumber dari 2 tempat berbeda tergantung jenis keluarnya,
-            // jadi dicek keduanya sekaligus (OR).
             ->when($filterExitYear, function ($q) use ($filterExitYear) {
-                $q->where(function ($q2) use ($filterExitYear) {
-                    $q2->whereHas('classGroupStudents', function ($q3) use ($filterExitYear) {
-                        $q3->where('status', 'graduated')->whereYear('exit_date', $filterExitYear);
-                    })->orWhereHas('mutations', function ($q3) use ($filterExitYear) {
-                        $q3->whereYear('mutation_date', $filterExitYear);
-                    });
-                });
-            })
-            ->orderBy('name', 'asc')
+                $q->whereYear('mutation_date', $filterExitYear);
+            });
+
+        // 2. Terapkan Stats dari Base Query
+        $stats = $this->getStats(clone $baseQuery);
+
+        // 3. Dropdown Options
+        $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
+        $exitYearOptions       = $this->getExitYearOptions();
+
+        // 4. Data Tabel
+        $students = (clone $baseQuery)
+            ->orderByDesc('mutation_date')
             ->paginate(10)
             ->withQueryString();
 
@@ -87,39 +76,28 @@ class StudentHistoryController extends Controller
                 'exitYearOptions'
             ),
             $stats,
-            ['exitStatusOptions' => self::EXIT_STATUS_OPTIONS]
+            ['exitStatusOptions' => self::MUTATION_STATUS_OPTIONS]
         ));
     }
 
-    private function getStats(): array
+    private function getStats($query): array
     {
-        $graduatedStats      = Student::where('status', 'graduated')->count();
-        $droppedOutStats     = Student::where('status', 'dropped_out')->count();
-        $transferredOutStats = Student::where('status', 'transferred_out')->count();
-        $totalHistoryStats   = $graduatedStats + $droppedOutStats + $transferredOutStats;
+        $transferInStats  = (clone $query)->where('status', 'transfer_in')->count();
+        $transferOutStats = (clone $query)->where('status', 'transfer_out')->count();
+        $droppedOutStats  = (clone $query)->where('status', 'dropped_out')->count();
+        $deceasedStats    = (clone $query)->where('status', 'deceased')->count();
 
-        return compact('totalHistoryStats', 'graduatedStats', 'droppedOutStats', 'transferredOutStats');
+        $totalHistoryStats = $transferInStats + $transferOutStats + $droppedOutStats + $deceasedStats;
+
+        return compact('totalHistoryStats', 'transferInStats', 'transferOutStats', 'droppedOutStats', 'deceasedStats');
     }
 
-    /**
-     * Opsi tahun untuk dropdown filter, diambil dari data riil (bukan angka statis)
-     * supaya selalu sinkron: gabungan tahun exit_date rombel kelulusan + tahun mutation_date.
-     */
     private function getExitYearOptions()
     {
-        $graduationYears = ClassGroupStudent::where('status', 'graduated')
-            ->whereNotNull('exit_date')
-            ->selectRaw('YEAR(exit_date) as y')
+        return StudentMutation::selectRaw('YEAR(mutation_date) as y')
             ->distinct()
-            ->pluck('y');
-
-        $mutationYears = StudentMutation::selectRaw('YEAR(mutation_date) as y')
-            ->distinct()
-            ->pluck('y');
-
-        return $graduationYears->merge($mutationYears)
+            ->pluck('y')
             ->filter()
-            ->unique()
             ->sortDesc()
             ->values();
     }
@@ -127,10 +105,8 @@ class StudentHistoryController extends Controller
     private function renderPartials($students, $stats): string
     {
         $stats['isOob'] = true;
-
         $tableHtml = view('pages.admin.students.history.partials._table', compact('students'))->render();
         $statsHtml = view('pages.admin.students.history.partials._stats-cards', $stats)->render();
-
         return $tableHtml . $statsHtml;
     }
 }

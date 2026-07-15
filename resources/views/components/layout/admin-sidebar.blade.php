@@ -104,8 +104,8 @@
                 </a>
 
                 {{-- 3. Menu Mutasi Peserta Didik --}}
-                @php $isMutasi = request()->routeIs('admin.students.mutasi.*'); @endphp
-                <a href="{{ route('admin.students.mutasi.index') }}" class="group cursor-pointer {{ $isMutasi ? 'active' : '' }}">
+                @php $isMutasi = request()->routeIs('admin.students.transfers.*'); @endphp
+                <a href="{{ route('admin.students.transfer.in.index') }}" class="group cursor-pointer {{ $isMutasi ? 'active' : '' }}">
                     <div class="flex items-center justify-between rounded-xl p-3 transition-all duration-300 {{ $isMutasi ? 'bg-muted' : 'hover:bg-muted' }}">
                         <div class="flex items-center gap-3">
                             <i data-lucide="shuffle" class="size-5 transition-all duration-300 {{ $isMutasi ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
@@ -116,7 +116,18 @@
                     </div>
                 </a>
 
-                {{-- 4. Menu Riwayat Peserta Didik --}}
+                {{-- 4. Menu Data Alumni (Kelulusan) --}}
+                @php $isAlumni = request()->routeIs('admin.students.alumni.*'); @endphp
+                <a href="{{ route('admin.students.graduates.index') }}" class="group cursor-pointer {{ $isAlumni ? 'active' : '' }}">
+                    <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isAlumni ? 'bg-muted' : 'hover:bg-muted' }}">
+                        <i data-lucide="graduation-cap" class="size-5 transition-all duration-300 {{ $isAlumni ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
+                        <span class="text-sm transition-all duration-300 {{ $isAlumni ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
+                            Data Kelulusan
+                        </span>
+                    </div>
+                </a>
+
+                {{-- 5. Menu Riwayat Peserta Didik --}}
                 @php $isRiwayat = request()->routeIs('admin.students.history.*'); @endphp
                 <a href="{{ route('admin.students.history.index') }}" class="group cursor-pointer {{ $isRiwayat ? 'active' : '' }}">
                     <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isRiwayat ? 'bg-muted' : 'hover:bg-muted' }}">
