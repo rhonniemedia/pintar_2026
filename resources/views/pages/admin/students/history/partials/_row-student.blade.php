@@ -14,7 +14,7 @@ $jurusan = optional(optional($r->classGroup)->concentration)->name ?? '-';
 // Menentukan label dan warna berdasarkan status Mutasi
 $mutationReasonMap = [
 'transfer_in' => 'Pindahan Masuk',
-'transfer_out' => 'Pindah Keluar',
+'transfer_out' => 'Pindah Sekolah',
 'dropped_out' => 'Putus Sekolah',
 'deceased' => 'Meninggal Dunia',
 ];
@@ -61,9 +61,15 @@ default => 'bg-secondary/10 text-secondary',
     </td>
 
     <td class="px-4 py-4">
-        <span class="inline-block px-2 py-1 rounded-md text-xs font-bold {{ $exitBadgeClass }}">{{ $exitLabel }}</span>
-        <div class="text-xs text-secondary mt-1">
-            {{ $exitDate ? \Illuminate\Support\Carbon::parse($exitDate)->translatedFormat('d M Y') : '-' }}
+        <span class="inline-block px-2 py-1 rounded-md text-xs font-bold {{ $exitBadgeClass }}">
+            {{ $exitLabel }}
+        </span>
+
+        <div class="mt-1 flex items-center gap-1 text-[11px] text-secondary">
+            <i data-lucide="calendar" class="w-3 h-3"></i>
+            <span>
+                {{ $exitDate ? \Illuminate\Support\Carbon::parse($exitDate)->translatedFormat('d M Y') : '-' }}
+            </span>
         </div>
     </td>
 </tr>

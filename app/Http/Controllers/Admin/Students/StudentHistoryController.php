@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Students;
 
 use App\Http\Controllers\Controller;
 use App\Models\CoreConcentration;
+use App\Models\CoreSemester; // Pastikan model ini di-import
 use App\Models\StudentMutation;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class StudentHistoryController extends Controller
         $search               = $request->input('search');
         $filterExitStatus     = $request->input('filter_exit_status');
         $filterConcentration  = $request->input('filter_concentration');
-        $filterExitYear       = $request->input('filter_exit_year');
+        $filterExitSemester   = $request->input('filter_exit_semester');
 
         // 1. Base Query langsung ke tabel Mutasi
         $baseQuery = StudentMutation::with(['student.vault', 'classGroup.concentration'])
@@ -44,16 +45,22 @@ class StudentHistoryController extends Controller
                     $q2->where('concentration_id', $filterConcentration);
                 });
             })
-            ->when($filterExitYear, function ($q) use ($filterExitYear) {
-                $q->whereYear('mutation_date', $filterExitYear);
+            ->when($filterExitSemester, function ($q) use ($filterExitSemester) {
+                // Ambil data semester dari database berdasarkan kode (contoh: '2025-1')
+                $semester = CoreSemester::where('code', $filterExitSemester)->first();
+
+                if ($semester) {
+                    // Filter berdasarkan rentang tanggal resmi semester tersebut
+                    $q->whereBetween('mutation_date', [$semester->start_date, $semester->end_date]);
+                }
             });
 
         // 2. Terapkan Stats dari Base Query
         $stats = $this->getStats(clone $baseQuery);
 
         // 3. Dropdown Options
-        $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
-        $exitYearOptions       = $this->getExitYearOptions();
+        $concentrationOptions  = CoreConcentration::orderBy('name')->pluck('name', 'id');
+        $exitSemesterOptions   = $this->getExitSemesterOptions();
 
         // 4. Data Tabel
         $students = (clone $baseQuery)
@@ -71,9 +78,9 @@ class StudentHistoryController extends Controller
                 'search',
                 'filterExitStatus',
                 'filterConcentration',
-                'filterExitYear',
+                'filterExitSemester',
                 'concentrationOptions',
-                'exitYearOptions'
+                'exitSemesterOptions'
             ),
             $stats,
             ['exitStatusOptions' => self::MUTATION_STATUS_OPTIONS]
@@ -92,13 +99,11 @@ class StudentHistoryController extends Controller
         return compact('totalHistoryStats', 'transferInStats', 'transferOutStats', 'droppedOutStats', 'deceasedStats');
     }
 
-    private function getExitYearOptions()
+    private function getExitSemesterOptions()
     {
-        return StudentMutation::selectRaw('YEAR(mutation_date) as y')
-            ->distinct()
-            ->pluck('y')
-            ->filter()
-            ->sortDesc()
+        // Mengambil kode semester dari tabel core_semesters, diurutkan dari yang terbaru berdasarkan tanggal mulai
+        return CoreSemester::orderBy('start_date', 'desc')
+            ->pluck('code')
             ->values();
     }
 

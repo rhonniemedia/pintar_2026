@@ -39,11 +39,11 @@
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-foreground mb-2">Tahun Keluar</label>
-                <select name="filter_exit_year" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                    <option value="">Semua Tahun</option>
-                    @foreach ($exitYearOptions as $year)
-                    <option value="{{ $year }}" @selected($filterExitYear==$year)>{{ $year }}</option>
+                <label class="block text-sm font-bold text-foreground mb-2">Semester Keluar</label>
+                <select name="filter_exit_semester" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                    <option value="">Semua Semester</option>
+                    @foreach ($exitSemesterOptions as $semester)
+                    <option value="{{ $semester }}" @selected($filterExitSemester==$semester)>{{ $semester }}</option>
                     @endforeach
                 </select>
             </div>

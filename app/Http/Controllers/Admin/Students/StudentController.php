@@ -13,11 +13,6 @@ class StudentController extends Controller
 {
     use HasBlindIndex;
 
-    /**
-     * Opsi agama untuk dropdown filter. Sesuaikan urutan/nilai jika
-     * berbeda dari yang dipakai saat input data siswa, karena filter
-     * ini mencocokkan blind-index hash secara persis (bukan LIKE).
-     */
     private const RELIGION_OPTIONS = [
         'Islam',
         'Kristen',
@@ -36,30 +31,28 @@ class StudentController extends Controller
         $filterGender        = $request->input('filter_gender');
         $filterReligion      = $request->input('filter_religion');
         $filterSpecialNeeds  = $request->input('filter_special_needs');
-
-        // 1. Tambahkan penangkap input filter jurusan
         $filterConcentration = $request->input('filter_concentration');
 
-        $stats = $this->getGlobalStats();
-
-        // Ambil Semester Aktif untuk acuan tabel
         $semesterAktif = CoreSemester::where('status', 'active')->first();
         $semesterId    = $semesterAktif ? $semesterAktif->id : null;
 
-        // 2. Ambil daftar jurusan untuk opsi dropdown
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
 
-        $students = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
+        // 1. BUAT BASE QUERY
+        $baseQuery = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
             $q->where('semester_id', $semesterId);
         }])
-            // PERBAIKAN: sebelumnya where('status','active') saja, sehingga siswa kelas 12
-            // yang baru diluluskan (status jadi 'graduated') hilang dari listing meski masih
-            // tercatat di rombel semester berjalan. activeClassGroup() sudah mencakup pivot
-            // status 'graduated' juga (lihat Student::activeClassGroup()).
-            ->whereIn('status', ['active', 'graduated'])
+            // Syarat Mutlak: Harus terdaftar di rombel semester ini
             ->whereHas('activeClassGroup', function ($q2) use ($semesterId) {
                 $q2->where('semester_id', $semesterId);
             })
+            // Terapkan Filter Status / Fallback
+            ->when($filterStatus, function ($q) use ($filterStatus) {
+                $q->where('status', $filterStatus);
+            }, function ($q) {
+                $q->whereIn('status', ['active', 'graduated']);
+            })
+            // Terapkan sisa filter lainnya
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -68,29 +61,26 @@ class StudentController extends Controller
             })
             ->when($filterGrade, function ($q) use ($filterGrade, $semesterId) {
                 $q->whereHas('activeClassGroup', function ($q2) use ($filterGrade, $semesterId) {
-                    $q2->where('grade_level', $filterGrade)
-                        ->where('semester_id', $semesterId);
+                    $q2->where('grade_level', $filterGrade)->where('semester_id', $semesterId);
                 });
             })
             ->when($filterGender, fn($q) => $q->where('gender', $filterGender))
             ->when($filterSpecialNeeds, fn($q) => $q->where('is_special_condition', $filterSpecialNeeds))
-
-            // 3. Tambahkan kondisi query untuk filter jurusan
-            // PERBAIKAN: acuan jurusan yang benar adalah concentration_id milik ROMBEL
-            // (acd_class_groups) tempat siswa aktif terdaftar, bukan kolom concentration_id
-            // di acd_students — kolom itu bisa saja belum sinkron dengan rombel siswa saat ini,
-            // sehingga hasilnya beda dari jumlah anggota rombel di ClassGroupController.
             ->when($filterConcentration, function ($q) use ($filterConcentration, $semesterId) {
                 $q->whereHas('activeClassGroup', function ($q2) use ($filterConcentration, $semesterId) {
-                    $q2->where('semester_id', $semesterId)
-                        ->where('concentration_id', $filterConcentration);
+                    $q2->where('semester_id', $semesterId)->where('concentration_id', $filterConcentration);
                 });
             })
-
             ->when($filterReligion, function ($q) use ($filterReligion) {
                 $hash = $this->blindIndexHash($filterReligion);
                 $q->whereHas('vault', fn($q2) => $q2->where('religion_hash', $hash));
-            })
+            });
+
+        // 2. LEMPAR BASE QUERY KE PENGHITUNG STATS (Agar angka ikut terfilter dinamis)
+        $stats = $this->getStats(clone $baseQuery, $semesterId);
+
+        // 3. PAGINASI UNTUK TABEL
+        $students = (clone $baseQuery)
             ->orderBy('name', 'asc')
             ->paginate(10)
             ->withQueryString();
@@ -108,8 +98,8 @@ class StudentController extends Controller
                 'filterGender',
                 'filterReligion',
                 'filterSpecialNeeds',
-                'filterConcentration',  // 4. Kirim variabel ini ke view
-                'concentrationOptions'  // 4. Kirim opsi jurusan ke view
+                'filterConcentration',
+                'concentrationOptions'
             ),
             $stats,
             ['religionOptions' => self::RELIGION_OPTIONS]
@@ -121,67 +111,38 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $student->delete();
 
-        $stats = $this->getGlobalStats();
-
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
-        $semesterId    = $semesterAktif ? $semesterAktif->id : null;
-
-        // PERBAIKAN: samakan dengan index() - jangan filter status 'active' saja,
-        // supaya siswa kelas 12 yang sudah lulus tidak ikut hilang dari tabel hasil HTMX
-        $students = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
-            $q->where('semester_id', $semesterId);
-        }])
-            ->whereIn('status', ['active', 'graduated'])
-            ->whereHas('activeClassGroup', function ($q) use ($semesterId) {
-                $q->where('semester_id', $semesterId);
-            })
-            ->orderBy('name', 'asc')
-            ->paginate(10)
-            ->withQueryString();
-
-        return $this->renderPartials($students, $stats);
+        // Kembalikan ke index agar baseQuery dan state HTMX berjalan normal
+        return $this->index($request);
     }
 
-    private function getGlobalStats(): array
+    private function getStats($baseQuery, $semesterId): array
     {
-        // 1. Ambil Semester Aktif terlebih dahulu
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
-        $semesterId    = $semesterAktif ? $semesterAktif->id : null;
+        // 1. STATISTIK SEMESTER AKTIF
+        $totalStats = (clone $baseQuery)->count();
 
-        // 2. PERBAIKAN: Hapus when() agar jika $semesterId null, jumlah total & aktif akan 0 (tidak menjumlahkan semua semester)
-        $totalStats = Student::whereHas('activeClassGroup', function ($q) use ($semesterId) {
-            $q->where('semester_id', $semesterId);
+        // PERBAIKAN DISINI: 
+        // Agar angka di kartu "Total Siswa Aktif" sama dengan total di tabel,
+        // kita harus memasukkan status 'graduated' ke dalam hitungan aktif 
+        // HANYA untuk siswa yang masih terikat di rombel semester berjalan ini.
+        $activeStats = (clone $baseQuery)->whereIn('status', ['active', 'graduated'])->count();
+
+        $grade12Stats = (clone $baseQuery)->whereHas('activeClassGroup', function ($query) use ($semesterId) {
+            $query->where('grade_level', '12')->where('semester_id', $semesterId);
         })->count();
 
-        $activeStats = Student::where('status', 'active')
-            ->whereHas('activeClassGroup', function ($q) use ($semesterId) {
-                $q->where('semester_id', $semesterId);
-            })->count();
+        $grade11Stats = (clone $baseQuery)->whereHas('activeClassGroup', function ($query) use ($semesterId) {
+            $query->where('grade_level', '11')->where('semester_id', $semesterId);
+        })->count();
 
-        // Lulus dan keluar/pindah tidak terikat semester aktif (akumulatif historis)
+        $grade10Stats = (clone $baseQuery)->whereHas('activeClassGroup', function ($query) use ($semesterId) {
+            $query->where('grade_level', '10')->where('semester_id', $semesterId);
+        })->count();
+
+        // 2. STATISTIK HISTORIS (AKUMULATIF)
+        // Dihitung dari global (tabel acd_students langsung) karena alumni dan
+        // siswa pindah sudah tidak memiliki relasi ke semester aktif saat ini.
         $graduatedStats = Student::where('status', 'graduated')->count();
         $inactiveStats  = Student::whereIn('status', ['dropped_out', 'transferred_out'])->count();
-
-        // 3. Hitung siswa dengan memfilter grade_level DAN semester_id
-        // PERBAIKAN: ikutkan status 'graduated' juga (bukan cuma 'active') supaya rombel
-        // kelas 12 yang siswanya sudah diluluskan tidak jadi 0 di kartu statistik.
-        $grade12Stats = Student::whereIn('status', ['active', 'graduated'])
-            ->whereHas('activeClassGroup', function ($query) use ($semesterId) {
-                $query->where('grade_level', '12')
-                    ->where('semester_id', $semesterId);
-            })->count();
-
-        $grade11Stats = Student::whereIn('status', ['active', 'graduated'])
-            ->whereHas('activeClassGroup', function ($query) use ($semesterId) {
-                $query->where('grade_level', '11')
-                    ->where('semester_id', $semesterId);
-            })->count();
-
-        $grade10Stats = Student::whereIn('status', ['active', 'graduated'])
-            ->whereHas('activeClassGroup', function ($query) use ($semesterId) {
-                $query->where('grade_level', '10')
-                    ->where('semester_id', $semesterId);
-            })->count();
 
         return compact(
             'totalStats',
@@ -196,7 +157,7 @@ class StudentController extends Controller
 
     private function renderPartials($students, $stats): string
     {
-        $stats['isOob'] = true; // Untuk HTMX out-of-band swap pada stats cards
+        $stats['isOob'] = true;
 
         $tableHtml = view('pages.admin.students.data.partials._table', compact('students'))->render();
         $statsHtml = view('pages.admin.students.data.partials._stats-cards', $stats)->render();

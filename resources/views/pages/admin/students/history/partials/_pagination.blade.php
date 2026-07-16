@@ -1,4 +1,3 @@
-{{-- File: resources/views/pages/admin/students/data/partials/_pagination.blade.php --}}
 <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-4 px-1">
     <span class="text-sm text-secondary text-center">
         Menampilkan <span class="font-semibold text-foreground">{{ $students->firstItem() ?? 0 }}</span>
@@ -11,8 +10,10 @@
             <i data-lucide="chevron-left" class="size-4"></i>
         </button>
         @else
-        <button type="button" hx-get="{{ $students->previousPageUrl() }}" hx-target="#students-container"
-            hx-select="#students-container" hx-swap="outerHTML" hx-push-url="true"
+        <button type="button" hx-get="{{ $students->previousPageUrl() }}"
+            hx-target="#students-history-container"
+            hx-select="#students-history-container"
+            hx-swap="outerHTML" hx-push-url="true"
             class="p-2 rounded-lg border border-border bg-white hover:bg-muted cursor-pointer transition-colors">
             <i data-lucide="chevron-left" class="size-4"></i>
         </button>
@@ -30,12 +31,14 @@
             @if ($i > 0 && $page - $pages[$i - 1] > 1)
             <span class="px-1 text-secondary text-sm">…</span>
             @endif
+
             @if ($page === $curr)
             <button class="w-9 h-9 rounded-lg bg-primary text-white text-sm font-bold" disabled>{{ $page }}</button>
             @else
             <button type="button"
                 hx-get="{{ $students->url($page) }}"
-                hx-target="#students-container" hx-select="#students-container"
+                hx-target="#students-history-container"
+                hx-select="#students-history-container"
                 hx-swap="outerHTML" hx-push-url="true"
                 class="w-9 h-9 rounded-lg border border-border bg-white hover:bg-muted text-sm cursor-pointer transition-colors">
                 {{ $page }}
@@ -44,8 +47,10 @@
             @endforeach
 
             @if ($students->hasMorePages())
-            <button type="button" hx-get="{{ $students->nextPageUrl() }}" hx-target="#students-container"
-                hx-select="#students-container" hx-swap="outerHTML" hx-push-url="true"
+            <button type="button" hx-get="{{ $students->nextPageUrl() }}"
+                hx-target="#students-history-container"
+                hx-select="#students-history-container"
+                hx-swap="outerHTML" hx-push-url="true"
                 class="p-2 rounded-lg border border-border bg-white hover:bg-muted cursor-pointer transition-colors">
                 <i data-lucide="chevron-right" class="size-4"></i>
             </button>

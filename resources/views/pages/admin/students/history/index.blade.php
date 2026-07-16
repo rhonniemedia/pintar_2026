@@ -8,13 +8,13 @@
 <div class="p-8"
     x-data="{
         filterModalOpen: false,
-        isFilterActive: {{ ($filterExitStatus || $filterConcentration || $filterExitYear) ? 'true' : 'false' }},
+        isFilterActive: {{ ($filterExitStatus || $filterConcentration || $filterExitSemester) ? 'true' : 'false' }},
         checkFilterStatus() {
             const exitStatus = document.querySelector('[name=filter_exit_status]')?.value || '';
             const concentration = document.querySelector('[name=filter_concentration]')?.value || '';
-            const exitYear = document.querySelector('[name=filter_exit_year]')?.value || '';
+            const exitSemester = document.querySelector('[name=filter_exit_semester]')?.value || '';
 
-            this.isFilterActive = (exitStatus !== '' || concentration !== '' || exitYear !== '');
+            this.isFilterActive = (exitStatus !== '' || concentration !== '' || exitSemester !== '');
         }
     }"
     @htmx:after-request.document="checkFilterStatus()">
@@ -106,9 +106,9 @@
     @include('pages.admin.students.history.partials._filter-modal', [
     'filterExitStatus' => $filterExitStatus,
     'filterConcentration' => $filterConcentration,
-    'filterExitYear' => $filterExitYear,
+    'filterExitSemester' => $filterExitSemester,
     'concentrationOptions' => $concentrationOptions,
-    'exitYearOptions' => $exitYearOptions,
+    'exitSemesterOptions' => $exitSemesterOptions,
     'exitStatusOptions' => $exitStatusOptions,
     ])
 

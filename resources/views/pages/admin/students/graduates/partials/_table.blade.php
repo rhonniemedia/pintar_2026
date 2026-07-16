@@ -101,7 +101,7 @@
                     {{-- Kolom Aksi --}}
                     <td class="px-4 py-4">
                         <div class="flex items-center justify-center gap-2">
-                            <a href="{{ route('admin.graduates.show', $student->id) }}" title="Detail Profil Alumni"
+                            <a href="#" title="Detail Profil Alumni"
                                 class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
                                 <i data-lucide="user-search" class="size-4 pointer-events-none"></i>
                             </a>

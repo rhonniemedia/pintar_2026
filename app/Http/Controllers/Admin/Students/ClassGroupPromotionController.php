@@ -237,7 +237,9 @@ class ClassGroupPromotionController extends Controller
 
         DB::transaction(function () use ($data, $classGroup, $targetClassGroup) {
             foreach ($data['student_id'] as $studentId) {
-                $currentRow = ClassGroupStudent::where('class_group_id', $classGroup->id)
+                // TAMBAHKAN with('student') DI SINI
+                $currentRow = ClassGroupStudent::with('student')
+                    ->where('class_group_id', $classGroup->id)
                     ->where('student_id', $studentId)
                     ->where('status', 'active')
                     ->whereNull('exit_date')
@@ -252,6 +254,9 @@ class ClassGroupPromotionController extends Controller
                         'status' => 'graduated',
                         'exit_date' => $data['exit_date'],
                     ]);
+
+                    // TAMBAHKAN BARIS INI UNTUK UPDATE MASTER SISWA
+                    $currentRow->student->update(['status' => 'graduated']);
                 } else {
                     $currentRow->update(['exit_date' => $data['exit_date']]);
 
@@ -305,7 +310,9 @@ class ClassGroupPromotionController extends Controller
 
         DB::transaction(function () use ($data, $classGroup, $nextSemester) {
             foreach ($data['student_id'] as $studentId) {
-                $currentRow = ClassGroupStudent::where('class_group_id', $classGroup->id)
+                // TAMBAHKAN with('student') DI SINI
+                $currentRow = ClassGroupStudent::with('student')
+                    ->where('class_group_id', $classGroup->id)
                     ->where('student_id', $studentId)
                     ->first();
 
@@ -315,6 +322,9 @@ class ClassGroupPromotionController extends Controller
 
                 if ($currentRow->status === 'graduated') {
                     $currentRow->update(['status' => 'active', 'exit_date' => null]);
+
+                    // TAMBAHKAN BARIS INI UNTUK KEMBALIKAN STATUS MASTER SISWA
+                    $currentRow->student->update(['status' => 'active']);
                 } elseif ($nextSemester) {
                     ClassGroupStudent::whereHas('classGroup', fn($q) => $q->where('semester_id', $nextSemester->id))
                         ->where('student_id', $studentId)
