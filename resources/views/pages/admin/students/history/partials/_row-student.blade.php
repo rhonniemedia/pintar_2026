@@ -34,15 +34,15 @@ default => 'bg-secondary/10 text-secondary',
 <tr id="row-student-history-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
     <td class="px-4 py-4">
         <div class="flex items-center gap-3">
-            <div @style(["background: {$color}"])
-                class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
-                {{ $initials }}
-            </div>
+            {{-- Memanggil komponen Avatar --}}
+            <x-ui.avatar :name="$student->name ?? '-'" :gender="optional($student)->gender" :index="$loop->index" />
+
             <div>
                 <div class="font-semibold text-foreground text-sm uppercase">{{ $student->name ?? '-' }}</div>
-                <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5">
-                    <span class="inline-block size-1.5 rounded-full {{ optional($student)->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}"></span>
-                    {{ $genderLabel }}
+
+                {{-- Menampilkan NIK dengan font standar bawaan --}}
+                <div class="text-xs text-secondary mt-0.5">
+                    {{ optional(optional($student)->vault)->nik_encrypted ?? '-' }}
                 </div>
             </div>
         </div>

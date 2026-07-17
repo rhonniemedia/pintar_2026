@@ -48,27 +48,17 @@
                     {{-- Kolom Peserta Didik --}}
                     <td class="px-4 py-4">
                         <div class="flex items-center gap-3 group">
-                            <div class="relative shrink-0">
-                                <div @style(["background: {$color}"])
-                                    class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                                    {{ $initials }}
-                                </div>
-                                <span title="{{ $student->gender === 'L' ? 'Laki-laki' : 'Perempuan' }}"
-                                    class="absolute -bottom-0.5 -right-0.5 flex items-center justify-center size-4 rounded-full border-2 border-white {{ $student->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}">
-                                    <i data-lucide="{{ $student->gender === 'L' ? 'mars' : 'venus' }}" class="size-2.5 text-white pointer-events-none"></i>
-                                </span>
-                            </div>
+                            {{-- Memanggil komponen Avatar --}}
+                            <x-ui.avatar :name="$student->name" :gender="$student->gender" :index="$loop->index" />
+
                             <div class="min-w-0">
                                 <div class="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">
                                     {{ $student->name ?? '-' }}
                                 </div>
-                                <div class="mt-1.5 flex items-center gap-1.5">
-                                    <span class="px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-700 text-[10px] font-bold font-mono" title="NIS">
-                                        NIS {{ $student->nis ?? '-' }}
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 text-[10px] font-bold font-mono" title="NISN">
-                                        NISN {{ $nisn }}
-                                    </span>
+
+                                {{-- Menampilkan NIK (Menggantikan NIS & NISN) --}}
+                                <div class="text-xs text-secondary mt-0.5 truncate" title="NIK">
+                                    {{ optional($student->vault)->nik_encrypted ?? '-' }}
                                 </div>
                             </div>
                         </div>
@@ -123,14 +113,8 @@
         </table>
     </div>
 
-    {{-- Render pagination component jika ada --}}
-    @if(view()->exists('pages.admin.students.data.partials._pagination'))
-    @include('pages.admin.students.data.partials._pagination', ['students' => $graduates])
-    @else
-    <div class="mt-4">
-        {{ $graduates->links() }}
-    </div>
-    @endif
+    {{-- Memanggil komponen pagination --}}
+    <x-ui.pagination :paginator="$graduates" hxTarget="#graduates-container" />
 
     <script>
         if (typeof lucide !== 'undefined') {

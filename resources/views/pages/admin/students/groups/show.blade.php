@@ -124,53 +124,31 @@
         hx-swap="outerHTML"
         class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-        <div class="relative overflow-hidden flex flex-col rounded-2xl border border-border p-5 gap-4 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5 cursor-default">
-            <div class="flex items-center gap-2">
-                <div class="size-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="user-check" class="size-5 text-slate-600"></i>
-                </div>
-                <p class="font-medium text-xs text-secondary">Wali Kelas</p>
-            </div>
-            <div class="border-t border-dashed border-border pt-3">
-                <p class="font-bold text-lg truncate">{{ $classGroup->homeroomTeacher->name ?? 'Belum ditentukan' }}</p>
-            </div>
-        </div>
+        <x-ui.stat-card
+            theme="slate"
+            icon="user-check"
+            title="Wali Kelas"
+            :value="$classGroup->homeroomTeacher->name ?? 'Belum ditentukan'"
+            valueClass="text-lg truncate" />
 
-        <div class="relative overflow-hidden flex flex-col rounded-2xl border border-border p-5 gap-4 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5 hover:border-green-200 cursor-default">
-            <div class="flex items-center gap-2">
-                <div class="size-10 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="users" class="size-5 text-success"></i>
-                </div>
-                <p class="font-medium text-xs text-secondary">Total Anggota</p>
-            </div>
-            <div class="border-t border-dashed border-border pt-3">
-                <p class="font-bold text-3xl">{{ $classGroup->total_students_count }}</p>
-            </div>
-        </div>
+        <x-ui.stat-card
+            theme="success"
+            icon="users"
+            title="Total Anggota"
+            :value="$classGroup->total_students_count" />
 
-        <div class="relative overflow-hidden flex flex-col rounded-2xl border border-border p-5 gap-4 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5 hover:border-blue-200 cursor-default">
-            <div class="flex items-center gap-2">
-                <div class="size-10 bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="user" class="size-5 text-blue-600"></i>
-                </div>
-                <p class="font-medium text-xs text-secondary">Siswa Laki-laki</p>
-            </div>
-            <div class="border-t border-dashed border-border pt-3">
-                <p class="font-bold text-3xl text-blue-600">{{ $classGroup->male_students_count }}</p>
-            </div>
-        </div>
+        <x-ui.stat-card
+            theme="blue"
+            icon="user"
+            title="Siswa Laki-laki"
+            :value="$classGroup->male_students_count" />
 
-        <div class="relative overflow-hidden flex flex-col rounded-2xl border border-border p-5 gap-4 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5 hover:border-pink-200 cursor-default">
-            <div class="flex items-center gap-2">
-                <div class="size-10 bg-pink-500/10 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="user" class="size-5 text-pink-600"></i>
-                </div>
-                <p class="font-medium text-xs text-secondary">Siswa Perempuan</p>
-            </div>
-            <div class="border-t border-dashed border-border pt-3">
-                <p class="font-bold text-3xl text-pink-600">{{ $classGroup->female_students_count }}</p>
-            </div>
-        </div>
+        <x-ui.stat-card
+            theme="pink"
+            icon="user"
+            title="Siswa Perempuan"
+            :value="$classGroup->female_students_count" />
+
     </div>
 
     {{-- 3. AREA TABEL PESERTA DIDIK (Menggunakan desain asli) --}}

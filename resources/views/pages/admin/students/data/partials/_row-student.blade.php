@@ -16,15 +16,11 @@ $jurusan = $r->concentration->name ?? '-';
 <tr id="row-student-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
     <td class="px-4 py-4">
         <div class="flex items-center gap-3">
-            <div @style(["background: {$color}"])
-                class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
-                {{ $initials }}
-            </div>
+            <x-ui.avatar :name="$r->name" :gender="$r->gender" :index="$loop->index" />
             <div>
                 <div class="font-semibold text-foreground text-sm uppercase">{{ $r->name }}</div>
                 <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5">
-                    <span class="inline-block size-1.5 rounded-full {{ $r->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}"></span>
-                    {{ $genderLabel }}
+                    {{ $r->vault->nik_encrypted ?? '-' }}
                 </div>
             </div>
         </div>

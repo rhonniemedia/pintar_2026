@@ -1,7 +1,8 @@
 {{-- resources/views/pages/admin/students/groups/partials/_graduation-cancel-modal.blade.php --}}
 <div id="modal-container"
+    x-init="setTimeout(() => open = true, 10)"
     x-data="{
-        open: true,
+        open: false,
         search: '',
         saving: false,
         checkAll(e) {
@@ -22,16 +23,9 @@
             header.checked = visible.length > 0 && checkedCount === visible.length;
             header.indeterminate = checkedCount > 0 && checkedCount < visible.length;
         }
-    }"
-    x-show="open"
-    x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-    @click.self="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)">
+    }">
 
-    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-
+    <x-ui.modal show="open" maxWidth="4xl">
         {{-- Header Modal --}}
         <div class="flex items-center justify-between px-6 py-5 border-b border-border shrink-0 bg-gray-50/50">
             <div>
@@ -123,56 +117,31 @@
 
             {{-- Footer Form --}}
             <div class="px-6 py-4 border-t border-border bg-gray-50/50 flex items-center justify-end shrink-0 gap-4">
-                <!-- Tombol Aksi -->
                 <div class="flex items-center gap-2">
-                    <!-- Tombol Batal -->
                     <button type="button"
                         :disabled="saving"
                         @click="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl 
-                        border border-border bg-white 
-                        text-secondary text-sm font-semibold 
-                        hover:bg-muted hover:border-gray-300 
-                        hover:shadow-sm hover:-translate-y-0.5 
-                        active:translate-y-0 active:shadow-none 
-                        transition-all duration-200 
-                        cursor-pointer
-                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none">
-
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50">
                         <i data-lucide="x" class="size-4"></i>
                         <span>Batal</span>
                     </button>
 
-                    <!-- Tombol Simpan dengan Loading Spinner (Menggunakan gaya Error/Merah untuk Batal Kelulusan) -->
                     @if ($candidates->isNotEmpty())
                     <button type="submit"
                         :disabled="saving"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl 
-                        bg-error text-white text-sm font-bold 
-                        shadow-md 
-                        hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 
-                        active:translate-y-0 active:shadow-md 
-                        transition-all duration-200 
-                        cursor-pointer
-                        disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-md">
-
-                        <!-- Icon Alert/Trash (normal) menggunakan x-show -->
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-error text-white text-sm font-bold shadow-md hover:opacity-90 hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-70">
                         <i data-lucide="alert-circle" class="size-4" x-show="!saving"></i>
-
-                        <!-- Spinner (loading) menggunakan x-show dan x-cloak -->
                         <svg x-show="saving" x-cloak class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-
-                        <!-- Teks dinamis -->
                         <span x-text="saving ? 'Membatalkan...' : 'Batalkan Kelulusan'"></span>
                     </button>
                     @endif
                 </div>
             </div>
         </form>
-    </div>
+    </x-ui.modal>
 
     {{-- Trigger Lucide Icons --}}
     <script>

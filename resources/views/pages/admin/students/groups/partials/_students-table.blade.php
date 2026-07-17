@@ -33,18 +33,14 @@
                 <tr id="row-student-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
                     <td class="px-4 py-4">
                         <a href="{{ route('admin.students.edit.personal', $r->id) }}" title="Detail" class="flex items-center gap-3 group">
-                            <div class="relative shrink-0">
-                                <div @style(["background: {$color}"])
-                                    class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                    {{ $initials }}
-                                </div>
-                                <span title="{{ $r->gender === 'L' ? 'Laki-laki' : 'Perempuan' }}"
-                                    class="absolute -bottom-0.5 -right-0.5 flex items-center justify-center size-4 rounded-full border-2 border-white {{ $r->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}">
-                                    <i data-lucide="{{ $r->gender === 'L' ? 'mars' : 'venus' }}" class="size-2.5 text-white pointer-events-none"></i>
-                                </span>
-                            </div>
+
+                            {{-- Memanggil komponen Avatar --}}
+                            <x-ui.avatar :name="$r->name" :gender="$r->gender" :index="$loop->index" />
+
                             <div class="min-w-0">
                                 <div class="font-semibold text-foreground text-sm group-hover:text-primary group-hover:none transition-colors truncate">{{ $r->name }}</div>
+
+                                {{-- Font NIK dikembalikan ke standar bawaan --}}
                                 <div class="text-xs text-secondary truncate">{{ $nik }}</div>
                             </div>
                         </a>
@@ -88,5 +84,6 @@
         </table>
     </div>
 
-    @include('pages.admin.students.data.partials._pagination', ['students' => $students])
+    {{-- Memanggil komponen pagination yang baru dibuat --}}
+    <x-ui.pagination :paginator="$students" hxTarget="#students-container" />
 </div>

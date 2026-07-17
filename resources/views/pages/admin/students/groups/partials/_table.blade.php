@@ -37,5 +37,6 @@
         </table>
     </div>
 
-    @include('pages.admin.students.groups.partials._pagination', ['classGroups' => $classGroups])
+    {{-- Memanggil komponen pagination yang baru dibuat --}}
+    <x-ui.pagination :paginator="$classGroups" hxTarget="#class-groups-container" />
 </div>

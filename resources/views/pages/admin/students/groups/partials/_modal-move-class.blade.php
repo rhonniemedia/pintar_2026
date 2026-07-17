@@ -1,10 +1,5 @@
-<div x-data="{ open: true }" x-show="open" x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-    @click.self="open = false; setTimeout(() => $el.closest('#modal-container').innerHTML = '', 150)">
-
-    <div class="bg-white rounded-2xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden">
+<div id="modal-container" x-data="{ open: false }" x-init="setTimeout(() => open = true, 10)">
+    <x-ui.modal show="open" maxWidth="md">
 
         {{-- Header --}}
         <div class="flex items-center justify-between px-6 py-5 border-b border-border bg-gray-50/50">
@@ -94,7 +89,7 @@
                 </button>
             </div>
         </form>
-    </div>
+    </x-ui.modal>
 
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();

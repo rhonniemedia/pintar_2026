@@ -1,5 +1,7 @@
-<div x-data="{
-        open: true,
+<div id="modal-container"
+    x-init="setTimeout(() => open = true, 10)"
+    x-data="{
+        open: false,
         search: '',
         decision: 'naik',
         saving: false,
@@ -21,14 +23,9 @@
             header.checked = visible.length > 0 && checkedCount === visible.length;
             header.indeterminate = checkedCount > 0 && checkedCount < visible.length;
         }
-    }" x-show="open" x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-    @click.self="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)">
+    }">
 
-    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-
+    <x-ui.modal show="open" maxWidth="4xl">
         {{-- Header Modal --}}
         <div class="flex items-center justify-between px-6 py-5 border-b border-border shrink-0 bg-gray-50/50">
             <div>
@@ -98,7 +95,6 @@
                                 <td class="py-3 text-sm text-foreground uppercase">{{ $c->student->name }}</td>
                                 <td class="py-3 text-sm flex gap-2 items-center">
                                     <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-600 font-bold text-xs">{{ $c->student->nis }}</span>
-                                    {{-- Pastikan ini disesuaikan dengan cara Anda memanggil NISN seperti di _graduation-modal --}}
                                     <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-bold text-xs">{{ $c->student->vault->nisn_encrypted ?? '-' }}</span>
                                 </td>
                                 <td class="py-3 text-right">
@@ -151,44 +147,25 @@
                     <button type="button"
                         :disabled="saving"
                         @click="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
-                        border border-border bg-white
-                        text-secondary text-sm font-semibold
-                        hover:bg-muted hover:border-gray-300
-                        hover:shadow-sm hover:-translate-y-0.5
-                        active:translate-y-0 active:shadow-none
-                        transition-all duration-200
-                        cursor-pointer
-                        disabled:opacity-50 disabled:cursor-not-allowed">
-
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50">
                         <i data-lucide="x" class="size-4"></i>
                         <span>Batal</span>
                     </button>
 
                     <button type="submit"
                         :disabled="saving || {{ $nextSemesterMissing ? 'true' : 'false' }}"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                        bg-primary text-white text-sm font-bold
-                        shadow-md
-                        hover:bg-primary-dark hover:shadow-lg hover:-translate-y-0.5
-                        active:translate-y-0 active:shadow-md
-                        transition-all duration-200
-                        cursor-pointer
-                        disabled:opacity-70 disabled:cursor-not-allowed">
-
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-70">
                         <i data-lucide="save" class="size-4" x-show="!saving"></i>
-
                         <svg x-show="saving" x-cloak class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-
                         <span x-text="saving ? 'Memproses...' : 'Simpan Data'"></span>
                     </button>
                 </div>
             </div>
         </form>
-    </div>
+    </x-ui.modal>
 
     {{-- Trigger Lucide Icons --}}
     <script>

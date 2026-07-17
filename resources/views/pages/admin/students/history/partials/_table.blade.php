@@ -41,5 +41,6 @@
         </table>
     </div>
 
-    @include('pages.admin.students.history.partials._pagination', ['students' => $students])
+    {{-- Memanggil komponen pagination yang baru dibuat --}}
+    <x-ui.pagination :paginator="$students" hxTarget="#students-history-container" />
 </div>

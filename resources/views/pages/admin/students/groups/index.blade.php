@@ -129,22 +129,8 @@
     'concentrationOptions' => $concentrationOptions,
     ])
 
-    {{-- WRAPPER MODAL ADD / EDIT KOSONG --}}
-    <div x-show="formModalOpen" x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-        x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        @click.self="formModalOpen = false"
-        {{-- Reset konten kembali jadi loading setiap kali modal baru tertutup --}}
-        x-effect="if(!formModalOpen) setTimeout(() => resetFormModal(), 300)">
-
-        <div id="form-modal-content" class="bg-white rounded-2xl w-full max-w-lg flex flex-col shadow-2xl">
-            {{-- Isi ini akan digantikan oleh response server HTMX --}}
-            <div class="flex items-center justify-center h-40">
-                <i data-lucide="loader-2" class="size-8 text-primary animate-spin"></i>
-            </div>
-        </div>
-    </div>
+    {{-- MODAL ADD / EDIT KOSONG --}}
+    <div id="form-modal-content"> </div>
 
 </div>
 @endsection

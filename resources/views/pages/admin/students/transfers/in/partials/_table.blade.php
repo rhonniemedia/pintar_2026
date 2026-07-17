@@ -51,24 +51,17 @@
                     {{-- Kolom Peserta Didik --}}
                     <td class="px-4 py-4">
                         <div class="flex items-center gap-3 group">
-                            <div class="relative shrink-0">
-                                <div @style(["background: {$color}"])
-                                    class="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                                    {{ $initials }}
-                                </div>
-                                <span title="{{ optional($student)->gender === 'L' ? 'Laki-laki' : 'Perempuan' }}"
-                                    class="absolute -bottom-0.5 -right-0.5 flex items-center justify-center size-4 rounded-full border-2 border-white {{ optional($student)->gender === 'L' ? 'bg-blue-500' : 'bg-pink-500' }}">
-                                    <i data-lucide="{{ optional($student)->gender === 'L' ? 'mars' : 'venus' }}" class="size-2.5 text-white pointer-events-none"></i>
-                                </span>
-                            </div>
+                            {{-- Memanggil komponen Avatar --}}
+                            <x-ui.avatar :name="$student->name ?? '-'" :gender="optional($student)->gender" :index="$loop->index" />
+
                             <div class="min-w-0">
                                 <div class="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">
                                     {{ $student->name ?? '-' }}
                                 </div>
-                                <div>
-                                    <span class="px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold font-mono">
-                                        {{ $nisn }}
-                                    </span>
+
+                                {{-- Menampilkan NIK dengan format teks standar --}}
+                                <div class="text-xs text-secondary mt-0.5">
+                                    {{ optional(optional($student)->vault)->nik_encrypted ?? '-' }}
                                 </div>
                             </div>
                         </div>
@@ -89,8 +82,11 @@
                         <div class="text-foreground font-medium truncate">
                             {{ optional($r->classGroup)->name ?? '-' }}
                         </div>
-                        <div class="text-xs text-secondary truncate">
-                            {{ \Carbon\Carbon::parse($r->mutation_date)->translatedFormat('d M Y') }}
+                        <div class="mt-1 flex items-center gap-1 text-[11px] text-secondary">
+                            <i data-lucide="calendar" class="w-3 h-3"></i>
+                            <span>
+                                {{ \Carbon\Carbon::parse($r->mutation_date)->translatedFormat('d M Y') }}
+                            </span>
                         </div>
                     </td>
 
@@ -123,9 +119,8 @@
         </table>
     </div>
 
-    <div class="mt-4">
-        {{ $data->links() }}
-    </div>
+    {{-- Memanggil komponen pagination --}}
+    <x-ui.pagination :paginator="$data" hxTarget="#mutasi-masuk-container" />
 
     <script>
         if (typeof lucide !== 'undefined') {
