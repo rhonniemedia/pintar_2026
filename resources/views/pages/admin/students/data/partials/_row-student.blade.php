@@ -39,41 +39,100 @@ $jurusan = $r->concentration->name ?? '-';
     </td>
 
     <td class="px-4 py-4">
-        <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-            <button type="button" @click="open = !open" title="Aksi"
-                class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer focus:outline-none">
-                <i data-lucide="more-vertical" class="size-4 pointer-events-none"></i>
+        <div
+            x-data="{
+        open: false,
+        dropUp: false,
+
+        toggle() {
+            if (this.open) {
+                this.open = false;
+                return;
+            }
+
+            this.open = true;
+
+            this.$nextTick(() => {
+                const btn = this.$refs.button.getBoundingClientRect();
+                const menu = this.$refs.menu.getBoundingClientRect();
+
+                const spaceBelow = window.innerHeight - btn.bottom;
+                const spaceAbove = btn.top;
+
+                this.dropUp = spaceBelow < menu.height && spaceAbove > menu.height;
+            });
+        }
+    }"
+            @click.outside="open = false"
+            class="relative inline-block text-left">
+
+            <button
+                x-ref="button"
+                type="button"
+                @click="toggle()"
+                title="Aksi"
+                class="inline-flex items-center gap-2 h-8 px-3 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all focus:outline-none cursor-pointer">
+
+                <span class="text-sm font-medium">Aksi</span>
+
+                <i
+                    data-lucide="chevron-down"
+                    class="size-4 transition-transform duration-200"
+                    :class="{ 'rotate-180': open }">
+                </i>
             </button>
 
-            <div x-show="open" x-cloak
+            <div
+                x-ref="menu"
+                x-show="open"
+                x-cloak
+
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
+
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-                class="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-border bg-white shadow-lg py-3 flex flex-col text-left">
+
+                :class="dropUp
+            ? 'bottom-full mb-1 origin-bottom-right'
+            : 'top-full mt-1 origin-top-right'"
+
+                class="absolute right-0 z-20 w-56 rounded-xl border border-border bg-white shadow-lg py-3 flex flex-col text-left">
 
                 <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Detail</p>
-                <a href="{{ route('admin.students.detail.personal', $r->id) }}"
-                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors">
+                <button type="button"
+                    @click="open = false"
+                    hx-get="{{ route('admin.students.detail.personal', $r->id) }}"
+                    hx-target="#modal-container"
+                    hx-swap="outerHTML"
+                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                     <i data-lucide="user" class="size-4 text-secondary pointer-events-none"></i> Data Peserta Didik
-                </a>
-                <a href="{{ route('admin.students.detail.guardian', $r->id) }}"
-                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors">
+                </button>
+                <button type="button"
+                    @click="open = false"
+                    hx-get="{{ route('admin.students.detail.guardian', $r->id) }}"
+                    hx-target="#modal-container"
+                    hx-swap="outerHTML"
+                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                     <i data-lucide="users" class="size-4 text-secondary pointer-events-none"></i> Data Orang Tua
-                </a>
+                </button>
 
                 <div class="my-2 border-t border-border"></div>
 
                 <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Edit</p>
-                <a href="{{ route('admin.students.edit.personal', $r->id) }}"
-                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors">
-                    <i data-lucide="pencil" class="size-4 text-secondary pointer-events-none"></i> Data Peserta Didik
-                </a>
+                <button type="button"
+                    @click="open = false"
+                    hx-get="{{ route('admin.students.edit.personal', $r->id) }}"
+                    hx-target="#modal-container"
+                    hx-swap="outerHTML"
+                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
+                    <i data-lucide="file-pen-line" class="size-4 text-secondary pointer-events-none"></i> Data Peserta Didik
+                </button>
                 <a href="{{ route('admin.students.edit.guardian', $r->id) }}"
                     class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors">
-                    <i data-lucide="pencil" class="size-4 text-secondary pointer-events-none"></i> Data Orang Tua
+                    <i data-lucide="file-pen-line" class="size-4 text-secondary pointer-events-none"></i> Data Orang Tua
                 </a>
 
                 <div class="my-2 border-t border-border"></div>

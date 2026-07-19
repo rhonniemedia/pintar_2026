@@ -49,7 +49,7 @@
             <select name="filter_religion" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                 <option value="">Semua Agama</option>
                 @foreach ($religionOptions as $religion)
-                <option value="{{ $religion }}" @selected($filterReligion===$religion)>{{ $religion }}</option>
+                <option value="{{ $religion->value }}" @selected($filterReligion===$religion->value)>{{ $religion->label() }}</option>
                 @endforeach
             </select>
         </div>

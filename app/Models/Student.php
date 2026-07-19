@@ -2,6 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\Student\DistanceToSchool;
+use App\Enums\Student\Gender;
+use App\Enums\Student\RegistrationType;
+use App\Enums\Student\ResidenceType;
+use App\Enums\Student\SpecialCondition;
+use App\Enums\Student\StudentStatus;
+use App\Enums\Student\Transportation;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +24,17 @@ class Student extends Model
     protected $table = 'acd_students';
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'entry_date'             => 'date', // Cast ke date object
+        'status'                 => StudentStatus::class,
+        'residence_type'         => ResidenceType::class,
+        'transportation'         => Transportation::class,
+        'distance_to_school'     => DistanceToSchool::class,
+        'special_condition_type' => SpecialCondition::class,
+        'gender'                 => Gender::class,
+        'registration_type'      => RegistrationType::class,
+    ];
 
     public function user(): BelongsTo
     {

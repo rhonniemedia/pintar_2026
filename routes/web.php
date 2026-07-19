@@ -47,11 +47,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/data/{id}', [StudentController::class, 'destroy'])->name('data.destroy');
 
         // Detail
-        Route::get('/{id}/detail/personal', fn($id) => null)->name('detail.personal');
-        Route::get('/{id}/detail/guardian', fn($id) => null)->name('detail.guardian');
+        Route::get('/{id}/detail/personal', [StudentController::class, 'show'])->name('detail.personal');
+        Route::get('/{id}/detail/guardian', [StudentController::class, 'showGuardian'])->name('detail.guardian');
 
         // Edit
-        Route::get('/{id}/edit/personal', fn($id) => null)->name('edit.personal');
+        Route::get('/{id}/edit/personal', [StudentController::class, 'edit'])->name('edit.personal');
+        Route::put('/{id}/edit/personal', [StudentController::class, 'update'])->name('edit.personal.update');
         Route::get('/{id}/edit/guardian', fn($id) => null)->name('edit.guardian');
 
         // Kelompok / Rombel

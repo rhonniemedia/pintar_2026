@@ -1,5 +1,7 @@
 <!-- ══ SIDEBAR ══ -->
-<aside class="flex flex-col w-[280px] shrink-0 h-screen fixed inset-y-0 left-0 z-50 bg-white border-r border-border overflow-hidden">
+<aside
+    class="flex flex-col w-[280px] shrink-0 h-screen fixed inset-y-0 left-0 z-50 bg-white border-r border-border overflow-hidden transition-transform duration-300 ease-in-out"
+    :class="sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0 lg:shadow-none'">
 
     <!-- Logo -->
     <div class="flex items-center justify-between border-b border-border h-[90px] px-5 gap-3">
@@ -13,7 +15,8 @@
             </div>
         </div>
 
-        <button class="lg:hidden size-11 flex shrink-0 bg-white rounded-xl p-[10px] items-center justify-center ring-1 ring-border hover:ring-primary transition-all duration-300 cursor-pointer">
+        <!-- Tombol Close (X) ditambahkan @click -->
+        <button @click="sidebarOpen = false" class="lg:hidden size-11 flex shrink-0 bg-white rounded-xl p-[10px] items-center justify-center ring-1 ring-border hover:ring-primary transition-all duration-300 cursor-pointer">
             <i data-lucide="x" class="size-6 text-secondary"></i>
         </button>
     </div>

@@ -2,10 +2,17 @@
 
 namespace App\Http\Controllers\Admin\Students;
 
+use App\Enums\Student\Religion;
+use App\Filters\StudentFilter;
+// Religion dipakai di update() untuk Religion::tryFrom(), bukan lagi untuk
+// membangun daftar opsi <select> — blade agama sekarang loop Religion::cases() sendiri.
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Students\UpdateStudentRequest;
 use App\Models\CoreConcentration;
 use App\Models\CoreSemester;
 use App\Models\Student;
+use App\Services\StudentStatsService;
+use App\Support\StudentVaultMapper;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
 
@@ -13,73 +20,31 @@ class StudentController extends Controller
 {
     use HasBlindIndex;
 
-    private const RELIGION_OPTIONS = [
-        'Islam',
-        'Kristen',
-        'Katolik',
-        'Hindu',
-        'Buddha',
-        'Konghucu',
-        'Lainnya',
-    ];
+    public function __construct(
+        private readonly StudentStatsService $statsService,
+    ) {}
 
     public function index(Request $request)
     {
-        $search              = $request->input('search');
-        $filterStatus        = $request->input('filter_status');
-        $filterGrade         = $request->input('filter_grade');
-        $filterGender        = $request->input('filter_gender');
-        $filterReligion      = $request->input('filter_religion');
-        $filterSpecialNeeds  = $request->input('filter_special_needs');
-        $filterConcentration = $request->input('filter_concentration');
+        $filters = $request->only([
+            'search',
+            'filter_status',
+            'filter_grade',
+            'filter_gender',
+            'filter_religion',
+            'filter_special_needs',
+            'filter_concentration',
+        ]);
 
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
-        $semesterId    = $semesterAktif ? $semesterAktif->id : null;
+        $semesterId = CoreSemester::where('status', 'active')->value('id');
 
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
 
-        // 1. BUAT BASE QUERY
-        $baseQuery = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
-            $q->where('semester_id', $semesterId);
-        }])
-            // Syarat Mutlak: Harus terdaftar di rombel semester ini
-            ->whereHas('activeClassGroup', function ($q2) use ($semesterId) {
-                $q2->where('semester_id', $semesterId);
-            })
-            // Terapkan Filter Status / Fallback
-            ->when($filterStatus, function ($q) use ($filterStatus) {
-                $q->where('status', $filterStatus);
-            }, function ($q) {
-                $q->whereIn('status', ['active', 'graduated']);
-            })
-            // Terapkan sisa filter lainnya
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('nis', 'like', "%{$search}%");
-                });
-            })
-            ->when($filterGrade, function ($q) use ($filterGrade, $semesterId) {
-                $q->whereHas('activeClassGroup', function ($q2) use ($filterGrade, $semesterId) {
-                    $q2->where('grade_level', $filterGrade)->where('semester_id', $semesterId);
-                });
-            })
-            ->when($filterGender, fn($q) => $q->where('gender', $filterGender))
-            ->when($filterSpecialNeeds, fn($q) => $q->where('is_special_condition', $filterSpecialNeeds))
-            ->when($filterConcentration, function ($q) use ($filterConcentration, $semesterId) {
-                $q->whereHas('activeClassGroup', function ($q2) use ($filterConcentration, $semesterId) {
-                    $q2->where('semester_id', $semesterId)->where('concentration_id', $filterConcentration);
-                });
-            })
-            ->when($filterReligion, function ($q) use ($filterReligion) {
-                $hash = $this->blindIndexHash($filterReligion);
-                $q->whereHas('vault', fn($q2) => $q2->where('religion_hash', $hash));
-            });
+        $baseQuery = $this->buildBaseQuery($filters, $semesterId);
 
-        // 2. LEMPAR BASE QUERY KE PENGHITUNG STATS (Agar angka ikut terfilter dinamis)
-        $stats = $this->getStats(clone $baseQuery, $semesterId);
+        // Lempar base query ke penghitung stats agar angka ikut terfilter dinamis
+        $stats = $this->statsService->getStats(clone $baseQuery, $semesterId);
 
-        // 3. PAGINASI UNTUK TABEL
         $students = (clone $baseQuery)
             ->orderBy('name', 'asc')
             ->paginate(10)
@@ -90,20 +55,181 @@ class StudentController extends Controller
         }
 
         return view('pages.admin.students.data.index', array_merge(
-            compact(
-                'students',
-                'search',
-                'filterStatus',
-                'filterGrade',
-                'filterGender',
-                'filterReligion',
-                'filterSpecialNeeds',
-                'filterConcentration',
-                'concentrationOptions'
-            ),
+            [
+                'students'             => $students,
+                'search'               => $filters['search'] ?? null,
+                'filterStatus'         => $filters['filter_status'] ?? null,
+                'filterGrade'          => $filters['filter_grade'] ?? null,
+                'filterGender'         => $filters['filter_gender'] ?? null,
+                'filterReligion'       => $filters['filter_religion'] ?? null,
+                'filterSpecialNeeds'   => $filters['filter_special_needs'] ?? null,
+                'filterConcentration'  => $filters['filter_concentration'] ?? null,
+                'concentrationOptions' => $concentrationOptions,
+            ],
             $stats,
-            ['religionOptions' => self::RELIGION_OPTIONS]
+            ['religionOptions' => Religion::cases()]
         ));
+    }
+
+    public function show(string $id)
+    {
+        $student = Student::with(['vault', 'concentration', 'activeClassGroup'])->findOrFail($id);
+
+        return view('pages.admin.students.data.partials._show-modal', compact('student'));
+    }
+
+    public function showGuardian(string $id)
+    {
+        $student = Student::with(['guardians.vault'])->findOrFail($id);
+
+        return view('pages.admin.students.data.partials._show-guardian-modal', compact('student'));
+    }
+
+    public function edit(Request $request, string $id)
+    {
+        // Load student beserta guardian pertama (jika ada)
+        $student = Student::with(['vault', 'guardians.vault'])->findOrFail($id);
+        $currentStep = $request->query('step', 1);
+
+        return view('pages.admin.students.data.partials._edit-modal', compact('student', 'currentStep'));
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $student = Student::with(['vault', 'guardians.vault'])->findOrFail($id);
+        $step = (int) $request->query('step', 1);
+
+        // --- STEP 1: IDENTITAS ---
+        if ($step === 1) {
+            $validated = $request->validate([
+                'name'               => 'required|string|max:255',
+                'gender'             => 'required|in:L,P',
+                'nick_name'          => 'nullable|string|max:255',
+                'pob'                => 'nullable|string|max:255',
+                'dob'                => 'nullable|date',
+                'religion'           => 'nullable|string',
+                'nik'                => 'nullable|numeric|digits_between:15,17',
+                'child_order'        => 'nullable|integer|min:1',
+                'number_of_siblings' => 'nullable|integer|min:0',
+            ]);
+
+            $student->update([
+                'name'               => $validated['name'],
+                'nick_name'          => $validated['nick_name'],
+                'gender'             => $validated['gender'],
+                'child_order'        => $validated['child_order'],
+                'number_of_siblings' => $validated['number_of_siblings'],
+            ]);
+
+            $vault = $student->vault;
+            $vault->pob_encrypted = $validated['pob'];
+            $vault->dob_encrypted = $validated['dob'];
+            $vault->nik_encrypted = $validated['nik'];
+            $vault->nik_hash      = $validated['nik'] ? $this->blindIndexHash($validated['nik']) : null; // kalau ada kolom nik_hash untuk pencarian
+
+            $vault->religion_encrypted = $validated['religion'] ? Religion::tryFrom($validated['religion'])?->value : null;
+            $vault->religion_hash = $validated['religion'] ? $this->blindIndexHash($validated['religion']) : null;
+
+            $vault->save();
+
+            // Lanjut ke step 2
+            return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 2], 303);
+        }
+
+        // --- STEP 2: ALAMAT & KONTAK ---
+        if ($step === 2) {
+            $validated = $request->validate([
+                'phone_number'       => 'nullable|string',
+                'email'              => 'nullable|email',
+                'residence_type'     => 'nullable|string',
+                'transportation'     => 'nullable|string',
+                'distance_to_school' => 'nullable|string',
+                'address'            => 'required|string',
+                // Tambahkan rule rt, rw, desa, dll.
+            ]);
+
+            $student->update([
+                'residence_type'     => $validated['residence_type'],
+                'transportation'     => $validated['transportation'],
+                'distance_to_school' => $validated['distance_to_school'],
+            ]);
+
+            // Update vault kontak...
+            return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 3], 303);
+        }
+
+        // --- STEP 3: ORANGTUA/WALI (BARU) ---
+        if ($step === 3) {
+            $validated = $request->validate([
+                'guardian_name'          => 'required|string|max:255',
+                'guardian_relationship'  => 'required|in:father,mother,guardian',
+                'guardian_living_status' => 'required|in:alive,deceased',
+                'guardian_birth_year'    => 'nullable|numeric|digits:4',
+                'guardian_occupation'    => 'nullable|string|max:255',
+                'guardian_education'     => 'nullable|string|max:255',
+                'guardian_income_range'  => 'nullable|string|max:255',
+                'guardian_nik'           => 'nullable|numeric',
+                'guardian_phone_number'  => 'nullable|string',
+                'guardian_address'       => 'nullable|string',
+            ]);
+
+            // Gunakan updateOrCreate untuk mengelola data Guardian pertama
+            $guardian = $student->guardians()->updateOrCreate(
+                ['relationship' => $validated['guardian_relationship']], // Asumsi 1 relasi utama
+                [
+                    'name'          => $validated['guardian_name'],
+                    'living_status' => $validated['guardian_living_status'],
+                    'birth_year'    => $validated['guardian_birth_year'],
+                    'occupation'    => $validated['guardian_occupation'],
+                    'education'     => $validated['guardian_education'],
+                    'income_range'  => $validated['guardian_income_range'],
+                ]
+            );
+
+            // Update Guardian Vault
+            $guardianVault = $guardian->vault ?? $guardian->vault()->create();
+            // Implementasikan enkripsi/hash sesuai pattern sistem Anda
+            $guardianVault->nik_encrypted = $validated['guardian_nik'];
+            $guardianVault->phone_number_encrypted = $validated['guardian_phone_number'];
+            $guardianVault->address_encrypted = $validated['guardian_address'];
+            $guardianVault->save();
+
+            return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 4], 303);
+        }
+
+        // --- STEP 4: AKADEMIK ---
+        if ($step === 4) {
+            $validated = $request->validate([
+                'previous_school'               => 'nullable|string|max:255',
+                'previous_school_npsn'          => 'nullable|numeric',
+                'previous_school_city'          => 'nullable|string|max:255',
+                'previous_school_province'      => 'nullable|string|max:255',
+                'graduation_certificate_number' => 'nullable|string|max:255',
+                'graduation_year'               => 'nullable|numeric|digits:4',
+            ]);
+
+            $student->update($validated);
+            return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 5], 303);
+        }
+
+        // --- STEP 5: KESEHATAN & SELESAI ---
+        if ($step === 5) {
+            $validated = $request->validate([
+                'height'                 => 'nullable|numeric|min:0',
+                'weight'                 => 'nullable|numeric|min:0',
+                'blood_type'             => 'nullable|string',
+                'is_special_condition'   => 'required|in:yes,no',
+                'special_condition_type' => 'nullable|string|required_if:is_special_condition,yes',
+                // ... validasi riwayat dll
+            ]);
+
+            $student->update($validated);
+
+            // Step terakhir sukses, kembalikan ke index (HTMX akan mengganti tabel utama)
+            return redirect()
+                ->route('admin.students.data.index', $request->query())
+                ->with('success', 'Data siswa berhasil diperbarui.');
+        }
     }
 
     public function destroy(Request $request, string $id)
@@ -111,51 +237,38 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $student->delete();
 
-        // Kembalikan ke index agar baseQuery dan state HTMX berjalan normal
-        return $this->index($request);
+        return redirect()
+            ->route('admin.students.index', $request->query())
+            ->with('success', 'Data siswa berhasil dihapus.');
     }
 
-    private function getStats($baseQuery, $semesterId): array
+    /**
+     * Base query yang dipakai bersama oleh tabel (paginate) dan kartu statistik.
+     */
+    private function buildBaseQuery(array $filters, ?string $semesterId)
     {
-        // 1. STATISTIK SEMESTER AKTIF
-        $totalStats = (clone $baseQuery)->count();
+        $query = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
+            $q->where('semester_id', $semesterId);
+        }])
+            // Syarat Mutlak: Harus terdaftar di rombel semester ini
+            ->whereHas('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
 
-        // PERBAIKAN DISINI: 
-        // Agar angka di kartu "Total Siswa Aktif" sama dengan total di tabel,
-        // kita harus memasukkan status 'graduated' ke dalam hitungan aktif 
-        // HANYA untuk siswa yang masih terikat di rombel semester berjalan ini.
-        $activeStats = (clone $baseQuery)->whereIn('status', ['active', 'graduated'])->count();
+        $studentFilter = new StudentFilter([
+            'search'        => $filters['search'] ?? null,
+            'status'        => $filters['filter_status'] ?? null,
+            'grade'         => $filters['filter_grade'] ?? null,
+            'gender'        => $filters['filter_gender'] ?? null,
+            'religion'      => $filters['filter_religion'] ?? null,
+            'special_needs' => $filters['filter_special_needs'] ?? null,
+            'concentration' => $filters['filter_concentration'] ?? null,
+        ], $semesterId);
 
-        $grade12Stats = (clone $baseQuery)->whereHas('activeClassGroup', function ($query) use ($semesterId) {
-            $query->where('grade_level', '12')->where('semester_id', $semesterId);
-        })->count();
-
-        $grade11Stats = (clone $baseQuery)->whereHas('activeClassGroup', function ($query) use ($semesterId) {
-            $query->where('grade_level', '11')->where('semester_id', $semesterId);
-        })->count();
-
-        $grade10Stats = (clone $baseQuery)->whereHas('activeClassGroup', function ($query) use ($semesterId) {
-            $query->where('grade_level', '10')->where('semester_id', $semesterId);
-        })->count();
-
-        // 2. STATISTIK HISTORIS (AKUMULATIF)
-        // Dihitung dari global (tabel acd_students langsung) karena alumni dan
-        // siswa pindah sudah tidak memiliki relasi ke semester aktif saat ini.
-        $graduatedStats = Student::where('status', 'graduated')->count();
-        $inactiveStats  = Student::whereIn('status', ['dropped_out', 'transferred_out'])->count();
-
-        return compact(
-            'totalStats',
-            'activeStats',
-            'graduatedStats',
-            'inactiveStats',
-            'grade12Stats',
-            'grade11Stats',
-            'grade10Stats'
-        );
+        return $studentFilter->apply($query);
     }
 
-    private function renderPartials($students, $stats): string
+    private function renderPartials($students, array $stats): string
     {
         $stats['isOob'] = true;
 

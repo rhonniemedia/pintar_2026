@@ -127,5 +127,7 @@
     'religionOptions' => $religionOptions,
     ])
 
+    <div id="modal-container"></div>
+
 </div>
 @endsection

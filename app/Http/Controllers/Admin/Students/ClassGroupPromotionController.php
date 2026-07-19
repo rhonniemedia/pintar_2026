@@ -84,9 +84,10 @@ class ClassGroupPromotionController extends Controller
         $nextSemester = $this->nextSemesterOf($classGroup);
 
         if (!$nextSemester) {
-            return redirect()
-                ->route('admin.students.group.show', $classGroup->id)
-                ->with('error', 'Semester berikutnya belum tersedia. Buat semester berikutnya terlebih dahulu sebelum memproses kenaikan kelas.');
+            // Kita juga mengubah response error agar sesuai dengan format yang ditangkap Frontend 
+            return response()->json([
+                'message' => 'Semester berikutnya belum tersedia. Buat semester berikutnya terlebih dahulu sebelum memproses kenaikan kelas.'
+            ], 422);
         }
 
         $targetClassGroup = ClassGroup::where('id', $data['target_class_group_id'])
@@ -120,9 +121,15 @@ class ClassGroupPromotionController extends Controller
             }
         });
 
-        return redirect()
-            ->route('admin.students.group.show', $classGroup->id)
-            ->with('success', 'Proses kenaikan kelas berhasil disimpan.');
+        // UBAH RETURN DI SINI
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Proses kenaikan kelas berhasil disimpan.'
+            ],
+            'refreshClassData' => true
+        ]));
     }
 
     public function promotionCancelForm(ClassGroup $classGroup)
@@ -159,9 +166,10 @@ class ClassGroupPromotionController extends Controller
         $nextSemester = $this->nextSemesterOf($classGroup);
 
         if (!$nextSemester) {
-            return redirect()
-                ->route('admin.students.group.show', $classGroup->id)
-                ->with('error', 'Tidak ada data kenaikan kelas yang bisa dibatalkan.');
+            // Kita juga mengubah response error agar sesuai dengan format yang ditangkap Frontend 
+            return response()->json([
+                'message' => 'Tidak ada data kenaikan kelas yang bisa dibatalkan.'
+            ], 422);
         }
 
         DB::transaction(function () use ($data, $classGroup, $nextSemester) {
@@ -176,9 +184,15 @@ class ClassGroupPromotionController extends Controller
             }
         });
 
-        return redirect()
-            ->route('admin.students.group.show', $classGroup->id)
-            ->with('success', 'Pembatalan kenaikan kelas berhasil disimpan.');
+        // UBAH RETURN DI SINI
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Dibatalkan!',
+                'text' => 'Pembatalan kenaikan kelas berhasil disimpan.'
+            ],
+            'refreshClassData' => true
+        ]));
     }
 
     /* =====================================================================
@@ -225,9 +239,10 @@ class ClassGroupPromotionController extends Controller
         $targetClassGroup = null;
         if ($data['decision'] === 'tidak-lulus') {
             if (!$nextSemester) {
-                return redirect()
-                    ->route('admin.students.group.show', $classGroup->id)
-                    ->with('error', 'Semester berikutnya belum tersedia. Buat semester berikutnya terlebih dahulu untuk memproses siswa tidak lulus.');
+                // Kita juga mengubah response error agar sesuai dengan format yang ditangkap Frontend 
+                return response()->json([
+                    'message' => 'Semester berikutnya belum tersedia. Buat semester berikutnya terlebih dahulu untuk memproses siswa tidak lulus.'
+                ], 422);
             }
 
             $targetClassGroup = ClassGroup::where('id', $data['target_class_group_id'])
@@ -274,9 +289,15 @@ class ClassGroupPromotionController extends Controller
             }
         });
 
-        return redirect()
-            ->route('admin.students.group.show', $classGroup->id)
-            ->with('success', 'Proses kelulusan berhasil disimpan.');
+        // UBAH RETURN DI SINI
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Proses kelulusan berhasil disimpan.'
+            ],
+            'refreshClassData' => true
+        ]));
     }
 
     public function graduationCancelForm(ClassGroup $classGroup)
@@ -335,9 +356,15 @@ class ClassGroupPromotionController extends Controller
             }
         });
 
-        return redirect()
-            ->route('admin.students.group.show', $classGroup->id)
-            ->with('success', 'Pembatalan kelulusan berhasil disimpan.');
+        // UBAH RETURN DI SINI
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Dibatalkan!',
+                'text' => 'Pembatalan kelulusan berhasil disimpan.'
+            ],
+            'refreshClassData' => true
+        ]));
     }
 
     /* =====================================================================

@@ -2,11 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\Student\Education;
-use App\Enums\Student\FamilyRelation;
-use App\Enums\Student\Income;
-use App\Enums\Student\LivingStatus;
-use App\Enums\Student\Profession;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,14 +15,6 @@ class Guardian extends Model
     protected $table = 'acd_guardians';
 
     protected $guarded = ['id'];
-
-    protected $casts = [
-        'relationship'  => FamilyRelation::class,
-        'living_status' => LivingStatus::class,
-        'occupation'    => Profession::class,
-        'education'     => Education::class,
-        'income_range'  => Income::class,
-    ];
 
     public function student(): BelongsTo
     {

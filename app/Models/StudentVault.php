@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\Student\Religion;
+use App\Models\Student;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,5 +39,19 @@ class StudentVault extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * Virtual Attribute untuk Agama (Religion)
+     * 
+     * Memungkinkan Anda mengakses $vault->religion sebagai Enum, 
+     * sementara sistem tetap menyimpan dan mengenkripsinya ke dalam $vault->religion_encrypted
+     */
+    protected function religion(): Attribute
+    {
+        return Attribute::make(
+            // Saat Get: Ambil nilai string yang sudah didekripsi oleh Laravel, ubah ke Enum
+            get: fn() => $this->religion_encrypted ? Religion::tryFrom($this->religion_encrypted) : null,
+        );
     }
 }
