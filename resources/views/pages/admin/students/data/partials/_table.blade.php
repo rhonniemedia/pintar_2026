@@ -1,5 +1,8 @@
 {{-- File: resources/views/pages/admin/students/data/partials/_table.blade.php --}}
-<div id="students-container">
+<div id="students-container"
+    hx-get="{{ request()->fullUrl() }}"
+    hx-trigger="refreshStudentData from:body"
+    hx-swap="outerHTML">
     <div class="overflow-x-auto">
         <table class="w-full text-left">
             <thead>

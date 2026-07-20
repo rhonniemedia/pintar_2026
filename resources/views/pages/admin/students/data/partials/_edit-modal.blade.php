@@ -1,7 +1,6 @@
 <div id="modal-container"
     x-data="{ 
         open: false,
-        isSpecial: '{{ old('is_special_condition', $student->is_special_condition ?? 'no') }}',
         closeModal() {
             this.open = false;
             setTimeout(() => document.getElementById('modal-container').outerHTML = '<div id=\'modal-container\'></div>', 300);
@@ -12,7 +11,12 @@
 
     <x-ui.modal show="open" maxWidth="3xl">
 
-        <div class="flex flex-col flex-1 min-h-0">
+        {{-- WADAH BARU: HTMX hanya akan mengganti elemen div ini beserta isinya, modal luarnya tidak tersentuh --}}
+        <div id="edit-modal-content" class="flex flex-col flex-1 min-h-0"
+            x-data="{ 
+                isSpecial: '{{ old('is_special_condition', $student->is_special_condition ?? 'no') }}',
+                isLoading: false
+            }">
 
             {{-- Modal Header --}}
             <div class="flex items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-slate-50/50 shrink-0">
@@ -35,9 +39,9 @@
             @php
             $steps = [
             1 => ['label' => 'Identitas', 'icon' => 'user'],
-            2 => ['label' => 'Alamat', 'icon' => 'map-pin'], // sebelumnya: Akademik
+            2 => ['label' => 'Alamat', 'icon' => 'map-pin'],
             3 => ['label' => 'Orangtua', 'icon' => 'users'],
-            4 => ['label' => 'Akademik', 'icon' => 'graduation-cap'], // sebelumnya: Kontak
+            4 => ['label' => 'Akademik', 'icon' => 'graduation-cap'],
             5 => ['label' => 'Kesehatan', 'icon' => 'activity'],
             ];
             $activeStep = (int) ($currentStep ?? 1);
@@ -49,7 +53,7 @@
                         <button type="button"
                             @if($number < $activeStep)
                             hx-get="{{ route('admin.students.edit.personal', ['id' => $student->id, 'step' => $number]) }}"
-                            hx-target="#modal-container" hx-swap="outerHTML"
+                            hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML"
                             class="cursor-pointer relative z-10 flex items-center justify-center size-8 sm:size-9 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 bg-emerald-500 text-white hover:bg-emerald-600"
                             @else
                             disabled
@@ -83,7 +87,11 @@
 
                 @if($activeStep === 1)
                 {{-- STEP 1: IDENTITAS DIRI --}}
-                <form id="edit-student-form" hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 1]) }}" hx-target="#modal-container" hx-swap="outerHTML">
+                <form id="edit-student-form"
+                    @htmx:before-request="isLoading = true"
+                    @htmx:after-request="isLoading = false"
+                    hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 1]) }}"
+                    hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML">
                     @csrf @method('PUT')
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -150,7 +158,11 @@
 
                 @if($activeStep === 2)
                 {{-- STEP 2: ALAMAT & KONTAK --}}
-                <form id="edit-student-form" hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 2]) }}" hx-target="#modal-container" hx-swap="outerHTML">
+                <form id="edit-student-form"
+                    @htmx:before-request="isLoading = true"
+                    @htmx:after-request="isLoading = false"
+                    hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 2]) }}"
+                    hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML">
                     @csrf @method('PUT')
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -246,7 +258,11 @@
                 @if($activeStep === 3)
                 {{-- STEP 3: ORANGTUA / WALI --}}
                 @php $guardian = $student->guardians->first(); @endphp
-                <form id="edit-student-form" hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 3]) }}" hx-target="#modal-container" hx-swap="outerHTML">
+                <form id="edit-student-form"
+                    @htmx:before-request="isLoading = true"
+                    @htmx:after-request="isLoading = false"
+                    hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 3]) }}"
+                    hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML">
                     @csrf @method('PUT')
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -318,7 +334,11 @@
 
                 @if($activeStep === 4)
                 {{-- STEP 4: AKADEMIK & RIWAYAT --}}
-                <form id="edit-student-form" hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 4]) }}" hx-target="#modal-container" hx-swap="outerHTML">
+                <form id="edit-student-form"
+                    @htmx:before-request="isLoading = true"
+                    @htmx:after-request="isLoading = false"
+                    hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 4]) }}"
+                    hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML">
                     @csrf @method('PUT')
 
                     <div class="bg-cyan-50 border border-cyan-100 text-cyan-700 text-xs rounded-xl px-3.5 py-2.5 flex items-start gap-2 mb-4">
@@ -362,9 +382,12 @@
 
                 @if($activeStep === 5)
                 {{-- STEP 5: KESEHATAN & MINAT --}}
-                <form id="edit-student-form" hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 5]) }}"
-                    hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML"
-                    hx-on::after-request="if (event.detail.successful) window.dispatchEvent(new CustomEvent('close-modal'))">
+                <form id="edit-student-form"
+                    @htmx:before-request="isLoading = true"
+                    @htmx:after-request="isLoading = false"
+                    hx-put="{{ route('admin.students.edit.personal.update', ['id' => $student->id, 'step' => 5]) }}"
+                    hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML"
+                    hx-on::after-request="if (!event.detail.xhr.responseURL.includes('step=')) window.dispatchEvent(new CustomEvent('close-modal'))">
                     @csrf @method('PUT')
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -467,10 +490,9 @@
                         Batal
                     </button>
                     @else
-                    <!-- Menggunakan HTMX untuk kembali ke step sebelumnya -->
                     <button type="button"
                         hx-get="{{ route('admin.students.edit.personal', ['id' => $student->id, 'step' => $activeStep - 1]) }}"
-                        hx-target="#modal-container" hx-swap="outerHTML"
+                        hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML"
                         class="flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all cursor-pointer">
                         <i data-lucide="arrow-left" class="size-4"></i>
                         <span>Kembali</span>
@@ -482,26 +504,45 @@
                     <span class="hidden sm:inline text-xs text-secondary font-medium">Langkah {{ $activeStep }} dari 5</span>
 
                     @if($activeStep < 5)
-                        <!-- Tombol ini memicu form yang aktif melalui atribut `form="edit-student-form" ` -->
-                        <button type="submit" form="edit-student-form"
-                            class="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-sm shadow-primary/30 transition-all cursor-pointer">
+                        <button type="submit" form="edit-student-form" :disabled="isLoading"
+                        class="flex items-center justify-center min-w-[160px] px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-sm shadow-primary/30 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+
+                        {{-- Tampilan Normal --}}
+                        <div x-show="!isLoading" class="flex items-center gap-1.5">
                             <span>Simpan & Lanjut</span>
                             <i data-lucide="arrow-right" class="size-4"></i>
+                        </div>
+
+                        {{-- Tampilan Loading --}}
+                        <div x-show="isLoading" x-cloak class="flex items-center gap-1.5">
+                            <i data-lucide="loader-2" class="size-4 animate-spin"></i>
+                            <span>Menyimpan...</span>
+                        </div>
                         </button>
                         @else
-                        <button type="submit" form="edit-student-form"
-                            class="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-sm shadow-primary/30 transition-all cursor-pointer">
-                            Simpan Perubahan Final
+                        <button type="submit" form="edit-student-form" :disabled="isLoading"
+                            class="flex items-center justify-center min-w-[210px] px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-sm shadow-primary/30 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+
+                            {{-- Tampilan Normal --}}
+                            <div x-show="!isLoading" class="flex items-center gap-1.5">
+                                <span>Simpan Perubahan Final</span>
+                            </div>
+
+                            {{-- Tampilan Loading --}}
+                            <div x-show="isLoading" x-cloak class="flex items-center gap-1.5">
+                                <i data-lucide="loader-2" class="size-4 animate-spin"></i>
+                                <span>Menyimpan...</span>
+                            </div>
                         </button>
                         @endif
                 </div>
             </div>
 
+            {{-- Script ditempatkan di sini agar dieksekusi ulang saat HTMX mengganti konten --}}
+            <script>
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            </script>
+
         </div>
     </x-ui.modal>
-
-    {{-- Re-initialize Lucide Icons di dalam DOM modal yang baru di-load HTMX --}}
-    <script>
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    </script>
 </div>

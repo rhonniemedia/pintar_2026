@@ -4,15 +4,12 @@ namespace App\Http\Controllers\Admin\Students;
 
 use App\Enums\Student\Religion;
 use App\Filters\StudentFilter;
-// Religion dipakai di update() untuk Religion::tryFrom(), bukan lagi untuk
-// membangun daftar opsi <select> — blade agama sekarang loop Religion::cases() sendiri.
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Students\UpdateStudentRequest;
 use App\Models\CoreConcentration;
 use App\Models\CoreSemester;
 use App\Models\Student;
 use App\Services\StudentStatsService;
-use App\Support\StudentVaultMapper;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
 
@@ -37,12 +34,9 @@ class StudentController extends Controller
         ]);
 
         $semesterId = CoreSemester::where('status', 'active')->value('id');
-
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
-
         $baseQuery = $this->buildBaseQuery($filters, $semesterId);
 
-        // Lempar base query ke penghitung stats agar angka ikut terfilter dinamis
         $stats = $this->statsService->getStats(clone $baseQuery, $semesterId);
 
         $students = (clone $baseQuery)
@@ -74,124 +68,95 @@ class StudentController extends Controller
     public function show(string $id)
     {
         $student = Student::with(['vault', 'concentration', 'activeClassGroup'])->findOrFail($id);
-
         return view('pages.admin.students.data.partials._show-modal', compact('student'));
     }
 
     public function showGuardian(string $id)
     {
         $student = Student::with(['guardians.vault'])->findOrFail($id);
-
         return view('pages.admin.students.data.partials._show-guardian-modal', compact('student'));
     }
 
     public function edit(Request $request, string $id)
     {
-        // Load student beserta guardian pertama (jika ada)
         $student = Student::with(['vault', 'guardians.vault'])->findOrFail($id);
         $currentStep = $request->query('step', 1);
 
         return view('pages.admin.students.data.partials._edit-modal', compact('student', 'currentStep'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateStudentRequest $request, string $id)
     {
         $student = Student::with(['vault', 'guardians.vault'])->findOrFail($id);
         $step = (int) $request->query('step', 1);
 
+        // Jika kode mencapai baris ini, berarti validasi sudah lolos di UpdateStudentRequest
+        $validated = $request->validated();
+
         // --- STEP 1: IDENTITAS ---
         if ($step === 1) {
-            $validated = $request->validate([
-                'name'               => 'required|string|max:255',
-                'gender'             => 'required|in:L,P',
-                'nick_name'          => 'nullable|string|max:255',
-                'pob'                => 'nullable|string|max:255',
-                'dob'                => 'nullable|date',
-                'religion'           => 'nullable|string',
-                'nik'                => 'nullable|numeric|digits_between:15,17',
-                'child_order'        => 'nullable|integer|min:1',
-                'number_of_siblings' => 'nullable|integer|min:0',
-            ]);
-
             $student->update([
                 'name'               => $validated['name'],
-                'nick_name'          => $validated['nick_name'],
+                'nick_name'          => $validated['nick_name'] ?? null,
                 'gender'             => $validated['gender'],
-                'child_order'        => $validated['child_order'],
-                'number_of_siblings' => $validated['number_of_siblings'],
+                'child_order'        => $validated['child_order'] ?? null,
+                'number_of_siblings' => $validated['number_of_siblings'] ?? null,
             ]);
 
-            $vault = $student->vault;
-            $vault->pob_encrypted = $validated['pob'];
-            $vault->dob_encrypted = $validated['dob'];
-            $vault->nik_encrypted = $validated['nik'];
-            $vault->nik_hash      = $validated['nik'] ? $this->blindIndexHash($validated['nik']) : null; // kalau ada kolom nik_hash untuk pencarian
-
-            $vault->religion_encrypted = $validated['religion'] ? Religion::tryFrom($validated['religion'])?->value : null;
-            $vault->religion_hash = $validated['religion'] ? $this->blindIndexHash($validated['religion']) : null;
-
+            $vault = $student->vault ?? $student->vault()->create();
+            $vault->pob_encrypted = $validated['pob'] ?? null;
+            $vault->dob_encrypted = $validated['dob'] ?? null;
+            $vault->nik_encrypted = $validated['nik'] ?? null;
+            $vault->nik_hash      = !empty($validated['nik']) ? $this->blindIndexHash($validated['nik']) : null;
+            $vault->religion_encrypted = !empty($validated['religion']) ? Religion::tryFrom($validated['religion'])?->value : null;
+            $vault->religion_hash = !empty($validated['religion']) ? $this->blindIndexHash($validated['religion']) : null;
             $vault->save();
 
-            // Lanjut ke step 2
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 2], 303);
         }
 
         // --- STEP 2: ALAMAT & KONTAK ---
         if ($step === 2) {
-            $validated = $request->validate([
-                'phone_number'       => 'nullable|string',
-                'email'              => 'nullable|email',
-                'residence_type'     => 'nullable|string',
-                'transportation'     => 'nullable|string',
-                'distance_to_school' => 'nullable|string',
-                'address'            => 'required|string',
-                // Tambahkan rule rt, rw, desa, dll.
-            ]);
-
             $student->update([
-                'residence_type'     => $validated['residence_type'],
-                'transportation'     => $validated['transportation'],
-                'distance_to_school' => $validated['distance_to_school'],
+                'residence_type'     => $validated['residence_type'] ?? null,
+                'transportation'     => $validated['transportation'] ?? null,
+                'distance_to_school' => $validated['distance_to_school'] ?? null,
             ]);
 
-            // Update vault kontak...
+            $vault = $student->vault ?? $student->vault()->create();
+            $vault->phone_number_encrypted = $validated['phone_number'] ?? null;
+            $vault->email_encrypted        = $validated['email'] ?? null;
+            $vault->address_encrypted      = $validated['address'] ?? null;
+            $vault->rt_encrypted           = $validated['rt'] ?? null;
+            $vault->rw_encrypted           = $validated['rw'] ?? null;
+            $vault->village_encrypted      = $validated['village'] ?? null;
+            $vault->district_encrypted     = $validated['district'] ?? null;
+            $vault->regency_encrypted      = $validated['regency'] ?? null;
+            $vault->province_encrypted     = $validated['province'] ?? null;
+            $vault->postal_code_encrypted  = $validated['postal_code'] ?? null;
+            $vault->save();
+
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 3], 303);
         }
 
-        // --- STEP 3: ORANGTUA/WALI (BARU) ---
+        // --- STEP 3: ORANGTUA/WALI ---
         if ($step === 3) {
-            $validated = $request->validate([
-                'guardian_name'          => 'required|string|max:255',
-                'guardian_relationship'  => 'required|in:father,mother,guardian',
-                'guardian_living_status' => 'required|in:alive,deceased',
-                'guardian_birth_year'    => 'nullable|numeric|digits:4',
-                'guardian_occupation'    => 'nullable|string|max:255',
-                'guardian_education'     => 'nullable|string|max:255',
-                'guardian_income_range'  => 'nullable|string|max:255',
-                'guardian_nik'           => 'nullable|numeric',
-                'guardian_phone_number'  => 'nullable|string',
-                'guardian_address'       => 'nullable|string',
-            ]);
-
-            // Gunakan updateOrCreate untuk mengelola data Guardian pertama
             $guardian = $student->guardians()->updateOrCreate(
-                ['relationship' => $validated['guardian_relationship']], // Asumsi 1 relasi utama
+                ['relationship' => $validated['guardian_relationship']],
                 [
                     'name'          => $validated['guardian_name'],
                     'living_status' => $validated['guardian_living_status'],
-                    'birth_year'    => $validated['guardian_birth_year'],
-                    'occupation'    => $validated['guardian_occupation'],
-                    'education'     => $validated['guardian_education'],
-                    'income_range'  => $validated['guardian_income_range'],
+                    'birth_year'    => $validated['guardian_birth_year'] ?? null,
+                    'occupation'    => $validated['guardian_occupation'] ?? null,
+                    'education'     => $validated['guardian_education'] ?? null,
+                    'income_range'  => $validated['guardian_income_range'] ?? null,
                 ]
             );
 
-            // Update Guardian Vault
             $guardianVault = $guardian->vault ?? $guardian->vault()->create();
-            // Implementasikan enkripsi/hash sesuai pattern sistem Anda
-            $guardianVault->nik_encrypted = $validated['guardian_nik'];
-            $guardianVault->phone_number_encrypted = $validated['guardian_phone_number'];
-            $guardianVault->address_encrypted = $validated['guardian_address'];
+            $guardianVault->nik_encrypted = $validated['guardian_nik'] ?? null;
+            $guardianVault->phone_number_encrypted = $validated['guardian_phone_number'] ?? null;
+            $guardianVault->address_encrypted = $validated['guardian_address'] ?? null;
             $guardianVault->save();
 
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 4], 303);
@@ -199,37 +164,47 @@ class StudentController extends Controller
 
         // --- STEP 4: AKADEMIK ---
         if ($step === 4) {
-            $validated = $request->validate([
-                'previous_school'               => 'nullable|string|max:255',
-                'previous_school_npsn'          => 'nullable|numeric',
-                'previous_school_city'          => 'nullable|string|max:255',
-                'previous_school_province'      => 'nullable|string|max:255',
-                'graduation_certificate_number' => 'nullable|string|max:255',
-                'graduation_year'               => 'nullable|numeric|digits:4',
+            $student->update([
+                'previous_school'               => $validated['previous_school'] ?? null,
+                'previous_school_npsn'          => $validated['previous_school_npsn'] ?? null,
+                'previous_school_city'          => $validated['previous_school_city'] ?? null,
+                'previous_school_province'      => $validated['previous_school_province'] ?? null,
+                'graduation_certificate_number' => $validated['graduation_certificate_number'] ?? null,
+                'graduation_year'               => $validated['graduation_year'] ?? null,
             ]);
 
-            $student->update($validated);
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 5], 303);
         }
 
         // --- STEP 5: KESEHATAN & SELESAI ---
         if ($step === 5) {
-            $validated = $request->validate([
-                'height'                 => 'nullable|numeric|min:0',
-                'weight'                 => 'nullable|numeric|min:0',
-                'blood_type'             => 'nullable|string',
-                'is_special_condition'   => 'required|in:yes,no',
-                'special_condition_type' => 'nullable|string|required_if:is_special_condition,yes',
-                // ... validasi riwayat dll
+            $student->update([
+                'height'                 => $validated['height'] ?? null,
+                'weight'                 => $validated['weight'] ?? null,
+                'blood_type'             => $validated['blood_type'] ?? null,
+                'is_special_condition'   => $validated['is_special_condition'] ?? 'no',
+                'special_condition_type' => $validated['special_condition_type'] ?? null,
+                'condition_description'  => $validated['condition_description'] ?? null,
+                'medical_history'        => $validated['medical_history'] ?? null,
+                'interest_art'           => $validated['interest_art'] ?? null,
+                'interest_sport'         => $validated['interest_sport'] ?? null,
+                'interest_organization'  => $validated['interest_organization'] ?? null,
+                'extracurricular_choice' => $validated['extracurricular_choice'] ?? null,
             ]);
 
-            $student->update($validated);
-
-            // Step terakhir sukses, kembalikan ke index (HTMX akan mengganti tabel utama)
-            return redirect()
-                ->route('admin.students.data.index', $request->query())
-                ->with('success', 'Data siswa berhasil diperbarui.');
+            // Menggunakan pola HX-Trigger dari ClassGroupPromotionController
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'close-modal' => true, // Mengirim event untuk menutup modal Alpine
+                'showAlert' => [
+                    'icon' => 'success',
+                    'title' => 'Berhasil!',
+                    'text' => 'Data siswa berhasil diperbarui.'
+                ],
+                'refreshStudentData' => true // Mengirim event untuk me-refresh tabel
+            ]));
         }
+
+        return redirect()->route('admin.students.data.index', $request->query(), 303);
     }
 
     public function destroy(Request $request, string $id)
@@ -237,20 +212,21 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $student->delete();
 
-        return redirect()
-            ->route('admin.students.index', $request->query())
-            ->with('success', 'Data siswa berhasil dihapus.');
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Dihapus!',
+                'text' => 'Data siswa berhasil dihapus.'
+            ],
+            'refreshStudentData' => true
+        ]));
     }
 
-    /**
-     * Base query yang dipakai bersama oleh tabel (paginate) dan kartu statistik.
-     */
     private function buildBaseQuery(array $filters, ?string $semesterId)
     {
         $query = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
             $q->where('semester_id', $semesterId);
         }])
-            // Syarat Mutlak: Harus terdaftar di rombel semester ini
             ->whereHas('activeClassGroup', function ($q) use ($semesterId) {
                 $q->where('semester_id', $semesterId);
             });
@@ -271,7 +247,6 @@ class StudentController extends Controller
     private function renderPartials($students, array $stats): string
     {
         $stats['isOob'] = true;
-
         $tableHtml = view('pages.admin.students.data.partials._table', compact('students'))->render();
         $statsHtml = view('pages.admin.students.data.partials._stats-cards', $stats)->render();
 
