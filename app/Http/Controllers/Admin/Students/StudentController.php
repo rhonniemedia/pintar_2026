@@ -90,26 +90,41 @@ class StudentController extends Controller
         $student = Student::with(['vault', 'guardians.vault'])->findOrFail($id);
         $step = (int) $request->query('step', 1);
 
-        // Jika kode mencapai baris ini, berarti validasi sudah lolos di UpdateStudentRequest
+        // Validasi lolos, bersihkan data null agar tidak menimpa database dengan nilai kosong
         $validated = $request->validated();
+
+        // Fungsi bantuan untuk membersihkan array dari nilai null
+        $filterNulls = fn($array) => array_filter($array, fn($val) => !is_null($val));
 
         // --- STEP 1: IDENTITAS ---
         if ($step === 1) {
-            $student->update([
-                'name'               => $validated['name'],
+            $studentData = $filterNulls([
+                'name'               => $validated['name'] ?? null,
                 'nick_name'          => $validated['nick_name'] ?? null,
-                'gender'             => $validated['gender'],
+                'gender'             => $validated['gender'] ?? null,
                 'child_order'        => $validated['child_order'] ?? null,
                 'number_of_siblings' => $validated['number_of_siblings'] ?? null,
             ]);
 
+            if (!empty($studentData)) {
+                $student->update($studentData);
+            }
+
             $vault = $student->vault ?? $student->vault()->create();
-            $vault->pob_encrypted = $validated['pob'] ?? null;
-            $vault->dob_encrypted = $validated['dob'] ?? null;
-            $vault->nik_encrypted = $validated['nik'] ?? null;
-            $vault->nik_hash      = !empty($validated['nik']) ? $this->blindIndexHash($validated['nik']) : null;
-            $vault->religion_encrypted = !empty($validated['religion']) ? Religion::tryFrom($validated['religion'])?->value : null;
-            $vault->religion_hash = !empty($validated['religion']) ? $this->blindIndexHash($validated['religion']) : null;
+
+            if (!is_null($validated['pob'] ?? null)) $vault->pob_encrypted = $validated['pob'];
+            if (!is_null($validated['dob'] ?? null)) $vault->dob_encrypted = $validated['dob'];
+
+            if (!is_null($validated['nik'] ?? null)) {
+                $vault->nik_encrypted = $validated['nik'];
+                $vault->nik_hash      = $this->blindIndexHash($validated['nik']);
+            }
+
+            if (!is_null($validated['religion'] ?? null)) {
+                $vault->religion_encrypted = Religion::tryFrom($validated['religion'])?->value;
+                $vault->religion_hash = $this->blindIndexHash($validated['religion']);
+            }
+
             $vault->save();
 
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 2], 303);
@@ -117,23 +132,37 @@ class StudentController extends Controller
 
         // --- STEP 2: ALAMAT & KONTAK ---
         if ($step === 2) {
-            $student->update([
+            $studentData = $filterNulls([
                 'residence_type'     => $validated['residence_type'] ?? null,
                 'transportation'     => $validated['transportation'] ?? null,
                 'distance_to_school' => $validated['distance_to_school'] ?? null,
             ]);
 
+            if (!empty($studentData)) {
+                $student->update($studentData);
+            }
+
             $vault = $student->vault ?? $student->vault()->create();
-            $vault->phone_number_encrypted = $validated['phone_number'] ?? null;
-            $vault->email_encrypted        = $validated['email'] ?? null;
-            $vault->address_encrypted      = $validated['address'] ?? null;
-            $vault->rt_encrypted           = $validated['rt'] ?? null;
-            $vault->rw_encrypted           = $validated['rw'] ?? null;
-            $vault->village_encrypted      = $validated['village'] ?? null;
-            $vault->district_encrypted     = $validated['district'] ?? null;
-            $vault->regency_encrypted      = $validated['regency'] ?? null;
-            $vault->province_encrypted     = $validated['province'] ?? null;
-            $vault->postal_code_encrypted  = $validated['postal_code'] ?? null;
+
+            $vaultFields = [
+                'phone_number' => 'phone_number_encrypted',
+                'email'        => 'email_encrypted',
+                'address'      => 'address_encrypted',
+                'rt'           => 'rt_encrypted',
+                'rw'           => 'rw_encrypted',
+                'village'      => 'village_encrypted',
+                'district'     => 'district_encrypted',
+                'regency'      => 'regency_encrypted',
+                'province'     => 'province_encrypted',
+                'postal_code'  => 'postal_code_encrypted'
+            ];
+
+            foreach ($vaultFields as $requestKey => $dbColumn) {
+                if (!is_null($validated[$requestKey] ?? null)) {
+                    $vault->{$dbColumn} = $validated[$requestKey];
+                }
+            }
+
             $vault->save();
 
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 3], 303);
@@ -141,30 +170,41 @@ class StudentController extends Controller
 
         // --- STEP 3: ORANGTUA/WALI ---
         if ($step === 3) {
-            $guardian = $student->guardians()->updateOrCreate(
-                ['relationship' => $validated['guardian_relationship']],
-                [
-                    'name'          => $validated['guardian_name'],
-                    'living_status' => $validated['guardian_living_status'],
-                    'birth_year'    => $validated['guardian_birth_year'] ?? null,
-                    'occupation'    => $validated['guardian_occupation'] ?? null,
-                    'education'     => $validated['guardian_education'] ?? null,
-                    'income_range'  => $validated['guardian_income_range'] ?? null,
-                ]
-            );
+            foreach ($validated['guardians'] as $relation => $guardianData) {
+                // Abaikan dan jangan ubah apapun jika user mengosongkan nama orangtua/wali
+                if (empty($guardianData['name'])) {
+                    continue;
+                }
 
-            $guardianVault = $guardian->vault ?? $guardian->vault()->create();
-            $guardianVault->nik_encrypted = $validated['guardian_nik'] ?? null;
-            $guardianVault->phone_number_encrypted = $validated['guardian_phone_number'] ?? null;
-            $guardianVault->address_encrypted = $validated['guardian_address'] ?? null;
-            $guardianVault->save();
+                $guardianUpdateData = $filterNulls([
+                    'name'          => $guardianData['name'] ?? null,
+                    'living_status' => $guardianData['living_status'] ?? null,
+                    'birth_year'    => $guardianData['birth_year'] ?? null,
+                    'occupation'    => $guardianData['occupation'] ?? null,
+                    'education'     => $guardianData['education'] ?? null,
+                    'income_range'  => $guardianData['income_range'] ?? null,
+                ]);
+
+                $guardian = $student->guardians()->updateOrCreate(
+                    ['relationship' => $relation],
+                    $guardianUpdateData
+                );
+
+                $guardianVault = $guardian->vault ?? $guardian->vault()->create();
+
+                if (!is_null($guardianData['nik'] ?? null)) $guardianVault->nik_encrypted = $guardianData['nik'];
+                if (!is_null($guardianData['phone_number'] ?? null)) $guardianVault->phone_number_encrypted = $guardianData['phone_number'];
+                if (!is_null($guardianData['address'] ?? null)) $guardianVault->address_encrypted = $guardianData['address'];
+
+                $guardianVault->save();
+            }
 
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 4], 303);
         }
 
         // --- STEP 4: AKADEMIK ---
         if ($step === 4) {
-            $student->update([
+            $studentData = $filterNulls([
                 'previous_school'               => $validated['previous_school'] ?? null,
                 'previous_school_npsn'          => $validated['previous_school_npsn'] ?? null,
                 'previous_school_city'          => $validated['previous_school_city'] ?? null,
@@ -173,16 +213,20 @@ class StudentController extends Controller
                 'graduation_year'               => $validated['graduation_year'] ?? null,
             ]);
 
+            if (!empty($studentData)) {
+                $student->update($studentData);
+            }
+
             return redirect()->route('admin.students.edit.personal', ['id' => $id, 'step' => 5], 303);
         }
 
         // --- STEP 5: KESEHATAN & SELESAI ---
         if ($step === 5) {
-            $student->update([
+            $studentData = $filterNulls([
                 'height'                 => $validated['height'] ?? null,
                 'weight'                 => $validated['weight'] ?? null,
                 'blood_type'             => $validated['blood_type'] ?? null,
-                'is_special_condition'   => $validated['is_special_condition'] ?? 'no',
+                'is_special_condition'   => $validated['is_special_condition'] ?? null,
                 'special_condition_type' => $validated['special_condition_type'] ?? null,
                 'condition_description'  => $validated['condition_description'] ?? null,
                 'medical_history'        => $validated['medical_history'] ?? null,
@@ -192,15 +236,18 @@ class StudentController extends Controller
                 'extracurricular_choice' => $validated['extracurricular_choice'] ?? null,
             ]);
 
-            // Menggunakan pola HX-Trigger dari ClassGroupPromotionController
+            if (!empty($studentData)) {
+                $student->update($studentData);
+            }
+
             return response()->noContent()->header('HX-Trigger', json_encode([
-                'close-modal' => true, // Mengirim event untuk menutup modal Alpine
+                'close-modal' => true,
                 'showAlert' => [
                     'icon' => 'success',
                     'title' => 'Berhasil!',
                     'text' => 'Data siswa berhasil diperbarui.'
                 ],
-                'refreshStudentData' => true // Mengirim event untuk me-refresh tabel
+                'refreshStudentData' => true
             ]));
         }
 

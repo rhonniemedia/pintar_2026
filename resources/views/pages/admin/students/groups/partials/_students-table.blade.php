@@ -53,8 +53,8 @@
 
                     <td class="px-4 py-4">
                         <div class="flex items-center gap-2">
-                            <span class="px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold font-mono">{{ $r->nis ?? '-' }}</span>
-                            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold font-mono">{{ $nisn }}</span>
+                            <span class="inline-block w-20 text-center px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold">{{ $r->nis ?? '-' }}</span>
+                            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold">{{ $nisn }}</span>
                         </div>
                     </td>
 
@@ -63,7 +63,7 @@
                             <!-- {{ route('admin.students.edit.personal', $r->id) }} -->
                             <a href="#" title="Edit"
                                 class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
-                                <i data-lucide="file-pen-line" class="size-4 pointer-events-none"></i>
+                                <i data-lucide="book-alert" class="size-4 pointer-events-none"></i>
                             </a>
                             <button type="button" title="Pindah Kelas"
                                 hx-get="{{ route('admin.students.group.student.move-form', ['classGroup' => $classGroup->id, 'student' => $r->id]) }}"

@@ -22,10 +22,8 @@ class UpdateStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        // Ambil info step dari URL (?step=...)
         $step = (int) $this->query('step', 1);
 
-        // Hanya jalankan validasi untuk step yang sedang aktif
         return match ($step) {
             1 => [ // Identitas
                 'name'               => ['required', 'string', 'max:255'],
@@ -38,7 +36,7 @@ class UpdateStudentRequest extends FormRequest
                 'child_order'        => ['nullable', 'integer', 'min:1'],
                 'number_of_siblings' => ['nullable', 'integer', 'min:0'],
             ],
-            2 => [ // Kontak & Alamat (Posisi baru di Step 2)
+            2 => [ // Kontak & Alamat
                 'phone_number'       => ['nullable', 'string', 'max:20'],
                 'email'              => ['nullable', 'email', 'max:255'],
                 'residence_type'     => ['nullable', 'in:' . $this->enumValues(ResidenceType::class)],
@@ -53,19 +51,43 @@ class UpdateStudentRequest extends FormRequest
                 'province'           => ['nullable', 'string', 'max:100'],
                 'postal_code'        => ['nullable', 'string', 'max:10'],
             ],
-            3 => [ // Orangtua / Wali (Rule tambahan)
-                'guardian_name'          => ['required', 'string', 'max:255'],
-                'guardian_relationship'  => ['required', 'in:father,mother,guardian'],
-                'guardian_living_status' => ['required', 'in:alive,deceased'],
-                'guardian_birth_year'    => ['nullable', 'numeric', 'digits:4'],
-                'guardian_occupation'    => ['nullable', 'string', 'max:255'],
-                'guardian_education'     => ['nullable', 'string', 'max:255'],
-                'guardian_income_range'  => ['nullable', 'string', 'max:255'],
-                'guardian_nik'           => ['nullable', 'string', 'max:32'],
-                'guardian_phone_number'  => ['nullable', 'string', 'max:20'],
-                'guardian_address'       => ['nullable', 'string'],
+            3 => [ // Orangtua / Wali
+                'guardians' => ['required', 'array'],
+
+                // --- Validasi Ayah (Wajib) ---
+                'guardians.father.name'          => ['required', 'string', 'max:255'],
+                'guardians.father.living_status' => ['required', 'in:alive,deceased'],
+                'guardians.father.birth_year'    => ['nullable', 'numeric', 'digits:4'],
+                'guardians.father.occupation'    => ['nullable', 'string', 'max:255'],
+                'guardians.father.education'     => ['nullable', 'string', 'max:255'],
+                'guardians.father.income_range'  => ['nullable', 'string', 'max:255'],
+                'guardians.father.nik'           => ['nullable', 'string', 'max:32'],
+                'guardians.father.phone_number'  => ['nullable', 'string', 'max:20'],
+                'guardians.father.address'       => ['nullable', 'string'],
+
+                // --- Validasi Ibu (Wajib) ---
+                'guardians.mother.name'          => ['required', 'string', 'max:255'],
+                'guardians.mother.living_status' => ['required', 'in:alive,deceased'],
+                'guardians.mother.birth_year'    => ['nullable', 'numeric', 'digits:4'],
+                'guardians.mother.occupation'    => ['nullable', 'string', 'max:255'],
+                'guardians.mother.education'     => ['nullable', 'string', 'max:255'],
+                'guardians.mother.income_range'  => ['nullable', 'string', 'max:255'],
+                'guardians.mother.nik'           => ['nullable', 'string', 'max:32'],
+                'guardians.mother.phone_number'  => ['nullable', 'string', 'max:20'],
+                'guardians.mother.address'       => ['nullable', 'string'],
+
+                // --- Validasi Wali (Opsional) ---
+                'guardians.guardian.name'          => ['nullable', 'string', 'max:255'],
+                'guardians.guardian.living_status' => ['nullable', 'in:alive,deceased'],
+                'guardians.guardian.birth_year'    => ['nullable', 'numeric', 'digits:4'],
+                'guardians.guardian.occupation'    => ['nullable', 'string', 'max:255'],
+                'guardians.guardian.education'     => ['nullable', 'string', 'max:255'],
+                'guardians.guardian.income_range'  => ['nullable', 'string', 'max:255'],
+                'guardians.guardian.nik'           => ['nullable', 'string', 'max:32'],
+                'guardians.guardian.phone_number'  => ['nullable', 'string', 'max:20'],
+                'guardians.guardian.address'       => ['nullable', 'string'],
             ],
-            4 => [ // Akademik (Posisi baru di Step 4)
+            4 => [ // Akademik
                 'previous_school'               => ['nullable', 'string', 'max:255'],
                 'previous_school_npsn'          => ['nullable', 'string', 'max:20'],
                 'previous_school_city'          => ['nullable', 'string', 'max:100'],
@@ -90,73 +112,57 @@ class UpdateStudentRequest extends FormRequest
         };
     }
 
-    /**
-     * Helper milikmu yang dipertahankan.
-     */
     private function enumValues(string $enumClass): string
     {
         return implode(',', array_column($enumClass::cases(), 'value'));
     }
 
-    /**
-     * Kustomisasi error khusus untuk HTMX agar mereturn Modal kembali, bukan melakukan redirect.
-     */
     protected function failedValidation(Validator $validator)
     {
         $id = $this->route('id');
         $step = (int) $this->query('step', 1);
 
-        // Menggunakan method bawaan Request (Lebih clean dan tidak dimarahi Intelephense)
         $this->flash();
 
         $student = Student::with(['vault', 'guardians.vault'])->findOrFail($id);
 
-        // Deklarasikan tipe class secara eksplisit untuk menghilangkan error 'withErrors'
         /** @var \Illuminate\View\View $view */
         $view = view('pages.admin.students.data.partials._edit-modal', [
             'student'     => $student,
             'currentStep' => $step
         ]);
 
-        // Suntikkan pesan error validasi ke dalam view
         $view->withErrors($validator);
 
         throw new HttpResponseException(response($view));
     }
 
-    /**
-     * Kustomisasi pesan error (Custom Messages)
-     */
     public function messages(): array
     {
         return [
-            // Pesan spesifik untuk field tertentu
-            'name.required'          => 'Nama lengkap wajib diisi.',
-            'gender.required'        => 'Jenis kelamin wajib dipilih.',
-            'address.required'       => 'Alamat wajib diisi.',
+            'name.required'                          => 'Nama lengkap wajib diisi.',
+            'gender.required'                        => 'Jenis kelamin wajib dipilih.',
+            'address.required'                       => 'Alamat wajib diisi.',
 
-            'guardian_name.required' => 'Nama wali wajib diisi.',
-            'guardian_relationship.required'  => 'Status relasi wajib dipilih.',
-            'guardian_living_status.required' => 'Status kehidupan wajib dipilih.',
+            // Pesan error spesifik untuk relasi Orangtua
+            'guardians.father.name.required'         => 'Nama ayah wajib diisi.',
+            'guardians.father.living_status.required' => 'Status kehidupan ayah wajib dipilih.',
+            'guardians.mother.name.required'         => 'Nama ibu wajib diisi.',
+            'guardians.mother.living_status.required' => 'Status kehidupan ibu wajib dipilih.',
 
-            // Pesan umum (fallback) untuk semua field yang menggunakan rule ini
-            'required'    => ':attribute wajib diisi.',
-            'string'      => ':attribute harus berupa teks.',
-            'max'         => ':attribute maksimal :max karakter.',
-            'min'         => ':attribute minimal :min karakter.',
-            'in'          => 'Pilihan :attribute tidak valid.',
-            'numeric'     => ':attribute hanya boleh berisi angka.',
-            'digits'      => ':attribute harus berisi tepat :digits angka.',
+            'required'       => ':attribute wajib diisi.',
+            'string'         => ':attribute harus berupa teks.',
+            'max'            => ':attribute maksimal :max karakter.',
+            'min'            => ':attribute minimal :min karakter.',
+            'in'             => 'Pilihan :attribute tidak valid.',
+            'numeric'        => ':attribute hanya boleh berisi angka.',
+            'digits'         => ':attribute harus berisi tepat :digits angka.',
             'digits_between' => ':attribute harus berisi antara :min sampai :max angka.',
-            'email'       => 'Format :attribute tidak valid.',
-            'date'        => 'Format tanggal tidak valid.',
+            'email'          => 'Format :attribute tidak valid.',
+            'date'           => 'Format tanggal tidak valid.',
         ];
     }
 
-    /**
-     * Kustomisasi nama alias kolom (Custom Attributes)
-     * Ini digunakan untuk mengganti kata ":attribute" pada pesan fallback di atas.
-     */
     public function attributes(): array
     {
         return [
@@ -177,15 +183,35 @@ class UpdateStudentRequest extends FormRequest
             'distance_to_school'    => 'Jarak ke Sekolah',
             'address'               => 'Alamat Lengkap',
 
-            'guardian_name'          => 'Nama Wali',
-            'guardian_relationship'  => 'Status Relasi',
-            'guardian_living_status' => 'Status Kehidupan',
-            'guardian_birth_year'    => 'Tahun Lahir Wali',
-            'guardian_occupation'    => 'Pekerjaan Wali',
-            'guardian_education'     => 'Pendidikan Terakhir Wali',
-            'guardian_income_range'  => 'Rentang Penghasilan Wali',
-            'guardian_nik'           => 'NIK Wali',
-            'guardian_phone_number'  => 'No Telepon Wali',
+            // Alias untuk atribut Ayah
+            'guardians.father.name'         => 'Nama Ayah',
+            'guardians.father.birth_year'   => 'Tahun Lahir Ayah',
+            'guardians.father.occupation'   => 'Pekerjaan Ayah',
+            'guardians.father.education'    => 'Pendidikan Terakhir Ayah',
+            'guardians.father.income_range' => 'Rentang Penghasilan Ayah',
+            'guardians.father.nik'          => 'NIK Ayah',
+            'guardians.father.phone_number' => 'No Telepon Ayah',
+            'guardians.father.address'      => 'Alamat Ayah',
+
+            // Alias untuk atribut Ibu
+            'guardians.mother.name'         => 'Nama Ibu',
+            'guardians.mother.birth_year'   => 'Tahun Lahir Ibu',
+            'guardians.mother.occupation'   => 'Pekerjaan Ibu',
+            'guardians.mother.education'    => 'Pendidikan Terakhir Ibu',
+            'guardians.mother.income_range' => 'Rentang Penghasilan Ibu',
+            'guardians.mother.nik'          => 'NIK Ibu',
+            'guardians.mother.phone_number' => 'No Telepon Ibu',
+            'guardians.mother.address'      => 'Alamat Ibu',
+
+            // Alias untuk atribut Wali
+            'guardians.guardian.name'         => 'Nama Wali',
+            'guardians.guardian.birth_year'   => 'Tahun Lahir Wali',
+            'guardians.guardian.occupation'   => 'Pekerjaan Wali',
+            'guardians.guardian.education'    => 'Pendidikan Terakhir Wali',
+            'guardians.guardian.income_range' => 'Rentang Penghasilan Wali',
+            'guardians.guardian.nik'          => 'NIK Wali',
+            'guardians.guardian.phone_number' => 'No Telepon Wali',
+            'guardians.guardian.address'      => 'Alamat Wali',
 
             'previous_school'       => 'Sekolah Asal',
             'previous_school_npsn'  => 'NPSN Sekolah Asal',

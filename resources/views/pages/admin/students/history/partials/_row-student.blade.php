@@ -50,8 +50,8 @@ default => 'bg-secondary/10 text-secondary',
 
     <td class="px-4 py-4">
         <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-bold font-mono" title="NIS">{{ $student->nis ?? '-' }}</span>
-            <span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-700 text-xs font-bold font-mono" title="NISN">{{ $nisn }}</span>
+            <span class="inline-block w-20 text-center px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold">{{ $student->nis ?? '-' }}</span>
+            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold">{{ $nisn }}</span>
         </div>
     </td>
 

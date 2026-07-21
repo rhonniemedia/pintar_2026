@@ -28,8 +28,8 @@ $jurusan = $r->concentration->name ?? '-';
 
     <td class="px-4 py-4">
         <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold font-mono">{{ $r->nis ?? '-' }}</span>
-            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold font-mono">{{ $nisn }}</span>
+            <span class="inline-block w-20 text-center px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold">{{ $r->nis ?? '-' }}</span>
+            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold">{{ $nisn }}</span>
         </div>
     </td>
 
@@ -41,28 +41,28 @@ $jurusan = $r->concentration->name ?? '-';
     <td class="px-4 py-4">
         <div
             x-data="{
-        open: false,
-        dropUp: false,
+                open: false,
+                dropUp: false,
 
-        toggle() {
-            if (this.open) {
-                this.open = false;
-                return;
-            }
+                toggle() {
+                    if (this.open) {
+                        this.open = false;
+                        return;
+                    }
 
-            this.open = true;
+                    this.open = true;
 
-            this.$nextTick(() => {
-                const btn = this.$refs.button.getBoundingClientRect();
-                const menu = this.$refs.menu.getBoundingClientRect();
+                    this.$nextTick(() => {
+                        const btn = this.$refs.button.getBoundingClientRect();
+                        const menu = this.$refs.menu.getBoundingClientRect();
 
-                const spaceBelow = window.innerHeight - btn.bottom;
-                const spaceAbove = btn.top;
+                        const spaceBelow = window.innerHeight - btn.bottom;
+                        const spaceAbove = btn.top;
 
-                this.dropUp = spaceBelow < menu.height && spaceAbove > menu.height;
-            });
-        }
-    }"
+                        this.dropUp = spaceBelow < menu.height && spaceAbove > menu.height;
+                    });
+                }
+            }"
             @click.outside="open = false"
             class="relative inline-block text-left">
 
@@ -121,28 +121,23 @@ $jurusan = $r->concentration->name ?? '-';
 
                 <div class="my-2 border-t border-border"></div>
 
-                <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Edit</p>
+                <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Edit & Delete</p>
                 <button type="button"
                     @click="open = false"
                     hx-get="{{ route('admin.students.edit.personal', $r->id) }}"
                     hx-target="#modal-container"
                     hx-swap="outerHTML"
                     class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
-                    <i data-lucide="file-pen-line" class="size-4 text-secondary pointer-events-none"></i> Data Peserta Didik
+                    <i data-lucide="file-pen-line" class="size-4 text-secondary pointer-events-none"></i> Edit Data
                 </button>
-                <a href="{{ route('admin.students.edit.guardian', $r->id) }}"
-                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors">
-                    <i data-lucide="file-pen-line" class="size-4 text-secondary pointer-events-none"></i> Data Orang Tua
-                </a>
-
-                <div class="my-2 border-t border-border"></div>
 
                 <button type="button"
+                    disabled
                     hx-delete="{{ route('admin.students.data.destroy', $r->id) }}"
                     hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML"
                     hx-confirm="Yakin ingin menghapus data {{ $r->name }}? Tindakan ini tidak dapat dibatalkan."
-                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors cursor-pointer">
-                    <i data-lucide="trash-2" class="size-4 pointer-events-none"></i> Hapus
+                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-error opacity-50 cursor-not-allowed">
+                    <i data-lucide="trash-2" class="size-4 pointer-events-none"></i> Hapus Data
                 </button>
             </div>
         </div>
