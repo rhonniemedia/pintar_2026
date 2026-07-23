@@ -43,7 +43,7 @@ return new class extends Migration
             // --- Sejarah Penerimaan (Statis) ---
             $table->date('entry_date');
             $table->enum('registration_type', ['new', 'transfer'])->default('new');
-            $table->enum('entry_grade_level', ['10', '11', '12', '13'])->default('10'); // Mutlak, sejarah awal masuk
+            $table->enum('entry_grade_level', ['10', '11', '12'])->default('10'); // Mutlak, sejarah awal masuk
             $table->foreignUuid('concentration_id')->constrained('core_concentrations');
 
             // Status Siswa (Aktif/Lulus/Keluar/Pindah)

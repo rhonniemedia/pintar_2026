@@ -95,26 +95,27 @@
                     @csrf @method('PUT')
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                        {{-- Baris 1: Nama Lengkap (Full Width) --}}
                         <div class="sm:col-span-2">
                             <label class="{{ $labelClass }}">Nama Lengkap <span class="text-error">*</span></label>
                             <input type="text" name="name" value="{{ old('name', $student->name) }}" placeholder="Masukkan nama lengkap" class="{{ $inputClass }} @error('name') {{ $errorClass }} @enderror">
                             @error('name') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
+                        {{-- Baris 2: NIK & NISN --}}
                         <div>
-                            <label class="{{ $labelClass }}">Nama Panggilan</label>
-                            <input type="text" name="nick_name" value="{{ old('nick_name', $student->nick_name) }}" placeholder="Masukkan nama panggilan" class="{{ $inputClass }} @error('nick_name') {{ $errorClass }} @enderror">
-                            @error('nick_name') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                            <label class="{{ $labelClass }}">Nomor Induk Kependudukan (NIK)</label>
+                            <input type="text" name="nik" inputmode="numeric" maxlength="16" value="{{ old('nik', $student->vault->nik_encrypted ?? '') }}" placeholder="Masukkan 16 digit NIK" class="{{ $inputClass }} font-mono @error('nik') {{ $errorClass }} @enderror">
+                            @error('nik') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="{{ $labelClass }}">Jenis Kelamin <span class="text-error">*</span></label>
-                            <select name="gender" class="{{ $inputClass }} @error('gender') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Jenis Kelamin —</option>
-                                @foreach(\App\Enums\Student\Gender::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('gender', $student->gender?->value) === $option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
-                            @error('gender') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                            <label class="{{ $labelClass }}">NISN <span class="text-error">*</span></label>
+                            <input type="text" name="nisn" inputmode="numeric" maxlength="10" value="{{ old('nisn', $student->vault->nisn_encrypted ?? '') }}" placeholder="Masukkan NISN" class="{{ $inputClass }} font-mono @error('nisn') {{ $errorClass }} @enderror">
+                            @error('nisn') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
+                        {{-- Baris 3: Tempat & Tanggal Lahir --}}
                         <div>
                             <label class="{{ $labelClass }}">Tempat Lahir</label>
                             <input type="text" name="pob" value="{{ old('pob', $student->vault->pob_encrypted ?? '') }}" placeholder="Masukkan tempat lahir" class="{{ $inputClass }} @error('pob') {{ $errorClass }} @enderror">
@@ -127,6 +128,18 @@
                                 class="{{ $inputClass }} @error('dob') {{ $errorClass }} @enderror">
                             @error('dob') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
+                        {{-- Baris 4: Jenis Kelamin & Agama --}}
+                        <div>
+                            <label class="{{ $labelClass }}">Jenis Kelamin <span class="text-error">*</span></label>
+                            <select name="gender" class="{{ $inputClass }} @error('gender') {{ $errorClass }} @enderror">
+                                <option value="">— Pilih Jenis Kelamin —</option>
+                                @foreach(\App\Enums\Student\Gender::cases() as $option)
+                                <option value="{{ $option->value }}" @selected(old('gender', $student->gender?->value) === $option->value)>{{ $option->label() }}</option>
+                                @endforeach
+                            </select>
+                            @error('gender') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
                         <div>
                             <label class="{{ $labelClass }}">Agama</label>
                             <select name="religion" class="{{ $inputClass }} @error('religion') {{ $errorClass }} @enderror">
@@ -137,11 +150,8 @@
                             </select>
                             @error('religion') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
-                        <div>
-                            <label class="{{ $labelClass }}">Nomor Induk Kependudukan (NIK)</label>
-                            <input type="text" name="nik" inputmode="numeric" maxlength="32" value="{{ old('nik', $student->vault->nik_encrypted ?? '') }}" placeholder="Masukkan 16 digit NIK" class="{{ $inputClass }} font-mono @error('nik') {{ $errorClass }} @enderror">
-                            @error('nik') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
-                        </div>
+
+                        {{-- Baris 5: Anak Ke & Jumlah Saudara --}}
                         <div>
                             <label class="{{ $labelClass }}">Anak Ke</label>
                             <input type="number" name="child_order" min="1" value="{{ old('child_order', $student->child_order) }}" placeholder="Contoh: 1" class="{{ $inputClass }} @error('child_order') {{ $errorClass }} @enderror">
@@ -152,6 +162,7 @@
                             <input type="number" name="number_of_siblings" min="0" value="{{ old('number_of_siblings', $student->number_of_siblings) }}" placeholder="Contoh: 2" class="{{ $inputClass }} @error('number_of_siblings') {{ $errorClass }} @enderror">
                             @error('number_of_siblings') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
                     </div>
                 </form>
                 @endif
@@ -210,37 +221,45 @@
 
                     <div class="mt-3">
                         <label class="{{ $labelClass }} px-1">Alamat Lengkap Siswa</label>
-                        <textarea name="address" rows="2" placeholder="Masukkan alamat lengkap siswa" class="{{ $inputClass }} resize-none @error('address') {{ $errorClass }} @enderror">{{ old('address', $student->vault->address_encrypted ?? '') }}</textarea>
+                        <textarea name="address" rows="2" placeholder="Masukkan alamat jalan dan nomor rumah" class="{{ $inputClass }} resize-none @error('address') {{ $errorClass }} @enderror">{{ old('address', $student->vault->address_encrypted ?? '') }}</textarea>
                         @error('address') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
+
+                    {{-- BARIS 1: RT (1/4), RW (1/4), Desa (1/2) --}}
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                        <div>
+                        <div class="col-span-1">
                             <label class="{{ $labelClass }}">RT</label>
                             <input type="text" name="rt" maxlength="5" value="{{ old('rt', $student->vault->rt_encrypted ?? '') }}" placeholder="Contoh: 001" class="{{ $inputClass }} @error('rt') {{ $errorClass }} @enderror">
                             @error('rt') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
-                        <div>
+                        <div class="col-span-1">
                             <label class="{{ $labelClass }}">RW</label>
                             <input type="text" name="rw" maxlength="5" value="{{ old('rw', $student->vault->rw_encrypted ?? '') }}" placeholder="Contoh: 002" class="{{ $inputClass }} @error('rw') {{ $errorClass }} @enderror">
                             @error('rw') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
-                        <div class="col-span-2 sm:col-span-1">
+                        <div class="col-span-2">
                             <label class="{{ $labelClass }}">Kel/Desa</label>
                             <input type="text" name="village" value="{{ old('village', $student->vault->village_encrypted ?? '') }}" placeholder="Masukkan kelurahan/desa" class="{{ $inputClass }} @error('village') {{ $errorClass }} @enderror">
                             @error('village') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
-                        <div class="col-span-2 sm:col-span-1">
+                    </div>
+
+                    {{-- BARIS 2: Kecamatan (1/2), Kabupaten (1/2) --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <div>
                             <label class="{{ $labelClass }}">Kecamatan</label>
                             <input type="text" name="district" value="{{ old('district', $student->vault->district_encrypted ?? '') }}" placeholder="Masukkan kecamatan" class="{{ $inputClass }} @error('district') {{ $errorClass }} @enderror">
                             @error('district') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
                         <div>
                             <label class="{{ $labelClass }}">Kabupaten/Kota</label>
                             <input type="text" name="regency" value="{{ old('regency', $student->vault->regency_encrypted ?? '') }}" placeholder="Masukkan kabupaten/kota" class="{{ $inputClass }} @error('regency') {{ $errorClass }} @enderror">
                             @error('regency') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+                    </div>
+
+                    {{-- BARIS 3: Provinsi (1/2), Kode Pos (1/2) --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
                             <label class="{{ $labelClass }}">Provinsi</label>
                             <input type="text" name="province" value="{{ old('province', $student->vault->province_encrypted ?? '') }}" placeholder="Masukkan provinsi" class="{{ $inputClass }} @error('province') {{ $errorClass }} @enderror">
@@ -293,39 +312,35 @@
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                                @if($relValue === 'guardian')
+                                {{-- ============================== --}}
+                                {{-- LAYOUT DATA WALI        --}}
+                                {{-- ============================== --}}
+
+                                {{-- Baris 1: Nama Lengkap --}}
                                 <div class="sm:col-span-2">
-                                    <label class="{{ $labelClass }}">Nama Lengkap @if($isRequired)<span class="text-error">*</span>@endif</label>
+                                    <label class="{{ $labelClass }}">Nama Lengkap</label>
                                     <input type="text" name="guardians[{{ $relValue }}][name]" value="{{ old('guardians.'.$relValue.'.name', $guardian?->name ?? '') }}" placeholder="Masukkan nama lengkap {{ $relLabel }}" class="{{ $inputClass }} @error('guardians.'.$relValue.'.name') {{ $errorClass }} @enderror">
                                     @error('guardians.'.$relValue.'.name') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+
+                                    {{-- Hidden input status hidup --}}
+                                    <input type="hidden" name="guardians[{{ $relValue }}][living_status]" value="alive">
                                 </div>
 
-                                <div>
-                                    <label class="{{ $labelClass }}">Status Kehidupan @if($isRequired)<span class="text-error">*</span>@endif</label>
-                                    <select name="guardians[{{ $relValue }}][living_status]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.living_status') {{ $errorClass }} @enderror">
-                                        @foreach(\App\Enums\Student\LivingStatus::cases() as $option)
-                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.living_status', $guardian?->living_status?->value ?? 'alive') === $option->value)>{{ $option->label() }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('guardians.'.$relValue.'.living_status') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-
+                                {{-- Baris 2: Tahun Lahir & NIK --}}
                                 <div>
                                     <label class="{{ $labelClass }}">Tahun Lahir</label>
                                     <input type="text" name="guardians[{{ $relValue }}][birth_year]" inputmode="numeric" maxlength="4" value="{{ old('guardians.'.$relValue.'.birth_year', $guardian?->birth_year ?? '') }}" placeholder="Contoh: 1985" class="{{ $inputClass }} @error('guardians.'.$relValue.'.birth_year') {{ $errorClass }} @enderror">
                                     @error('guardians.'.$relValue.'.birth_year') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
-
                                 <div>
-                                    <label class="{{ $labelClass }}">Pekerjaan</label>
-                                    <select name="guardians[{{ $relValue }}][occupation]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.occupation') {{ $errorClass }} @enderror">
-                                        <option value="">— Pilih Pekerjaan —</option>
-                                        @foreach(\App\Enums\Student\Profession::cases() as $option)
-                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.occupation', $guardian?->occupation?->value) === $option->value)>{{ $option->label() }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('guardians.'.$relValue.'.occupation') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                    <label class="{{ $labelClass }}">Nomor Induk Kependudukan (NIK)</label>
+                                    <input type="text" name="guardians[{{ $relValue }}][nik]" inputmode="numeric" maxlength="16" value="{{ old('guardians.'.$relValue.'.nik', $guardian?->vault?->nik_encrypted ?? '') }}" placeholder="Masukkan 16 digit NIK" class="{{ $inputClass }} font-mono @error('guardians.'.$relValue.'.nik') {{ $errorClass }} @enderror">
+                                    @error('guardians.'.$relValue.'.nik') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
 
+                                {{-- Baris 3: Pendidikan Terakhir & No Telepon/WA --}}
                                 <div>
                                     <label class="{{ $labelClass }}">Pendidikan Terakhir</label>
                                     <select name="guardians[{{ $relValue }}][education]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.education') {{ $errorClass }} @enderror">
@@ -336,7 +351,23 @@
                                     </select>
                                     @error('guardians.'.$relValue.'.education') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
+                                <div>
+                                    <label class="{{ $labelClass }}">No Telepon / WhatsApp</label>
+                                    <input type="text" name="guardians[{{ $relValue }}][phone_number]" inputmode="tel" value="{{ old('guardians.'.$relValue.'.phone_number', $guardian?->vault?->phone_number_encrypted ?? '') }}" placeholder="Contoh: 081234567890" class="{{ $inputClass }} font-mono @error('guardians.'.$relValue.'.phone_number') {{ $errorClass }} @enderror">
+                                    @error('guardians.'.$relValue.'.phone_number') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
 
+                                {{-- Baris 4: Pekerjaan & Rentang Penghasilan --}}
+                                <div>
+                                    <label class="{{ $labelClass }}">Pekerjaan</label>
+                                    <select name="guardians[{{ $relValue }}][occupation]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.occupation') {{ $errorClass }} @enderror">
+                                        <option value="">— Pilih Pekerjaan —</option>
+                                        @foreach(\App\Enums\Student\Profession::cases() as $option)
+                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.occupation', $guardian?->occupation?->value) === $option->value)>{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('guardians.'.$relValue.'.occupation') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
                                 <div>
                                     <label class="{{ $labelClass }}">Rentang Penghasilan</label>
                                     <select name="guardians[{{ $relValue }}][income_range]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.income_range') {{ $errorClass }} @enderror">
@@ -348,27 +379,95 @@
                                     @error('guardians.'.$relValue.'.income_range') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="sm:col-span-2 pt-3 border-t border-border/50 mt-1">
-                                    <h4 class="font-bold text-foreground text-xs mb-3">Kontak & Alamat {{ $relLabel }}</h4>
+                                {{-- Baris 5: Alamat Lengkap --}}
+                                <div class="sm:col-span-2">
+                                    <label class="{{ $labelClass }}">Alamat Lengkap</label>
+                                    <textarea name="guardians[{{ $relValue }}][address]" rows="2" placeholder="Masukkan alamat jalan dan nomor rumah {{ $relLabel }}" class="{{ $inputClass }} resize-none @error('guardians.'.$relValue.'.address') {{ $errorClass }} @enderror">{{ old('guardians.'.$relValue.'.address', $guardian?->vault?->address_encrypted ?? '') }}</textarea>
+                                    @error('guardians.'.$relValue.'.address') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
 
+                                @else
+                                {{-- ============================== --}}
+                                {{-- LAYOUT DATA AYAH / IBU     --}}
+                                {{-- ============================== --}}
+
+                                {{-- Baris 1: Nama Orangtua --}}
+                                <div class="sm:col-span-2">
+                                    <label class="{{ $labelClass }}">Nama Lengkap @if($isRequired)<span class="text-error">*</span>@endif</label>
+                                    <input type="text" name="guardians[{{ $relValue }}][name]" value="{{ old('guardians.'.$relValue.'.name', $guardian?->name ?? '') }}" placeholder="Masukkan nama lengkap {{ $relLabel }}" class="{{ $inputClass }} @error('guardians.'.$relValue.'.name') {{ $errorClass }} @enderror">
+                                    @error('guardians.'.$relValue.'.name') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+
+                                {{-- Baris 2: Status & NIK --}}
+                                <div>
+                                    <label class="{{ $labelClass }}">Status Kehidupan @if($isRequired)<span class="text-error">*</span>@endif</label>
+                                    <select name="guardians[{{ $relValue }}][living_status]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.living_status') {{ $errorClass }} @enderror">
+                                        @foreach(\App\Enums\Student\LivingStatus::cases() as $option)
+                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.living_status', $guardian?->living_status?->value ?? 'alive') === $option->value)>{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('guardians.'.$relValue.'.living_status') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
                                 <div>
                                     <label class="{{ $labelClass }}">Nomor Induk Kependudukan (NIK)</label>
-                                    <input type="text" name="guardians[{{ $relValue }}][nik]" inputmode="numeric" maxlength="32" value="{{ old('guardians.'.$relValue.'.nik', $guardian?->vault?->nik_encrypted ?? '') }}" placeholder="Masukkan 16 digit NIK" class="{{ $inputClass }} font-mono @error('guardians.'.$relValue.'.nik') {{ $errorClass }} @enderror">
+                                    <input type="text" name="guardians[{{ $relValue }}][nik]" inputmode="numeric" maxlength="16" value="{{ old('guardians.'.$relValue.'.nik', $guardian?->vault?->nik_encrypted ?? '') }}" placeholder="Masukkan 16 digit NIK" class="{{ $inputClass }} font-mono @error('guardians.'.$relValue.'.nik') {{ $errorClass }} @enderror">
                                     @error('guardians.'.$relValue.'.nik') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
 
+                                {{-- Baris 3: Tahun Lahir & Telepon --}}
+                                <div>
+                                    <label class="{{ $labelClass }}">Tahun Lahir</label>
+                                    <input type="text" name="guardians[{{ $relValue }}][birth_year]" inputmode="numeric" maxlength="4" value="{{ old('guardians.'.$relValue.'.birth_year', $guardian?->birth_year ?? '') }}" placeholder="Contoh: 1985" class="{{ $inputClass }} @error('guardians.'.$relValue.'.birth_year') {{ $errorClass }} @enderror">
+                                    @error('guardians.'.$relValue.'.birth_year') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
                                 <div>
                                     <label class="{{ $labelClass }}">No Telepon / WhatsApp</label>
                                     <input type="text" name="guardians[{{ $relValue }}][phone_number]" inputmode="tel" value="{{ old('guardians.'.$relValue.'.phone_number', $guardian?->vault?->phone_number_encrypted ?? '') }}" placeholder="Contoh: 081234567890" class="{{ $inputClass }} font-mono @error('guardians.'.$relValue.'.phone_number') {{ $errorClass }} @enderror">
                                     @error('guardians.'.$relValue.'.phone_number') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
 
+                                {{-- Baris 4: Pendidikan & Pekerjaan --}}
+                                <div>
+                                    <label class="{{ $labelClass }}">Pendidikan Terakhir</label>
+                                    <select name="guardians[{{ $relValue }}][education]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.education') {{ $errorClass }} @enderror">
+                                        <option value="">— Pilih Pendidikan Terakhir —</option>
+                                        @foreach(\App\Enums\Student\Education::cases() as $option)
+                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.education', $guardian?->education?->value) === $option->value)>{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('guardians.'.$relValue.'.education') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="{{ $labelClass }}">Pekerjaan</label>
+                                    <select name="guardians[{{ $relValue }}][occupation]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.occupation') {{ $errorClass }} @enderror">
+                                        <option value="">— Pilih Pekerjaan —</option>
+                                        @foreach(\App\Enums\Student\Profession::cases() as $option)
+                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.occupation', $guardian?->occupation?->value) === $option->value)>{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('guardians.'.$relValue.'.occupation') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+
+                                {{-- Baris 5: Penghasilan (Full Width) --}}
+                                <div class="sm:col-span-2">
+                                    <label class="{{ $labelClass }}">Rentang Penghasilan</label>
+                                    <select name="guardians[{{ $relValue }}][income_range]" class="{{ $inputClass }} @error('guardians.'.$relValue.'.income_range') {{ $errorClass }} @enderror">
+                                        <option value="">— Pilih Rentang Penghasilan —</option>
+                                        @foreach(\App\Enums\Student\Income::cases() as $option)
+                                        <option value="{{ $option->value }}" @selected(old('guardians.'.$relValue.'.income_range', $guardian?->income_range?->value) === $option->value)>{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('guardians.'.$relValue.'.income_range') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+
+                                {{-- Baris 6: Alamat Lengkap --}}
                                 <div class="sm:col-span-2">
                                     <label class="{{ $labelClass }}">Alamat Lengkap</label>
-                                    <textarea name="guardians[{{ $relValue }}][address]" rows="2" placeholder="Masukkan alamat lengkap {{ $relLabel }}" class="{{ $inputClass }} resize-none @error('guardians.'.$relValue.'.address') {{ $errorClass }} @enderror">{{ old('guardians.'.$relValue.'.address', $guardian?->vault?->address_encrypted ?? '') }}</textarea>
+                                    <textarea name="guardians[{{ $relValue }}][address]" rows="2" placeholder="Masukkan alamat jalan dan nomor rumah {{ $relLabel }}" class="{{ $inputClass }} resize-none @error('guardians.'.$relValue.'.address') {{ $errorClass }} @enderror">{{ old('guardians.'.$relValue.'.address', $guardian?->vault?->address_encrypted ?? '') }}</textarea>
                                     @error('guardians.'.$relValue.'.address') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                                 </div>
+                                @endif
+
                             </div>
                         </div>
                         @endforeach
@@ -441,7 +540,8 @@
                     hx-on::after-request="if (!event.detail.xhr.responseURL.includes('step=')) window.dispatchEvent(new CustomEvent('close-modal'))">
                     @csrf @method('PUT')
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {{-- BARIS 1: Tinggi, Berat, Golongan Darah --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="{{ $labelClass }}">Tinggi Badan (cm)</label>
                             <input type="number" step="0.1" min="0" name="height" value="{{ old('height', $student->height) }}" placeholder="Contoh: 160" class="{{ $inputClass }} @error('height') {{ $errorClass }} @enderror">
@@ -452,9 +552,9 @@
                             <input type="number" step="0.1" min="0" name="weight" value="{{ old('weight', $student->weight) }}" placeholder="Contoh: 50" class="{{ $inputClass }} @error('weight') {{ $errorClass }} @enderror">
                             @error('weight') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
-                        <div class="sm:col-span-2">
+                        <div>
                             <label class="{{ $labelClass }}">Golongan Darah</label>
-                            <select name="blood_type" class="{{ $inputClass }} sm:w-40 @error('blood_type') {{ $errorClass }} @enderror">
+                            <select name="blood_type" class="{{ $inputClass }} @error('blood_type') {{ $errorClass }} @enderror">
                                 <option value="">— Pilih Golongan Darah —</option>
                                 @foreach(['A', 'B', 'AB', 'O'] as $bt)
                                 <option value="{{ $bt }}" @selected(old('blood_type', $student->blood_type) === $bt)>{{ $bt }}</option>
@@ -464,6 +564,36 @@
                         </div>
                     </div>
 
+                    {{-- BARIS 2: Alergi Makanan --}}
+                    <div x-data="{ hasFoodAllergy: '{{ old('has_food_allergy', $student->food_allergy ? 'yes' : 'no') }}' }" class="mt-4 bg-white border border-border rounded-xl p-3.5">
+                        <label class="{{ $labelClass }} mb-2">Alergi Makanan</label>
+                        <div class="flex items-center gap-4 mb-1">
+                            <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                                <input type="radio" name="has_food_allergy" value="no" x-model="hasFoodAllergy" class="accent-primary"> Tidak
+                            </label>
+                            <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                                <input type="radio" name="has_food_allergy" value="yes" x-model="hasFoodAllergy" class="accent-primary"> Ya
+                            </label>
+                        </div>
+
+                        <div x-show="hasFoodAllergy === 'yes'" x-transition.opacity x-cloak class="mt-3">
+                            <label class="{{ $labelClass }}">Pilih Jenis Alergi Makanan</label>
+                            <select name="food_allergy" class="{{ $inputClass }} @error('food_allergy') {{ $errorClass }} @enderror">
+                                <option value="">— Pilih Jenis Alergi Makanan —</option>
+                                <option value="Susu sapi" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Susu sapi')>Susu sapi (Umumnya pada bayi/anak)</option>
+                                <option value="Telur" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Telur')>Telur (Terutama putih telur)</option>
+                                <option value="Kacang tanah" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Kacang tanah')>Kacang tanah (Peanut)</option>
+                                <option value="Kacang pohon" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Kacang pohon')>Kacang pohon (Almond, kenari, mete, dll)</option>
+                                <option value="Ikan" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Ikan')>Ikan (Tuna, salmon, kakap, dll)</option>
+                                <option value="Makanan laut" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Makanan laut')>Makanan laut (Udang, kepiting, cumi, dll)</option>
+                                <option value="Kedelai" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Kedelai')>Kedelai (Tahu, tempe, susu kedelai)</option>
+                                <option value="Gandum" @selected(old('food_allergy', $student->food_allergy ?? '') === 'Gandum')>Gandum</option>
+                            </select>
+                            @error('food_allergy') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    {{-- BARIS 3: Kondisi Khusus / Disabilitas --}}
                     <div class="mt-4 bg-white border border-border rounded-xl p-3.5">
                         <label class="{{ $labelClass }} mb-2">Kondisi Khusus / Disabilitas</label>
                         <div class="flex items-center gap-4 mb-1">
@@ -476,7 +606,7 @@
                         </div>
                         @error('is_special_condition') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
 
-                        <div x-show="isSpecial === 'yes'" x-transition.opacity x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <div x-show="isSpecial === 'yes'" x-transition.opacity x-cloak class="mt-3">
                             <div>
                                 <label class="{{ $labelClass }}">Jenis Kondisi</label>
                                 <select name="special_condition_type" class="{{ $inputClass }} @error('special_condition_type') {{ $errorClass }} @enderror">
@@ -487,7 +617,7 @@
                                 </select>
                                 @error('special_condition_type') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="sm:col-span-2">
+                            <div class="sm:col-span-2 mt-3">
                                 <label class="{{ $labelClass }}">Keterangan</label>
                                 <textarea name="condition_description" rows="2" placeholder="Jelaskan kondisi khusus siswa" class="{{ $inputClass }} resize-none @error('condition_description') {{ $errorClass }} @enderror">{{ old('condition_description', $student->condition_description ?? '') }}</textarea>
                                 @error('condition_description') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
@@ -495,12 +625,14 @@
                         </div>
                     </div>
 
+                    {{-- BARIS 4: Riwayat Penyakit --}}
                     <div class="mt-3">
-                        <label class="{{ $labelClass }} px-1">Riwayat Penyakit</label>
+                        <label class="{{ $labelClass }} px-1">Riwayat Penyakit Umum</label>
                         <textarea name="medical_history" rows="2" placeholder="Tuliskan riwayat penyakit (jika ada)" class="{{ $inputClass }} resize-none @error('medical_history') {{ $errorClass }} @enderror">{{ old('medical_history', $student->medical_history ?? '') }}</textarea>
                         @error('medical_history') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
+                    {{-- Minat & Bakat (Tetap) --}}
                     <div class="flex items-center gap-2 pt-5 mt-5 border-t border-border/70">
                         <i data-lucide="star" class="size-4 text-secondary"></i>
                         <h4 class="font-bold text-foreground text-sm">Minat & Bakat</h4>
