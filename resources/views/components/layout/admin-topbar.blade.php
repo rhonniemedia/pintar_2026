@@ -1,9 +1,24 @@
 <div class="flex items-center justify-between w-full h-[90px] shrink-0 border-b border-border bg-white px-5 md:px-8 sticky top-0 z-50">
-    <button @click="sidebarOpen = true" class="lg:hidden size-11 flex items-center justify-center rounded-xl ring-1 ring-border hover:ring-primary transition-all duration-300 cursor-pointer">
-        <i data-lucide="menu" class="size-6 text-foreground"></i>
-    </button>
-    <h2 class="hidden lg:block font-bold text-2xl text-foreground">PINTAR</h2>
 
+    <button
+        @click="sidebarOpen = !sidebarOpen"
+        class="lg:hidden size-11 flex items-center justify-center rounded-xl ring-1 ring-border hover:ring-primary transition-all duration-300 cursor-pointer"
+        :aria-label="sidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'">
+
+        <i data-lucide="menu" x-show="!sidebarOpen" class="size-6 text-foreground"></i>
+        <i data-lucide="x" x-show="sidebarOpen" x-cloak class="size-6 text-foreground"></i>
+    </button>
+
+    {{-- Brand --}}
+    <div class="min-w-0 flex-1 ml-3 lg:ml-0">
+        <h2 class="text-lg md:text-2xl font-bold text-foreground leading-tight">
+            PINTAR
+        </h2>
+
+        <p class="hidden md:block text-xs text-secondary leading-tight truncate">
+            Platform Informasi Kesiswaan Terintegrasi
+        </p>
+    </div>
     <div class="flex items-center gap-3">
         <button class="size-11 flex items-center justify-center rounded-xl ring-1 ring-border hover:ring-primary transition-all duration-300 cursor-pointer">
             <i data-lucide="search" class="size-5 text-secondary"></i>

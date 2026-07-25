@@ -42,7 +42,7 @@
             2 => ['label' => 'Alamat', 'icon' => 'map-pin'],
             3 => ['label' => 'Orangtua', 'icon' => 'users'],
             4 => ['label' => 'Akademik', 'icon' => 'graduation-cap'],
-            5 => ['label' => 'Kesehatan', 'icon' => 'activity'],
+            5 => ['label' => 'Kesehatan & Karir', 'icon' => 'briefcase'],
             ];
             $activeStep = (int) ($currentStep ?? 1);
             @endphp
@@ -98,7 +98,7 @@
 
                         {{-- Baris 1: Nama Lengkap (Full Width) --}}
                         <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}">Nama Lengkap <span class="text-error">*</span></label>
+                            <label class="{{ $labelClass }}">Nama Lengkap</label>
                             <input type="text" name="name" value="{{ old('name', $student->name) }}" placeholder="Masukkan nama lengkap" class="{{ $inputClass }} @error('name') {{ $errorClass }} @enderror">
                             @error('name') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
@@ -110,7 +110,7 @@
                             @error('nik') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="{{ $labelClass }}">NISN <span class="text-error">*</span></label>
+                            <label class="{{ $labelClass }}">NISN</label>
                             <input type="text" name="nisn" inputmode="numeric" maxlength="10" value="{{ old('nisn', $student->vault->nisn_encrypted ?? '') }}" placeholder="Masukkan NISN" class="{{ $inputClass }} font-mono @error('nisn') {{ $errorClass }} @enderror">
                             @error('nisn') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
@@ -131,7 +131,7 @@
 
                         {{-- Baris 4: Jenis Kelamin & Agama --}}
                         <div>
-                            <label class="{{ $labelClass }}">Jenis Kelamin <span class="text-error">*</span></label>
+                            <label class="{{ $labelClass }}">Jenis Kelamin</label>
                             <select name="gender" class="{{ $inputClass }} @error('gender') {{ $errorClass }} @enderror">
                                 <option value="">— Pilih Jenis Kelamin —</option>
                                 @foreach(\App\Enums\Student\Gender::cases() as $option)
@@ -531,7 +531,7 @@
                 @endif
 
                 @if($activeStep === 5)
-                {{-- STEP 5: KESEHATAN & MINAT --}}
+                {{-- STEP 5: KESEHATAN, MINAT & KARIR --}}
                 <form id="edit-student-form"
                     @htmx:before-request="isLoading = true"
                     @htmx:after-request="isLoading = false"
@@ -540,7 +540,7 @@
                     hx-on::after-request="if (!event.detail.xhr.responseURL.includes('step=')) window.dispatchEvent(new CustomEvent('close-modal'))">
                     @csrf @method('PUT')
 
-                    {{-- BARIS 1: Tinggi, Berat, Golongan Darah --}}
+                    {{-- SEKSI 1: KESEHATAN --}}
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="{{ $labelClass }}">Tinggi Badan (cm)</label>
@@ -564,8 +564,7 @@
                         </div>
                     </div>
 
-                    {{-- BARIS 2: Alergi Makanan --}}
-                    <div x-data="{ hasFoodAllergy: '{{ old('has_food_allergy', $student->food_allergy ? 'yes' : 'no') }}' }" class="mt-4 bg-white border border-border rounded-xl p-3.5">
+                    <div x-data="{ hasFoodAllergy: '{{ old('has_food_allergy', $student->has_food_allergy ?? 'no') }}' }" class="mt-4 bg-white border border-border rounded-xl p-3.5">
                         <label class="{{ $labelClass }} mb-2">Alergi Makanan</label>
                         <div class="flex items-center gap-4 mb-1">
                             <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
@@ -575,7 +574,6 @@
                                 <input type="radio" name="has_food_allergy" value="yes" x-model="hasFoodAllergy" class="accent-primary"> Ya
                             </label>
                         </div>
-
                         <div x-show="hasFoodAllergy === 'yes'" x-transition.opacity x-cloak class="mt-3">
                             <label class="{{ $labelClass }}">Pilih Jenis Alergi Makanan</label>
                             <select name="food_allergy" class="{{ $inputClass }} @error('food_allergy') {{ $errorClass }} @enderror">
@@ -593,7 +591,6 @@
                         </div>
                     </div>
 
-                    {{-- BARIS 3: Kondisi Khusus / Disabilitas --}}
                     <div class="mt-4 bg-white border border-border rounded-xl p-3.5">
                         <label class="{{ $labelClass }} mb-2">Kondisi Khusus / Disabilitas</label>
                         <div class="flex items-center gap-4 mb-1">
@@ -606,7 +603,7 @@
                         </div>
                         @error('is_special_condition') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
 
-                        <div x-show="isSpecial === 'yes'" x-transition.opacity x-cloak class="mt-3">
+                        <div x-show="isSpecial === 'yes'" x-transition.opacity x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                             <div>
                                 <label class="{{ $labelClass }}">Jenis Kondisi</label>
                                 <select name="special_condition_type" class="{{ $inputClass }} @error('special_condition_type') {{ $errorClass }} @enderror">
@@ -617,7 +614,7 @@
                                 </select>
                                 @error('special_condition_type') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="sm:col-span-2 mt-3">
+                            <div class="sm:col-span-2">
                                 <label class="{{ $labelClass }}">Keterangan</label>
                                 <textarea name="condition_description" rows="2" placeholder="Jelaskan kondisi khusus siswa" class="{{ $inputClass }} resize-none @error('condition_description') {{ $errorClass }} @enderror">{{ old('condition_description', $student->condition_description ?? '') }}</textarea>
                                 @error('condition_description') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
@@ -625,17 +622,16 @@
                         </div>
                     </div>
 
-                    {{-- BARIS 4: Riwayat Penyakit --}}
                     <div class="mt-3">
                         <label class="{{ $labelClass }} px-1">Riwayat Penyakit Umum</label>
                         <textarea name="medical_history" rows="2" placeholder="Tuliskan riwayat penyakit (jika ada)" class="{{ $inputClass }} resize-none @error('medical_history') {{ $errorClass }} @enderror">{{ old('medical_history', $student->medical_history ?? '') }}</textarea>
                         @error('medical_history') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Minat & Bakat (Tetap) --}}
+                    {{-- SEKSI 2: MINAT & BAKAT UMUM --}}
                     <div class="flex items-center gap-2 pt-5 mt-5 border-t border-border/70">
                         <i data-lucide="star" class="size-4 text-secondary"></i>
-                        <h4 class="font-bold text-foreground text-sm">Minat & Bakat</h4>
+                        <h4 class="font-bold text-foreground text-sm">Minat, Bakat & Organisasi</h4>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
@@ -659,6 +655,108 @@
                             @error('extracurricular_choice') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
+
+                    {{-- SEKSI 3: RENCANA KARIR & BKK --}}
+                    <div x-data="{ 
+                            postGradPlan: '{{ old('post_graduation_plan', $student->post_graduation_plan ?? '') }}',
+                            workInterest: '{{ old('work_interest', $student->work_interest ?? '') }}' 
+                        }"
+                        class="mt-5">
+
+                        <div class="flex items-center gap-2 pt-5 border-t border-border/70 mb-3">
+                            <i data-lucide="briefcase" class="size-4 text-secondary"></i>
+                            <h4 class="font-bold text-foreground text-sm">Rencana Karir & Penyaluran Kerja (BKK)</h4>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                            {{-- Rencana Setelah Lulus (Selalu Tampil) --}}
+                            <div class="sm:col-span-2">
+                                <label class="{{ $labelClass }}">Rencana Setelah Lulus</label>
+                                <select name="post_graduation_plan" x-model="postGradPlan" class="{{ $inputClass }} @error('post_graduation_plan') {{ $errorClass }} @enderror">
+                                    <option value="">— Pilih Rencana —</option>
+                                    <option value="bekerja">Bekerja</option>
+                                    <option value="kuliah">Kuliah</option>
+                                    <option value="berwirausaha">Berwirausaha</option>
+                                    <option value="belum-menentukan">Belum Menentukan</option>
+                                </select>
+                                @error('post_graduation_plan') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- ======================================================== --}}
+                            {{-- BUNGKUSAN FORM BKK (Hanya Tampil Jika Memilih "bekerja") --}}
+                            {{-- ======================================================== --}}
+                            <div x-show="postGradPlan === 'bekerja'" x-transition.opacity x-cloak class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+
+                                {{-- Minat Bekerja --}}
+                                <div class="sm:col-span-2">
+                                    <label class="{{ $labelClass }}">Minat Bekerja</label>
+                                    <select name="work_interest" x-model="workInterest" class="{{ $inputClass }} @error('work_interest') {{ $errorClass }} @enderror">
+                                        <option value="">— Pilih Minat Bekerja —</option>
+                                        <option value="dalam-negeri">Dalam Negeri</option>
+                                        <option value="luar-negeri">Luar Negeri</option>
+                                        <option value="bersedia-keduanya">Bersedia Keduanya</option>
+                                    </select>
+                                    @error('work_interest') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+
+                                {{-- Detail Luar Negeri (Muncul jika pilih Luar Negeri atau Keduanya) --}}
+                                <div x-show="workInterest === 'luar-negeri' || workInterest === 'bersedia-keduanya'" x-transition.opacity x-cloak class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                    <div>
+                                        <label class="{{ $labelClass }}">Negara Tujuan</label>
+                                        <input type="text" name="target_country" value="{{ old('target_country', $student->target_country ?? '') }}" placeholder="Contoh: Jepang, Korea, Jerman" class="{{ $inputClass }} @error('target_country') {{ $errorClass }} @enderror">
+                                        @error('target_country') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="{{ $labelClass }}">Program yang Diminati</label>
+                                        <select name="target_program" class="{{ $inputClass }} @error('target_program') {{ $errorClass }} @enderror">
+                                            <option value="">— Pilih Program —</option>
+                                            <option value="magang" @selected(old('target_program', $student->target_program ?? '') === 'magang')>Magang</option>
+                                            <option value="pekerja-profesional" @selected(old('target_program', $student->target_program ?? '') === 'pekerja-profesional')>Pekerja Profesional</option>
+                                            <option value="ssw" @selected(old('target_program', $student->target_program ?? '') === 'ssw')>SSW (Specified Skilled Worker)</option>
+                                            <option value="titp" @selected(old('target_program', $student->target_program ?? '') === 'titp')>TITP (Technical Intern Training)</option>
+                                            <option value="lainnya" @selected(old('target_program', $student->target_program ?? '') === 'lainnya')>Lainnya</option>
+                                        </select>
+                                        @error('target_program') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+
+                                {{-- Kemampuan Bahasa & Persetujuan BKK --}}
+                                <div class="sm:col-span-2">
+                                    <label class="{{ $labelClass }}">Kemampuan Bahasa Asing</label>
+                                    <input type="text" name="foreign_language_skills" value="{{ old('foreign_language_skills', $student->foreign_language_skills ?? '') }}" placeholder="Contoh: Bahasa Inggris (Pasif), Bahasa Jepang (N5)" class="{{ $inputClass }} @error('foreign_language_skills') {{ $errorClass }} @enderror">
+                                    @error('foreign_language_skills') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="bg-white border border-border rounded-xl p-3.5">
+                                    <label class="{{ $labelClass }} mb-2">Bersedia Mengikuti Pelatihan Bahasa?</label>
+                                    <div class="flex items-center gap-4">
+                                        <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                                            <input type="radio" name="willing_to_language_train" value="yes" @checked(old('willing_to_language_train', $student->willing_to_language_train ?? '') === 'yes') class="accent-primary"> Ya
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                                            <input type="radio" name="willing_to_language_train" value="no" @checked(old('willing_to_language_train', $student->willing_to_language_train ?? '') === 'no') class="accent-primary"> Tidak
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white border border-border rounded-xl p-3.5">
+                                    <label class="{{ $labelClass }} mb-2">Siap Mengikuti Seleksi BKK?</label>
+                                    <div class="flex items-center gap-4">
+                                        <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                                            <input type="radio" name="ready_for_bkk_selection" value="yes" @checked(old('ready_for_bkk_selection', $student->ready_for_bkk_selection ?? '') === 'yes') class="accent-primary"> Ya
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
+                                            <input type="radio" name="ready_for_bkk_selection" value="no" @checked(old('ready_for_bkk_selection', $student->ready_for_bkk_selection ?? '') === 'no') class="accent-primary"> Tidak
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div> {{-- Tutup Bungkusan Form BKK --}}
+
+                        </div>
+                    </div>
+
                 </form>
                 @endif
 
@@ -698,7 +796,7 @@
 
                         {{-- Tampilan Loading --}}
                         <div x-show="isLoading" x-cloak class="flex items-center gap-1.5">
-                            <i data-lucide="loader-2" class="size-4 animate-spin"></i>
+                            <i data-lucide="loader-2" stroke-width="3" class="size-4 animate-spin"></i>
                             <span>Menyimpan...</span>
                         </div>
                         </button>
@@ -713,7 +811,7 @@
 
                             {{-- Tampilan Loading --}}
                             <div x-show="isLoading" x-cloak class="flex items-center gap-1.5">
-                                <i data-lucide="loader-2" class="size-4 animate-spin"></i>
+                                <i data-lucide="loader-2" stroke-width="3" class="size-4 animate-spin"></i>
                                 <span>Menyimpan...</span>
                             </div>
                         </button>

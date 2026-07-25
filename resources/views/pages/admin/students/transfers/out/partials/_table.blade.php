@@ -19,13 +19,13 @@
                     </th>
 
                     <th class="px-4 py-3 text-sm font-bold text-secondary">
-                        Ditinggalkan
-                        <div class="text-[11px] font-normal normal-case">Rombel & Tanggal Keluar</div>
+                        Tujuan Mutasi
+                        <div class="text-[11px] font-normal normal-case">Sekolah Tujuan / Alasan</div>
                     </th>
 
                     <th class="px-4 py-3 text-sm font-bold text-secondary">
-                        Tujuan Mutasi
-                        <div class="text-[11px] font-normal normal-case">Sekolah Tujuan / Alasan</div>
+                        Ditinggalkan
+                        <div class="text-[11px] font-normal normal-case">Rombel & Tanggal Keluar</div>
                     </th>
 
                     <th class="px-4 py-3 text-sm font-bold text-secondary">
@@ -67,6 +67,18 @@
                         </div>
                     </td>
 
+                    {{-- Kolom Tujuan Mutasi --}}
+                    <td class="px-4 py-4 text-sm">
+                        <div class="text-foreground truncate pr-2 font-medium" title="{{ $r->destination_school ?? $r->mutation_reason_label }}">
+                            {{ $r->destination_school ?? ($r->mutation_reason_label ?? 'Tidak diketahui') }}
+                        </div>
+                        @if ($r->is_transfer_out)
+                        <div class="text-xs text-secondary truncate" title="{{ $r->notes }}">
+                            {{ $r->notes ?? 'Tidak ada catatan' }}
+                        </div>
+                        @endif
+                    </td>
+
                     {{-- Kolom Rombel Terakhir --}}
                     <td class="px-4 py-4 text-sm">
                         <div class="text-foreground font-medium truncate">
@@ -80,23 +92,116 @@
                         </div>
                     </td>
 
-                    {{-- Kolom Tujuan Mutasi --}}
-                    <td class="px-4 py-4 text-sm">
-                        <div class="text-foreground truncate pr-2 font-medium" title="{{ $r->origin_destination }}">
-                            {{ $r->origin_destination ?? 'Tidak diketahui' }}
-                        </div>
-                        <div class="text-xs text-secondary truncate" title="{{ $r->notes }}">
-                            {{ $r->notes ?? 'Tidak ada catatan' }}
-                        </div>
-                    </td>
-
                     {{-- Kolom Aksi --}}
                     <td class="px-4 py-4">
                         <div class="flex items-center gap-2">
-                            <button type="button" title="Detail Riwayat"
-                                class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
-                                <i data-lucide="info" class="size-4 pointer-events-none"></i>
-                            </button>
+
+                            {{-- DROPDOWN AKSI DENGAN POSISI FIXED --}}
+                            <div
+                                x-data="{
+                                    open: false,
+                                    menuX: 0,
+                                    menuY: 0,
+
+                                    toggle() {
+                                        if (this.open) {
+                                            this.open = false;
+                                            return;
+                                        }
+
+                                        this.open = true;
+
+                                        // Hitung posisi tepat setelah elemen dirender
+                                        this.$nextTick(() => {
+                                            const btn = this.$refs.button.getBoundingClientRect();
+                                            const menu = this.$refs.menu.getBoundingClientRect();
+
+                                            const spaceBelow = window.innerHeight - btn.bottom;
+                                            const spaceAbove = btn.top;
+
+                                            // Jika di bawah sempit tapi di atas luas, drop-up
+                                            const dropUp = spaceBelow < menu.height && spaceAbove > menu.height;
+
+                                            // Sejajarkan sisi kanan menu dengan sisi kanan tombol
+                                            this.menuX = btn.right - menu.width;
+
+                                            // Tempatkan di atas atau di bawah tombol
+                                            this.menuY = dropUp ? (btn.top - menu.height - 4) : (btn.bottom + 4);
+                                        });
+                                    }
+                                }"
+                                @click.outside="open = false"
+                                @scroll.window="open = false"
+                                @resize.window="open = false"
+                                class="relative inline-block text-left">
+
+                                <button
+                                    x-ref="button"
+                                    type="button"
+                                    @click="toggle()"
+                                    title="Aksi"
+                                    class="inline-flex items-center gap-2 h-8 px-3 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all focus:outline-none cursor-pointer">
+
+                                    <span class="text-sm font-medium">Aksi</span>
+
+                                    <i
+                                        data-lucide="chevron-down"
+                                        class="size-4 transition-transform duration-200"
+                                        :class="{ 'rotate-180': open }">
+                                    </i>
+                                </button>
+
+                                {{--
+                                    Perubahan Utama: 
+                                    Menggunakan "fixed z-[9999]" dan ":style" dinamis 
+                                    sehingga menu keluar dari batas tabel yang overflow 
+                                --}}
+                                <div
+                                    x-ref="menu"
+                                    x-show="open"
+                                    x-cloak
+                                    x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="opacity-100 scale-100"
+                                    x-transition:leave-end="opacity-0 scale-95"
+                                    :style="`top: ${menuY}px; left: ${menuX}px;`"
+                                    class="fixed z-[9999] w-56 rounded-xl border border-border bg-white shadow-xl py-3 flex flex-col text-left origin-top-right">
+
+                                    <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Detail</p>
+                                    <button type="button"
+                                        @click="open = false"
+                                        hx-get="{{ route('admin.students.detail.personal', $student->id) }}"
+                                        hx-target="#modal-container"
+                                        hx-swap="outerHTML"
+                                        class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
+                                        <i data-lucide="user" class="size-4 text-secondary pointer-events-none"></i> Data Peserta Didik
+                                    </button>
+                                    <button type="button"
+                                        @click="open = false"
+                                        hx-get="{{ route('admin.students.detail.guardian', $student->id) }}"
+                                        hx-target="#modal-container"
+                                        hx-swap="outerHTML"
+                                        class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
+                                        <i data-lucide="users" class="size-4 text-secondary pointer-events-none"></i> Data Orang Tua
+                                    </button>
+
+                                    <div class="my-2 border-t border-border"></div>
+
+                                    <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Manajemen Data</p>
+                                    <!-- Hapus Data -->
+                                    <button type="button"
+                                        disabled
+                                        hx-delete="{{ route('admin.students.data.destroy', $student->id) }}"
+                                        hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML"
+                                        hx-confirm="Yakin ingin menghapus data {{ $student->name }}? Tindakan ini tidak dapat dibatalkan."
+                                        class="flex items-center gap-2 mx-2 px-3 py-2 mt-1 rounded-lg text-sm text-error opacity-50 cursor-not-allowed text-left rounded-t-none">
+                                        <i data-lucide="trash-2" class="size-4 pointer-events-none"></i> Hapus Data
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </td>
 

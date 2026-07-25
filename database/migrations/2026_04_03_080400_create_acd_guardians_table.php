@@ -47,6 +47,10 @@ return new class extends Migration
             $table->string('income_range')->nullable();   // rentang penghasilan
 
             $table->timestamps();
+
+            // --- PROTEKSI GANDA ---
+            // Memastikan 1 siswa hanya bisa punya 1 data untuk masing-masing relasi (Ayah/Ibu/Wali)
+            $table->unique(['student_id', 'relationship'], 'unique_student_guardian');
         });
     }
 

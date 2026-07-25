@@ -69,8 +69,8 @@
 
                     {{-- Kolom Sekolah Asal --}}
                     <td class="px-4 py-4 text-sm">
-                        <div class="text-foreground font-medium truncate pr-2" title="{{ $r->origin_destination }}">
-                            {{ $r->origin_destination ?? '-' }}
+                        <div class="text-foreground font-medium truncate pr-2" title="{{ $r->origin_school }}">
+                            {{ $r->origin_school ?? '-' }}
                         </div>
                         <div class="text-xs text-secondary truncate">
                             {{ $student->previous_school_province ?? '-' }}

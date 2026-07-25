@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Student\StudentStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -46,8 +47,14 @@ return new class extends Migration
             $table->enum('entry_grade_level', ['10', '11', '12'])->default('10'); // Mutlak, sejarah awal masuk
             $table->foreignUuid('concentration_id')->constrained('core_concentrations');
 
-            // Status Siswa (Aktif/Lulus/Keluar/Pindah)
-            $table->enum('status', ['active', 'graduated', 'dropped_out', 'transferred_out'])->default('active');
+            // Status keaktifan siswa saat ini (cache dari acd_student_mutations)
+            $table->enum('status', array_column(StudentStatus::cases(), 'value'))
+                ->default(StudentStatus::ACTIVE->value);
+
+            // Tanggal kejadian status terkini, mengikuti mutation_date
+            // dari acd_student_mutations terkait - memudahkan query cepat
+            // tanpa perlu join ke tabel mutasi untuk sekadar tahu "sejak kapan".
+            $table->date('status_date')->nullable();
 
             // --- Domisili & mobilitas (non-sensitif) ---
             $table->string('residence_type')->nullable();     // j_tinggal
@@ -72,12 +79,26 @@ return new class extends Migration
             $table->integer('height')->nullable();
             $table->integer('weight')->nullable();
             $table->string('medical_history', 100)->nullable();
+
+            // Tambahan Alergi Makanan (2 Kolom)
+            $table->enum('has_food_allergy', ['yes', 'no'])->default('no');
+            $table->string('food_allergy', 100)->nullable();
+
             $table->string('interest_art', 100)->nullable();
             $table->string('interest_sport', 100)->nullable();
             $table->string('interest_organization', 100)->nullable();
             $table->string('extracurricular_choice', 100)->nullable();
             $table->string('fl2sn_category', 100)->nullable();
             $table->string('o2sn_category', 100)->nullable();
+
+            // --- Rencana Karir & BKK ---
+            $table->string('post_graduation_plan', 50)->nullable();
+            $table->string('work_interest', 50)->nullable();
+            $table->string('target_country', 100)->nullable();
+            $table->string('target_program', 50)->nullable();
+            $table->string('foreign_language_skills')->nullable();
+            $table->enum('willing_to_language_train', ['yes', 'no'])->nullable();
+            $table->enum('ready_for_bkk_selection', ['yes', 'no'])->nullable();
 
             $table->string('photo')->nullable();
 

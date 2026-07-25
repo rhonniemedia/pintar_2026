@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Students;
 use App\Enums\Student\Religion;
 use App\Filters\StudentFilter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Students\UpdateStudentPhotoRequest;
 use App\Http\Requests\Admin\Students\UpdateStudentRequest;
 use App\Models\CoreConcentration;
 use App\Models\CoreSemester;
@@ -12,6 +13,7 @@ use App\Models\Student;
 use App\Services\StudentStatsService;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
@@ -100,7 +102,6 @@ class StudentController extends Controller
         if ($step === 1) {
             $studentData = $filterNulls([
                 'name'               => $validated['name'] ?? null,
-                'nick_name'          => $validated['nick_name'] ?? null,
                 'gender'             => $validated['gender'] ?? null,
                 'child_order'        => $validated['child_order'] ?? null,
                 'number_of_siblings' => $validated['number_of_siblings'] ?? null,
@@ -114,6 +115,12 @@ class StudentController extends Controller
 
             if (!is_null($validated['pob'] ?? null)) $vault->pob_encrypted = $validated['pob'];
             if (!is_null($validated['dob'] ?? null)) $vault->dob_encrypted = $validated['dob'];
+
+            // Penambahan proses simpan NISN terenkripsi
+            if (!is_null($validated['nisn'] ?? null)) {
+                $vault->nisn_encrypted = $validated['nisn'];
+                $vault->nisn_hash      = $this->blindIndexHash($validated['nisn']);
+            }
 
             if (!is_null($validated['nik'] ?? null)) {
                 $vault->nik_encrypted = $validated['nik'];
@@ -176,6 +183,10 @@ class StudentController extends Controller
                     continue;
                 }
 
+                // PERBAIKAN: Pastikan key relasi bersih dan seragam (huruf kecil semua)
+                // Jika form Anda mengirim dari input tersembunyi, gunakan $guardianData['relationship']
+                $relationKey = strtolower(trim($guardianData['relationship'] ?? $relation));
+
                 $guardianUpdateData = $filterNulls([
                     'name'          => $guardianData['name'] ?? null,
                     'living_status' => $guardianData['living_status'] ?? null,
@@ -185,8 +196,9 @@ class StudentController extends Controller
                     'income_range'  => $guardianData['income_range'] ?? null,
                 ]);
 
+                // Gunakan relationKey yang sudah distandarisasi
                 $guardian = $student->guardians()->updateOrCreate(
-                    ['relationship' => $relation],
+                    ['relationship' => $relationKey],
                     $guardianUpdateData
                 );
 
@@ -226,6 +238,8 @@ class StudentController extends Controller
                 'height'                 => $validated['height'] ?? null,
                 'weight'                 => $validated['weight'] ?? null,
                 'blood_type'             => $validated['blood_type'] ?? null,
+                'has_food_allergy'       => $validated['has_food_allergy'] ?? null,
+                'food_allergy'           => $validated['food_allergy'] ?? null,
                 'is_special_condition'   => $validated['is_special_condition'] ?? null,
                 'special_condition_type' => $validated['special_condition_type'] ?? null,
                 'condition_description'  => $validated['condition_description'] ?? null,
@@ -234,6 +248,15 @@ class StudentController extends Controller
                 'interest_sport'         => $validated['interest_sport'] ?? null,
                 'interest_organization'  => $validated['interest_organization'] ?? null,
                 'extracurricular_choice' => $validated['extracurricular_choice'] ?? null,
+
+                // Tambahan Data Rencana Karir & BKK
+                'post_graduation_plan'      => $validated['post_graduation_plan'] ?? null,
+                'work_interest'             => $validated['work_interest'] ?? null,
+                'target_country'            => $validated['target_country'] ?? null,
+                'target_program'            => $validated['target_program'] ?? null,
+                'foreign_language_skills'   => $validated['foreign_language_skills'] ?? null,
+                'willing_to_language_train' => $validated['willing_to_language_train'] ?? null,
+                'ready_for_bkk_selection'   => $validated['ready_for_bkk_selection'] ?? null,
             ]);
 
             if (!empty($studentData)) {
@@ -252,6 +275,49 @@ class StudentController extends Controller
         }
 
         return redirect()->route('admin.students.data.index', $request->query(), 303);
+    }
+
+    /**
+     * Menampilkan Modal Edit Foto
+     */
+    public function editPhoto(string $id)
+    {
+        $student = Student::findOrFail($id);
+        return view('pages.admin.students.data.partials._edit-photo-modal', compact('student'));
+    }
+
+    /**
+     * Memproses Unggahan & Penyimpanan Foto
+     */
+    public function updatePhoto(UpdateStudentPhotoRequest $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+
+        if ($request->hasFile('photo')) {
+            // 1. Hapus foto lama jika ada
+            if ($student->photo && Storage::disk('public')->exists($student->photo)) {
+                Storage::disk('public')->delete($student->photo);
+            }
+
+            // 2. Simpan foto baru ke dalam folder 'students/photos' di disk public
+            $path = $request->file('photo')->store('students/photos', 'public');
+
+            // 3. Update kolom database
+            $student->update([
+                'photo' => $path
+            ]);
+        }
+
+        // 4. Berikan respon sukses untuk HTMX (Tutup modal & Refresh data tabel)
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'close-modal' => true,
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Pas foto siswa berhasil diperbarui.'
+            ],
+            'refreshStudentData' => true
+        ]));
     }
 
     public function destroy(Request $request, string $id)

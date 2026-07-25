@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin\Students;
 
+use App\Enums\Student\MutationStatus;
+use App\Enums\Student\StudentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\ClassGroupStudent;
@@ -14,6 +16,43 @@ use Illuminate\Validation\Rule;
 
 class ClassGroupController extends Controller
 {
+    /**
+     * Definisi tunggal "anggota rombel" (dipakai di index, show stats, dan
+     * show roster) - satu-satunya tempat logika ini ditulis, supaya kalau
+     * kebijakan berubah, cukup ubah di sini.
+     *
+     * Anggota rombel = exit_date masih NULL (belum keluar sama sekali),
+     * ATAU sudah keluar tapi sebabnya GRADUATED (tamat) - siswa yang lulus
+     * tetap dihitung/tampil sebagai riwayat anggota rombel terakhirnya,
+     * supaya rombel kelas 12 yang sudah lulus semua tidak tampil kosong.
+     *
+     * Sebab keluar lain (pindah, keluar, meninggal, menikah, DO, resign,
+     * atau pindah kelas internal) TIDAK lagi dihitung sebagai anggota
+     * rombel ini.
+     */
+    private function memberOfClassGroupCondition(string $cgsTable): \Closure
+    {
+        return function ($q) use ($cgsTable) {
+            // 1. Status siswa utama (di acd_students) harus ACTIVE atau GRADUATED
+            $q->whereIn('acd_students.status', [
+                StudentStatus::ACTIVE->value,
+                StudentStatus::GRADUATED->value
+            ])
+                // 2. PERBAIKAN: Gunakan exit_reason, bukan exit_date
+                ->whereNull("{$cgsTable}.exit_reason")
+                // 3. PERBAIKAN: Tidak ada mutasi keluar, kecuali mutasi Lulus
+                ->where(function ($qPivot) use ($cgsTable) {
+                    $qPivot->whereNull("{$cgsTable}.mutation_id")
+                        ->orWhereExists(function ($sub) use ($cgsTable) {
+                            $sub->selectRaw('1')
+                                ->from('acd_student_mutations')
+                                ->whereColumn('acd_student_mutations.id', "{$cgsTable}.mutation_id")
+                                ->where('acd_student_mutations.status', MutationStatus::GRADUATED->value);
+                        });
+                });
+        };
+    }
+
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
@@ -32,21 +71,10 @@ class ClassGroupController extends Controller
         // di-hardcode), supaya tidak tergantung penamaan tabel yang sebenarnya.
         $cgsTable = (new ClassGroupStudent())->getTable();
 
-        // PERBAIKAN: kondisi ini SENGAJA TIDAK memfilter exit_date, konsisten dengan
-        // docblock ClassGroup::activeStudents() — exit_date diisi sebagai JADWAL pindah
-        // semester berikutnya, bukan berarti siswa sudah keluar dari rombel ini sekarang.
-        // Kondisi "anggota rombel ini" yang benar:
-        // - pivot.status = 'active' DAN acd_students.status = 'active' -> ini persis
-        //   logika activeStudents() di model.
-        // - ATAU pivot.status = 'graduated' -> siswa lulus DARI rombel ini, tetap
-        //   dihitung sebagai riwayat kelulusan rombel ini (tanpa syarat acd_students.status,
-        //   karena begitu siswa lulus, acd_students.status juga biasanya berubah dari
-        //   'active').
-        $memberCondition = fn($q) => $q->where(
-            fn($q2) => $q2->where(
-                fn($q3) => $q3->where("{$cgsTable}.status", 'active')->where('acd_students.status', 'active')
-            )->orWhere("{$cgsTable}.status", 'graduated')
-        );
+        // Kondisi "anggota rombel" - lihat memberOfClassGroupCondition() untuk
+        // penjelasan lengkap. Sudah tidak bergantung pada kolom `status`
+        // yang dihapus dari acd_class_group_students.
+        $memberCondition = $this->memberOfClassGroupCondition($cgsTable);
 
         $query = ClassGroup::query()
             ->with(['concentration', 'homeroomTeacher'])
@@ -171,18 +199,10 @@ class ClassGroupController extends Controller
     public function show(Request $request, string $id)
     {
         // 1. Ambil metrik ringkasan rombel (Stats Card)
-        // PERBAIKAN: sama seperti index() — kondisi mengikuti persis docblock
-        // ClassGroup::activeStudents(): TIDAK memfilter exit_date (itu cuma jadwal
-        // pindah semester berikutnya, bukan status keluar sekarang). Anggota rombel ini
-        // = (pivot.status='active' DAN acd_students.status='active') ATAU
-        // pivot.status='graduated' (riwayat lulus dari rombel ini).
+        // Kondisi "anggota rombel" - lihat memberOfClassGroupCondition().
         $cgsTable = (new ClassGroupStudent())->getTable();
 
-        $memberCondition = fn($q) => $q->where(
-            fn($q2) => $q2->where(
-                fn($q3) => $q3->where("{$cgsTable}.status", 'active')->where('acd_students.status', 'active')
-            )->orWhere("{$cgsTable}.status", 'graduated')
-        );
+        $memberCondition = $this->memberOfClassGroupCondition($cgsTable);
 
         $classGroup = ClassGroup::with(['concentration', 'homeroomTeacher', 'semester'])
             ->select('acd_class_groups.*')
@@ -215,18 +235,9 @@ class ClassGroupController extends Controller
         $filterGender = (string) $request->query('filter_gender', '');
 
         // 2. Query anggota siswa di rombel ini
-        // PERBAIKAN: filter roster ini disamakan persis dengan kondisi stats card di
-        // atas — (pivot.status='active' DAN acd_students.status='active') ATAU
-        // pivot.status='graduated' — supaya tabel dan angka "Total Anggota" dkk selalu
-        // sinkron. Tidak memfilter exit_date, konsisten dengan docblock
-        // ClassGroup::activeStudents().
+        // Cukup panggil $memberCondition agar 100% sinkron dengan Stats Card!
         $students = $classGroup->students()
-            ->where(function ($q) use ($cgsTable) {
-                $q->where(
-                    fn($q2) => $q2->where("{$cgsTable}.status", 'active')
-                        ->where('acd_students.status', 'active')
-                )->orWhere("{$cgsTable}.status", 'graduated');
-            })
+            ->where($memberCondition)
             ->with(['vault', 'concentration', 'activeClassGroup'])
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q2) use ($search) {
@@ -390,10 +401,13 @@ class ClassGroupController extends Controller
             return response()->json(['message' => 'Pelanggaran sistem: Tidak diizinkan pindah lintas tingkat.'], 422);
         }
 
-        // Proses pindah: Update ID rombel pada tabel pivot yang statusnya masih aktif
+        // Proses pindah: Update ID rombel pada baris pivot yang masih aktif
+        // (exit_date belum terisi = siswa memang masih terdaftar di rombel asal).
+        // Pindah kelas internal TIDAK menyentuh acd_student_mutations, karena
+        // siswa tetap berstatus AKTIF - hanya berpindah rombel.
         ClassGroupStudent::where('student_id', $studentId)
             ->where('class_group_id', $classGroupId)
-            ->where('status', 'active')
+            ->whereNull('exit_date')
             ->update(['class_group_id' => $targetClass->id]);
 
         // Kirim trigger SweetAlert DAN trigger refresh data secara bersamaan

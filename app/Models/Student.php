@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Student\DistanceToSchool;
 use App\Enums\Student\Gender;
+use App\Enums\Student\MutationStatus;
 use App\Enums\Student\RegistrationType;
 use App\Enums\Student\ResidenceType;
 use App\Enums\Student\SpecialCondition;
@@ -78,8 +79,9 @@ class Student extends Model
 
     public function classGroups(): BelongsToMany
     {
+        // Hapus 'status', ganti dengan kolom baru dari blueprint Anda
         return $this->belongsToMany(ClassGroup::class, 'acd_class_group_students')
-            ->withPivot('entry_date', 'exit_date', 'status')
+            ->withPivot('entry_date', 'exit_date', 'exit_reason', 'mutation_id')
             ->withTimestamps();
     }
 
@@ -96,7 +98,19 @@ class Student extends Model
      */
     public function activeClassGroup(): BelongsToMany
     {
-        return $this->classGroups()->wherePivotIn('status', ['active', 'graduated']);
+        return $this->classGroups()
+            // 1. PERBAIKAN: Gunakan exit_reason
+            ->whereNull('acd_class_group_students.exit_reason')
+            // 2. PERBAIKAN: Logika mutation_id
+            ->where(function ($q) {
+                $q->whereNull('acd_class_group_students.mutation_id')
+                    ->orWhereExists(function ($sub) {
+                        $sub->selectRaw('1')
+                            ->from('acd_student_mutations')
+                            ->whereColumn('acd_student_mutations.id', 'acd_class_group_students.mutation_id')
+                            ->where('acd_student_mutations.status', MutationStatus::GRADUATED->value);
+                    });
+            });
     }
 
     public function extracurriculars(): BelongsToMany

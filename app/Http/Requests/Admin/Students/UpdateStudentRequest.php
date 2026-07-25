@@ -27,7 +27,7 @@ class UpdateStudentRequest extends FormRequest
         return match ($step) {
             1 => [ // Identitas
                 'name'               => ['required', 'string', 'max:255'],
-                'nick_name'          => ['nullable', 'string', 'max:100'],
+                'nisn'               => ['required', 'digits:10'],
                 'gender'             => ['required', 'in:' . $this->enumValues(Gender::class)],
                 'pob'                => ['nullable', 'string', 'max:255'],
                 'dob'                => ['nullable', 'date'],
@@ -99,6 +99,8 @@ class UpdateStudentRequest extends FormRequest
                 'height'                 => ['nullable', 'numeric', 'min:0'],
                 'weight'                 => ['nullable', 'numeric', 'min:0'],
                 'blood_type'             => ['nullable', 'string', 'max:5'],
+                'has_food_allergy'       => ['nullable', 'in:yes,no'],
+                'food_allergy'           => ['nullable', 'string', 'max:100'],
                 'is_special_condition'   => ['nullable', 'in:yes,no'],
                 'special_condition_type' => ['nullable', 'in:' . $this->enumValues(SpecialCondition::class)],
                 'condition_description'  => ['nullable', 'string'],
@@ -107,6 +109,15 @@ class UpdateStudentRequest extends FormRequest
                 'interest_sport'         => ['nullable', 'string', 'max:255'],
                 'interest_organization'  => ['nullable', 'string', 'max:255'],
                 'extracurricular_choice' => ['nullable', 'string', 'max:255'],
+
+                // Aturan validasi BKK
+                'post_graduation_plan'      => ['nullable', 'in:bekerja,kuliah,berwirausaha,belum-menentukan'],
+                'work_interest'             => ['nullable', 'in:dalam-negeri,luar-negeri,bersedia-keduanya'],
+                'target_country'            => ['nullable', 'string', 'max:100'],
+                'target_program'            => ['nullable', 'in:magang,pekerja-profesional,ssw,titp,lainnya'],
+                'foreign_language_skills'   => ['nullable', 'string'],
+                'willing_to_language_train' => ['nullable', 'in:yes,no'],
+                'ready_for_bkk_selection'   => ['nullable', 'in:yes,no'],
             ],
             default => [],
         };
@@ -167,7 +178,7 @@ class UpdateStudentRequest extends FormRequest
     {
         return [
             'name'                  => 'Nama Lengkap',
-            'nick_name'             => 'Nama Panggilan',
+            'nisn'                  => 'NISN',
             'gender'                => 'Jenis Kelamin',
             'pob'                   => 'Tempat Lahir',
             'dob'                   => 'Tanggal Lahir',

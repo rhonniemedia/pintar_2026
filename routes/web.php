@@ -53,6 +53,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Edit
         Route::get('/{id}/edit/personal', [StudentController::class, 'edit'])->name('edit.personal');
         Route::put('/{id}/edit/personal', [StudentController::class, 'update'])->name('edit.personal.update');
+
+        // --- RUTE BARU UNTUK FOTO ---
+        Route::get('/{id}/edit/photo', [StudentController::class, 'editPhoto'])->name('edit.photo');
+        Route::put('/{id}/edit/photo', [StudentController::class, 'updatePhoto'])->name('edit.photo.update');
+
         Route::get('/{id}/edit/guardian', fn($id) => null)->name('edit.guardian');
 
         // Kelompok / Rombel
@@ -105,6 +110,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Mutasi Keluar
             Route::name('transfer.out.')->prefix('out')->group(function () {
                 Route::get('/', [StudentMutationOutController::class, 'index'])->name('index');
+                Route::get('/create', [StudentMutationOutController::class, 'create'])->name('create');
+                Route::post('/', [StudentMutationOutController::class, 'store'])->name('store');
             });
         });
 

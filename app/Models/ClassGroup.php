@@ -34,7 +34,8 @@ class ClassGroup extends Model
     public function students(): BelongsToMany
     {
         return $this->belongsToMany(Student::class, 'acd_class_group_students')
-            ->withPivot('entry_date', 'exit_date', 'status')
+            // Hapus 'status', sesuaikan dengan struktur baru jika perlu
+            ->withPivot('entry_date', 'exit_date', 'exit_reason', 'mutation_id')
             ->withTimestamps();
     }
 
@@ -59,8 +60,12 @@ class ClassGroup extends Model
     public function activeStudents(): BelongsToMany
     {
         return $this->students()
+            // Pastikan string 'active' ini sesuai dengan value Enum StudentStatus Anda 
+            // (jika Enum Anda menggunakan huruf besar, ubah menjadi 'ACTIVE' atau panggil Enum-nya langsung)
             ->where('acd_students.status', 'active')
-            ->wherePivot('status', 'active');
+
+            // Logika baru pengganti status pivot: belum ada tanggal keluar / belum dipindah / dimutasi
+            ->wherePivotNull('exit_date');
     }
 
     public function classGroupTeachers(): HasMany

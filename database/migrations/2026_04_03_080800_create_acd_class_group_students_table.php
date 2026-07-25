@@ -24,12 +24,15 @@ return new class extends Migration
             $table->date('entry_date');
             $table->date('exit_date')->nullable();
 
-            $table->enum('status', ['active', 'moved_class', 'dropped', 'graduated'])->default('active');
+            $table->enum('exit_reason', ['moved_class'])->nullable();
 
             $table->timestamps();
 
-            // MODIFIKASI: Cukup pastikan siswa tidak diinput 2x di rombel yang SAMA.
+            // Cukup pastikan siswa tidak diinput 2x di rombel yang SAMA.
             $table->unique(['student_id', 'class_group_id'], 'unique_student_class_group');
+
+            // Index untuk query "siapa saja yang masih aktif di rombel ini"
+            $table->index(['class_group_id', 'exit_date']);
         });
     }
 

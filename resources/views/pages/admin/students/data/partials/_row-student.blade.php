@@ -41,29 +41,37 @@ $jurusan = $r->concentration->name ?? '-';
     <td class="px-4 py-4">
         <div
             x-data="{
-                open: false,
-                dropUp: false,
+            open: false,
+            menuX: 0,
+            menuY: 0,
 
-                toggle() {
-                    if (this.open) {
-                        this.open = false;
-                        return;
-                    }
-
-                    this.open = true;
-
-                    this.$nextTick(() => {
-                        const btn = this.$refs.button.getBoundingClientRect();
-                        const menu = this.$refs.menu.getBoundingClientRect();
-
-                        const spaceBelow = window.innerHeight - btn.bottom;
-                        const spaceAbove = btn.top;
-
-                        this.dropUp = spaceBelow < menu.height && spaceAbove > menu.height;
-                    });
+            toggle() {
+                if (this.open) {
+                    this.open = false;
+                    return;
                 }
-            }"
+
+                this.open = true;
+
+                this.$nextTick(() => {
+                    const btn = this.$refs.button.getBoundingClientRect();
+                    const menu = this.$refs.menu.getBoundingClientRect();
+
+                    const spaceBelow = window.innerHeight - btn.bottom;
+                    const spaceAbove = btn.top;
+
+                    const dropUp = spaceBelow < menu.height && spaceAbove > menu.height;
+                    
+                    // Sejajarkan kanan menu dengan kanan tombol
+                    this.menuX = btn.right - menu.width;
+                    // Tentukan posisi Y (atas atau bawah tombol)
+                    this.menuY = dropUp ? (btn.top - menu.height - 4) : (btn.bottom + 4);
+                });
+            }
+        }"
             @click.outside="open = false"
+            @scroll.window="open = false"
+            @resize.window="open = false"
             class="relative inline-block text-left">
 
             <button
@@ -86,20 +94,14 @@ $jurusan = $r->concentration->name ?? '-';
                 x-ref="menu"
                 x-show="open"
                 x-cloak
-
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
-
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-
-                :class="dropUp
-            ? 'bottom-full mb-1 origin-bottom-right'
-            : 'top-full mt-1 origin-top-right'"
-
-                class="absolute right-0 z-20 w-56 rounded-xl border border-border bg-white shadow-lg py-3 flex flex-col text-left">
+                :style="`top: ${menuY}px; left: ${menuX}px;`"
+                class="fixed z-[9999] w-56 rounded-xl border border-border bg-white shadow-lg py-3 flex flex-col text-left origin-top-right">
 
                 <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Detail</p>
                 <button type="button"
@@ -129,6 +131,15 @@ $jurusan = $r->concentration->name ?? '-';
                     hx-swap="outerHTML"
                     class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                     <i data-lucide="file-pen-line" class="size-4 text-secondary pointer-events-none"></i> Edit Data
+                </button>
+
+                <button type="button"
+                    @click="open = false"
+                    hx-get="{{ route('admin.students.edit.photo', $r->id) }}"
+                    hx-target="#modal-container"
+                    hx-swap="outerHTML"
+                    class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
+                    <i data-lucide="camera" class="size-4 text-secondary pointer-events-none"></i> Edit Foto
                 </button>
 
                 <button type="button"

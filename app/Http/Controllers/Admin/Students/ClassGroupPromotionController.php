@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin\Students;
 
+use App\Enums\Student\MutationStatus;
+use App\Enums\Student\StudentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\ClassGroupStudent;
 use App\Models\CoreSemester;
+use App\Models\StudentMutation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -84,7 +87,6 @@ class ClassGroupPromotionController extends Controller
         $nextSemester = $this->nextSemesterOf($classGroup);
 
         if (!$nextSemester) {
-            // Kita juga mengubah response error agar sesuai dengan format yang ditangkap Frontend 
             return response()->json([
                 'message' => 'Semester berikutnya belum tersedia. Buat semester berikutnya terlebih dahulu sebelum memproses kenaikan kelas.'
             ], 422);
@@ -96,9 +98,9 @@ class ClassGroupPromotionController extends Controller
 
         DB::transaction(function () use ($data, $classGroup, $targetClassGroup) {
             foreach ($data['student_id'] as $studentId) {
+                // PERBAIKAN: Kolom status pivot dihapus, patokan aktif adalah exit_date NULL
                 $currentRow = ClassGroupStudent::where('class_group_id', $classGroup->id)
                     ->where('student_id', $studentId)
-                    ->where('status', 'active')
                     ->whereNull('exit_date')
                     ->first();
 
@@ -115,13 +117,12 @@ class ClassGroupPromotionController extends Controller
                     ],
                     [
                         'entry_date' => $data['entry_date'],
-                        'status' => 'active',
+                        // PERBAIKAN: Hapus baris 'status' => 'active'
                     ]
                 );
             }
         });
 
-        // UBAH RETURN DI SINI
         return response()->noContent()->header('HX-Trigger', json_encode([
             'showAlert' => [
                 'icon' => 'success',
@@ -140,9 +141,8 @@ class ClassGroupPromotionController extends Controller
             ? ClassGroupStudent::with('student')
             ->where('class_group_id', $classGroup->id)
             ->whereNotNull('exit_date')
-            // Menambahkan filter active untuk kandidat pembatalan juga
             ->whereHas('student', function ($q) {
-                $q->where('status', 'active');
+                $q->where('status', StudentStatus::ACTIVE->value);
             })
             ->whereHas('student.classGroupStudents', function ($q) use ($nextSemester) {
                 $q->whereHas('classGroup', fn($qq) => $qq->where('semester_id', $nextSemester->id));
@@ -166,7 +166,6 @@ class ClassGroupPromotionController extends Controller
         $nextSemester = $this->nextSemesterOf($classGroup);
 
         if (!$nextSemester) {
-            // Kita juga mengubah response error agar sesuai dengan format yang ditangkap Frontend 
             return response()->json([
                 'message' => 'Tidak ada data kenaikan kelas yang bisa dibatalkan.'
             ], 422);
@@ -184,7 +183,6 @@ class ClassGroupPromotionController extends Controller
             }
         });
 
-        // UBAH RETURN DI SINI
         return response()->noContent()->header('HX-Trigger', json_encode([
             'showAlert' => [
                 'icon' => 'success',
@@ -239,7 +237,6 @@ class ClassGroupPromotionController extends Controller
         $targetClassGroup = null;
         if ($data['decision'] === 'tidak-lulus') {
             if (!$nextSemester) {
-                // Kita juga mengubah response error agar sesuai dengan format yang ditangkap Frontend 
                 return response()->json([
                     'message' => 'Semester berikutnya belum tersedia. Buat semester berikutnya terlebih dahulu untuk memproses siswa tidak lulus.'
                 ], 422);
@@ -252,11 +249,10 @@ class ClassGroupPromotionController extends Controller
 
         DB::transaction(function () use ($data, $classGroup, $targetClassGroup) {
             foreach ($data['student_id'] as $studentId) {
-                // TAMBAHKAN with('student') DI SINI
                 $currentRow = ClassGroupStudent::with('student')
                     ->where('class_group_id', $classGroup->id)
                     ->where('student_id', $studentId)
-                    ->where('status', 'active')
+                    // PERBAIKAN: Hapus where status = active
                     ->whereNull('exit_date')
                     ->first();
 
@@ -265,13 +261,22 @@ class ClassGroupPromotionController extends Controller
                 }
 
                 if ($data['decision'] === 'lulus') {
-                    $currentRow->update([
-                        'status' => 'graduated',
-                        'exit_date' => $data['exit_date'],
+                    // PERBAIKAN: Buat record Mutasi untuk kelulusan
+                    $mutation = StudentMutation::create([
+                        'student_id'    => $studentId,
+                        'semester_id'   => $classGroup->semester_id,
+                        'class_group_id' => $classGroup->id,
+                        'status'        => MutationStatus::GRADUATED->value,
+                        'mutation_date' => $data['exit_date'],
                     ]);
 
-                    // TAMBAHKAN BARIS INI UNTUK UPDATE MASTER SISWA
-                    $currentRow->student->update(['status' => 'graduated']);
+                    $currentRow->update([
+                        // PERBAIKAN: Status dihapus, gunakan mutation_id
+                        'exit_date'   => $data['exit_date'],
+                        'mutation_id' => $mutation->id,
+                    ]);
+
+                    $currentRow->student->update(['status' => StudentStatus::GRADUATED->value]);
                 } else {
                     $currentRow->update(['exit_date' => $data['exit_date']]);
 
@@ -282,14 +287,12 @@ class ClassGroupPromotionController extends Controller
                         ],
                         [
                             'entry_date' => $data['exit_date'],
-                            'status' => 'active',
                         ]
                     );
                 }
             }
         });
 
-        // UBAH RETURN DI SINI
         return response()->noContent()->header('HX-Trigger', json_encode([
             'showAlert' => [
                 'icon' => 'success',
@@ -304,13 +307,9 @@ class ClassGroupPromotionController extends Controller
     {
         $candidates = ClassGroupStudent::with('student')
             ->where('class_group_id', $classGroup->id)
-            ->where(function ($q) {
-                $q->where('status', 'graduated')
-                    ->orWhereNotNull('exit_date');
-            })
-            // Menambahkan filter active atau graduated jika sebelumnya dibatalkan
+            ->whereNotNull('exit_date')
             ->whereHas('student', function ($q) {
-                $q->whereIn('status', ['active', 'graduated']);
+                $q->whereIn('status', [StudentStatus::ACTIVE->value, StudentStatus::GRADUATED->value]);
             })
             ->get();
 
@@ -331,7 +330,6 @@ class ClassGroupPromotionController extends Controller
 
         DB::transaction(function () use ($data, $classGroup, $nextSemester) {
             foreach ($data['student_id'] as $studentId) {
-                // TAMBAHKAN with('student') DI SINI
                 $currentRow = ClassGroupStudent::with('student')
                     ->where('class_group_id', $classGroup->id)
                     ->where('student_id', $studentId)
@@ -341,11 +339,20 @@ class ClassGroupPromotionController extends Controller
                     continue;
                 }
 
-                if ($currentRow->status === 'graduated') {
-                    $currentRow->update(['status' => 'active', 'exit_date' => null]);
+                // PERBAIKAN: Cek apakah kelulusan terkait dengan mutation_id
+                if ($currentRow->student->status->value === StudentStatus::GRADUATED->value || $currentRow->mutation_id) {
 
-                    // TAMBAHKAN BARIS INI UNTUK KEMBALIKAN STATUS MASTER SISWA
-                    $currentRow->student->update(['status' => 'active']);
+                    // Hapus data mutasi kelulusannya jika ada
+                    if ($currentRow->mutation_id) {
+                        StudentMutation::where('id', $currentRow->mutation_id)->delete();
+                    }
+
+                    $currentRow->update([
+                        'exit_date' => null,
+                        'mutation_id' => null, // Reset mutation_id
+                    ]);
+
+                    $currentRow->student->update(['status' => StudentStatus::ACTIVE->value]);
                 } elseif ($nextSemester) {
                     ClassGroupStudent::whereHas('classGroup', fn($q) => $q->where('semester_id', $nextSemester->id))
                         ->where('student_id', $studentId)
@@ -356,7 +363,6 @@ class ClassGroupPromotionController extends Controller
             }
         });
 
-        // UBAH RETURN DI SINI
         return response()->noContent()->header('HX-Trigger', json_encode([
             'showAlert' => [
                 'icon' => 'success',
@@ -405,11 +411,11 @@ class ClassGroupPromotionController extends Controller
     {
         return ClassGroupStudent::with(['student', 'student.vault'])
             ->where('class_group_id', $classGroup->id)
-            ->where('status', 'active')
-            ->whereNull('exit_date')
-            // PERBAIKAN: Pastikan status siswa di tabel utama (acd_students) juga aktif
+            // PERBAIKAN: Gunakan exit_reason dan mutation_id, BUKAN exit_date
+            ->whereNull('exit_reason')
+            ->whereNull('mutation_id')
             ->whereHas('student', function ($query) {
-                $query->where('status', 'active');
+                $query->where('status', StudentStatus::ACTIVE->value);
             });
     }
 }

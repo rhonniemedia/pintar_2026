@@ -22,11 +22,12 @@
         </div>
 
         <div class="flex items-center gap-2">
-            {{-- Tombol dimatikan sementara karena fokusnya hanya menampilkan data dulu --}}
-            <button type="button" disabled
-                class="flex items-center gap-2 px-5 py-2.5 bg-primary/50 text-white rounded-full font-semibold text-sm cursor-not-allowed">
-                <i data-lucide="plus" class="size-4"></i>
-                <span>Proses Mutasi Keluar</span>
+            <button type="button"
+                hx-get="{{ route('admin.students.transfer.out.create') }}"
+                hx-target="#mutasi-keluar-container" hx-swap="afterend"
+                class="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-focus text-white rounded-full font-semibold text-sm transition-colors cursor-pointer shadow-sm shadow-error/30">
+                <i data-lucide="log-out" class="size-4"></i>
+                <span>Mutasi Keluar</span>
             </button>
         </div>
     </div>
@@ -67,5 +68,12 @@
 
         @include('pages.admin.students.transfers.out.partials._table', ['data' => $data, 'search' => $search])
     </div>
+
+    {{-- MODAL ADD / EDIT KOSONG --}}
+    <div id="form-modal-content"> </div>
+
+    {{-- MODAL DETAIL (Data Peserta Didik / Data Orang Tua) --}}
+    <div id="modal-container"></div>
+
 </div>
 @endsection
