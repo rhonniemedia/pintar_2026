@@ -4,17 +4,17 @@
         <table class="w-full text-left">
             <thead>
                 <tr class="border-b border-border">
-                    <th class="w-[45%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">
+                    <th class="w-[46%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">
                         Rombel
                         <div class="text-[11px] font-normal normal-case">Nama Rombel | Jurusan</div>
                     </th>
 
-                    <th class="w-[45%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">
+                    <th class="w-[46%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">
                         Wali Kelas
                         <div class="text-[11px] font-normal normal-case">Wali Kelas | Jumlah Siswa</div>
                     </th>
 
-                    <th class="w-[10%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">
+                    <th class="w-[8%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">
                         Aksi
                         <div class="text-[11px] font-normal normal-case">Edit | Hapus</div>
                     </th>

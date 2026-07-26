@@ -33,6 +33,8 @@ class StudentController extends Controller
             'filter_religion',
             'filter_special_needs',
             'filter_concentration',
+            'filter_age',
+            'filter_age_date',
         ]);
 
         $semesterId = CoreSemester::where('status', 'active')->value('id');
@@ -60,6 +62,8 @@ class StudentController extends Controller
                 'filterReligion'       => $filters['filter_religion'] ?? null,
                 'filterSpecialNeeds'   => $filters['filter_special_needs'] ?? null,
                 'filterConcentration'  => $filters['filter_concentration'] ?? null,
+                'filterAge'            => $filters['filter_age'] ?? null,
+                'filterAgeDate'        => $filters['filter_age_date'] ?? null,
                 'concentrationOptions' => $concentrationOptions,
             ],
             $stats,
@@ -219,6 +223,7 @@ class StudentController extends Controller
             $studentData = $filterNulls([
                 'previous_school'               => $validated['previous_school'] ?? null,
                 'previous_school_npsn'          => $validated['previous_school_npsn'] ?? null,
+                'previous_school_status'        => $validated['previous_school_status'] ?? null,
                 'previous_school_city'          => $validated['previous_school_city'] ?? null,
                 'previous_school_province'      => $validated['previous_school_province'] ?? null,
                 'graduation_certificate_number' => $validated['graduation_certificate_number'] ?? null,
@@ -234,31 +239,49 @@ class StudentController extends Controller
 
         // --- STEP 5: KESEHATAN & SELESAI ---
         if ($step === 5) {
+            // 1. Ambil data utama (yang difilter null-nya agar tidak menimpa data yang tidak dikirim)
             $studentData = $filterNulls([
                 'height'                 => $validated['height'] ?? null,
                 'weight'                 => $validated['weight'] ?? null,
                 'blood_type'             => $validated['blood_type'] ?? null,
                 'has_food_allergy'       => $validated['has_food_allergy'] ?? null,
-                'food_allergy'           => $validated['food_allergy'] ?? null,
                 'is_special_condition'   => $validated['is_special_condition'] ?? null,
-                'special_condition_type' => $validated['special_condition_type'] ?? null,
-                'condition_description'  => $validated['condition_description'] ?? null,
                 'medical_history'        => $validated['medical_history'] ?? null,
                 'interest_art'           => $validated['interest_art'] ?? null,
                 'interest_sport'         => $validated['interest_sport'] ?? null,
                 'interest_organization'  => $validated['interest_organization'] ?? null,
                 'extracurricular_choice' => $validated['extracurricular_choice'] ?? null,
-
-                // Tambahan Data Rencana Karir & BKK
-                'post_graduation_plan'      => $validated['post_graduation_plan'] ?? null,
-                'work_interest'             => $validated['work_interest'] ?? null,
-                'target_country'            => $validated['target_country'] ?? null,
-                'target_program'            => $validated['target_program'] ?? null,
-                'foreign_language_skills'   => $validated['foreign_language_skills'] ?? null,
+                'post_graduation_plan'   => $validated['post_graduation_plan'] ?? null,
                 'willing_to_language_train' => $validated['willing_to_language_train'] ?? null,
                 'ready_for_bkk_selection'   => $validated['ready_for_bkk_selection'] ?? null,
             ]);
 
+            // 2. LOGIKA PEMBERSIHAN DATA KONDISIONAL (Memaksa NULL ke database jika opsi disembunyikan)
+
+            // Alergi Makanan
+            $studentData['food_allergy'] = ($validated['has_food_allergy'] ?? 'no') === 'yes'
+                ? ($validated['food_allergy'] ?? null)
+                : null;
+
+            // Kondisi Khusus / Disabilitas (Ini yang mencegah error Enum "none")
+            $studentData['special_condition_type'] = ($validated['is_special_condition'] ?? 'no') === 'yes'
+                ? ($validated['special_condition_type'] ?? null)
+                : null;
+            $studentData['condition_description'] = ($validated['is_special_condition'] ?? 'no') === 'yes'
+                ? ($validated['condition_description'] ?? null)
+                : null;
+
+            // Rencana Karir & BKK
+            $isBekerja = ($validated['post_graduation_plan'] ?? '') === 'bekerja';
+            $studentData['work_interest'] = $isBekerja ? ($validated['work_interest'] ?? null) : null;
+            $studentData['foreign_language_skills'] = $isBekerja ? ($validated['foreign_language_skills'] ?? null) : null;
+
+            $isLuarNegeri = $isBekerja && in_array($validated['work_interest'] ?? '', ['luar-negeri', 'bersedia-keduanya']);
+            $studentData['target_country'] = $isLuarNegeri ? ($validated['target_country'] ?? null) : null;
+            $studentData['target_program'] = $isLuarNegeri ? ($validated['target_program'] ?? null) : null;
+
+
+            // 3. Eksekusi Update
             if (!empty($studentData)) {
                 $student->update($studentData);
             }
@@ -352,6 +375,8 @@ class StudentController extends Controller
             'religion'      => $filters['filter_religion'] ?? null,
             'special_needs' => $filters['filter_special_needs'] ?? null,
             'concentration' => $filters['filter_concentration'] ?? null,
+            'age'           => $filters['filter_age'] ?? null,
+            'age_reference_date' => $filters['filter_age_date'] ?? null,
         ], $semesterId);
 
         return $studentFilter->apply($query);

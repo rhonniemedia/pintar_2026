@@ -35,25 +35,25 @@
             <p class="text-sm text-secondary">Kelola data rombel dan penempatan siswa secara menyeluruh.</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
             <button type="button"
                 @click="formModalOpen = true"
                 hx-get="{{ route('admin.students.group.create') }}"
                 hx-target="#form-modal-content"
-                class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30">
-                <i data-lucide="plus" class="size-4"></i>
-                <span>Tambah Rombel</span>
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
+                <i data-lucide="plus" class="size-4 shrink-0"></i>
+                <span>Tambah</span>
             </button>
 
-            <button type="button" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30">
-                <i data-lucide="printer" class="size-4"></i>
-                <span>Cetak Daftar Hadir</span>
+            <button type="button" class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
+                <i data-lucide="printer" class="size-4 shrink-0"></i>
+                <span>Daftar Hadir</span>
             </button>
 
             <a href="{{ route('admin.students.group.index') }}"
                 onclick="document.getElementById('refresh-icon').classList.add('animate-spin');"
-                class="flex items-center gap-2 px-4 py-2.5 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer">
-                <i id="refresh-icon" data-lucide="refresh-cw" class="size-4"></i>
+                class="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer whitespace-nowrap">
+                <i id="refresh-icon" data-lucide="refresh-cw" class="size-4 shrink-0"></i>
                 <span>Segarkan</span>
             </a>
         </div>
@@ -76,8 +76,8 @@
                 <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
-            <div class="flex items-center gap-2">
-                <div class="relative">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-none">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
                     <input
                         type="text"
@@ -91,14 +91,14 @@
                         hx-swap="outerHTML"
                         hx-include="#class-group-filter-form"
                         hx-push-url="true"
-                        class="h-11 w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
                 </div>
 
                 <button
                     type="button"
                     @click="filterModalOpen = true"
                     title="Filter"
-                    class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
+                    class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
                     <i data-lucide="filter" class="size-4 text-secondary"></i>
 
                     <span

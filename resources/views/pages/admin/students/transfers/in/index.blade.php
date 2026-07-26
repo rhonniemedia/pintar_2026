@@ -26,12 +26,10 @@
                 hx-get="{{ route('admin.students.transfer.in.create') }}"
                 hx-target="#modal-form-container"
                 hx-swap="innerHTML"
-                class="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-focus text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-primary/30">
+                class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-green-500/30">
                 <i data-lucide="plus" class="size-4"></i>
-                <span>Tambah Siswa Pindahan</span>
+                <span>Mutasi Masuk</span>
             </button>
-
-            <div id="modal-form-container" @closeModal.window="document.getElementById('modal-form-container').innerHTML = ''"></div>
         </div>
     </div>
 
@@ -79,5 +77,12 @@
         @include('pages.admin.students.transfers.in.partials._table', ['data' => $data, 'search' => $search])
 
     </div>
+
+    {{-- MODAL ADD / EDIT KOSONG --}}
+    <div id="modal-form-container"></div>
+
+    {{-- MODAL DETAIL (Data Peserta Didik / Data Orang Tua) --}}
+    <div id="modal-container"></div>
+
 </div>
 @endsection

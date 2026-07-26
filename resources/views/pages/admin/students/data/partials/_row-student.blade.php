@@ -14,11 +14,11 @@ $jurusan = $r->concentration->name ?? '-';
 @endphp
 
 <tr id="row-student-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
-    <td class="px-4 py-4">
+    <td class="px-5 py-4 min-w-[240px]">
         <div class="flex items-center gap-3">
             <x-ui.avatar :name="$r->name" :gender="$r->gender" :index="$loop->index" />
             <div>
-                <div class="font-semibold text-foreground text-sm uppercase">{{ $r->name }}</div>
+                <div class="font-semibold text-foreground text-sm uppercase whitespace-nowrap">{{ $r->name }}</div>
                 <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5">
                     {{ $r->vault->nik_encrypted ?? '-' }}
                 </div>
@@ -26,19 +26,19 @@ $jurusan = $r->concentration->name ?? '-';
         </div>
     </td>
 
-    <td class="px-4 py-4">
+    <td class="px-5 py-4 min-w-[190px]">
         <div class="flex items-center gap-2">
-            <span class="inline-block w-20 text-center px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold">{{ $r->nis ?? '-' }}</span>
-            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold">{{ $nisn }}</span>
+            <span class="inline-block w-24 text-center px-3 py-1.5 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold whitespace-nowrap">{{ $r->nis ?? '-' }}</span>
+            <span class="px-3 py-1.5 rounded-md bg-warning/10 text-warning-dark text-xs font-bold whitespace-nowrap">{{ $nisn }}</span>
         </div>
     </td>
 
-    <td class="px-4 py-4">
-        <div class="text-sm font-semibold text-foreground">{{ $rombel }}</div>
-        <div class="text-xs text-secondary">{{ $jurusan }}</div>
+    <td class="px-5 py-4 min-w-[160px]">
+        <div class="text-sm font-semibold text-foreground whitespace-nowrap">{{ $rombel }}</div>
+        <div class="text-xs text-secondary whitespace-nowrap">{{ $jurusan }}</div>
     </td>
 
-    <td class="px-4 py-4">
+    <td class="px-5 py-4 min-w-[120px]">
         <div
             x-data="{
             open: false,
@@ -79,7 +79,7 @@ $jurusan = $r->concentration->name ?? '-';
                 type="button"
                 @click="toggle()"
                 title="Aksi"
-                class="inline-flex items-center gap-2 h-8 px-3 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all focus:outline-none cursor-pointer">
+                class="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all focus:outline-none cursor-pointer whitespace-nowrap">
 
                 <span class="text-sm font-medium">Aksi</span>
 

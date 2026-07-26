@@ -46,8 +46,9 @@
             ];
             $activeStep = (int) ($currentStep ?? 1);
             @endphp
-            <div class="sticky top-0 z-20 bg-white border-b border-border shadow-sm">
-                <div class="flex items-center px-6 sm:px-10 pt-5 pb-4 sm:pb-9">
+            <div class="sticky top-0 z-20 bg-white border-b border-border shadow-sm shrink-0">
+                {{-- PERUBAHAN: pb-3 sm:pb-7 diubah menjadi pb-6 sm:pb-10 agar teks 2 baris tidak terpotong --}}
+                <div class="flex items-center px-4 sm:px-10 pt-4 pb-6 sm:pb-10">
                     @foreach($steps as $number => $step)
                     <div class="relative shrink-0">
                         <button type="button"
@@ -55,10 +56,13 @@
                             hx-get="{{ route('admin.students.edit.personal', ['id' => $student->id, 'step' => $number]) }}"
                             hx-target="#edit-modal-content" hx-select="#edit-modal-content" hx-swap="outerHTML"
                             class="cursor-pointer relative z-10 flex items-center justify-center size-8 sm:size-9 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 bg-emerald-500 text-white hover:bg-emerald-600"
+                            @elseif($number===$activeStep)
+                            class="relative z-10 flex items-center justify-center size-8 sm:size-9 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 bg-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/15 scale-110"
                             @else
                             disabled
-                            class="disabled:cursor-not-allowed relative z-10 flex items-center justify-center size-8 sm:size-9 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 {{ $activeStep === $number ? 'bg-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/15 scale-110' : 'bg-white text-secondary border-2 border-border' }}"
+                            class="disabled:cursor-not-allowed relative z-10 flex items-center justify-center size-8 sm:size-9 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 bg-white text-secondary border-2 border-border"
                             @endif>
+
                             @if($activeStep > $number)
                             <i data-lucide="check" class="size-4"></i>
                             @else
@@ -66,12 +70,13 @@
                             @endif
                         </button>
 
-                        <span class="absolute top-full mt-2 whitespace-nowrap text-[11px] font-semibold leading-tight transition-colors duration-300 hidden sm:block {{ $loop->first ? 'left-0' : ($loop->last ? 'right-0' : 'left-1/2 -translate-x-1/2') }} {{ $activeStep > $number ? 'text-emerald-600' : ($activeStep === $number ? 'text-primary' : 'text-secondary') }}">
+                        <span class="absolute top-full mt-2 w-[80px] left-1/2 -translate-x-1/2 text-center text-[10px] sm:text-[11px] font-semibold leading-tight whitespace-normal transition-colors duration-300 hidden sm:block {{ $activeStep > $number ? 'text-emerald-600' : ($activeStep === $number ? 'text-primary' : 'text-secondary') }}">
                             {{ $step['label'] }}
                         </span>
                     </div>
+
                     @if(!$loop->last)
-                    <div class="flex-1 h-[3px] rounded-full transition-colors duration-300 {{ $activeStep > ($number) ? 'bg-emerald-500' : ($activeStep === ($number + 1) ? 'bg-primary' : 'bg-slate-200') }}"></div>
+                    <div class="flex-1 h-[3px] rounded-full transition-colors duration-300 {{ $activeStep > $number ? 'bg-emerald-500' : 'bg-slate-200' }}"></div>
                     @endif
                     @endforeach
                 </div>
@@ -496,16 +501,31 @@
                         <span>Rombongan belajar &amp; jurusan tidak diubah di sini — gunakan menu <strong>Pindah Kelas</strong> atau <strong>Kenaikan Kelas</strong>.</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
+
+                        {{-- Baris 1: Nama Sekolah Asal (Full 1 Baris) --}}
+                        <div class="sm:col-span-2">
                             <label class="{{ $labelClass }}">Sekolah Asal</label>
                             <input type="text" name="previous_school" value="{{ old('previous_school', $student->previous_school ?? '') }}" placeholder="Masukkan nama sekolah asal" class="{{ $inputClass }} @error('previous_school') {{ $errorClass }} @enderror">
                             @error('previous_school') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
+                        {{-- Baris 2: NPSN & Status Sekolah --}}
                         <div>
                             <label class="{{ $labelClass }}">NPSN Sekolah Asal</label>
                             <input type="text" name="previous_school_npsn" value="{{ old('previous_school_npsn', $student->previous_school_npsn ?? '') }}" placeholder="Masukkan NPSN sekolah asal" class="{{ $inputClass }} font-mono @error('previous_school_npsn') {{ $errorClass }} @enderror">
                             @error('previous_school_npsn') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+                        <div>
+                            <label class="{{ $labelClass }}">Status Sekolah Asal</label>
+                            <select name="previous_school_status" class="{{ $inputClass }} @error('previous_school_status') {{ $errorClass }} @enderror">
+                                <option value="">— Pilih Status —</option>
+                                <option value="negeri" @selected(old('previous_school_status', $student->previous_school_status ?? '') === 'negeri')>Negeri</option>
+                                <option value="swasta" @selected(old('previous_school_status', $student->previous_school_status ?? '') === 'swasta')>Swasta</option>
+                            </select>
+                            @error('previous_school_status') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        {{-- Baris 3: Kota & Provinsi --}}
                         <div>
                             <label class="{{ $labelClass }}">Kota Asal</label>
                             <input type="text" name="previous_school_city" value="{{ old('previous_school_city', $student->previous_school_city ?? '') }}" placeholder="Masukkan kota asal sekolah" class="{{ $inputClass }} @error('previous_school_city') {{ $errorClass }} @enderror">
@@ -516,6 +536,8 @@
                             <input type="text" name="previous_school_province" value="{{ old('previous_school_province', $student->previous_school_province ?? '') }}" placeholder="Masukkan provinsi asal sekolah" class="{{ $inputClass }} @error('previous_school_province') {{ $errorClass }} @enderror">
                             @error('previous_school_province') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
+                        {{-- Baris 4: Ijazah --}}
                         <div>
                             <label class="{{ $labelClass }}">Nomor Ijazah</label>
                             <input type="text" name="graduation_certificate_number" value="{{ old('graduation_certificate_number', $student->graduation_certificate_number ?? '') }}" placeholder="Masukkan nomor ijazah" class="{{ $inputClass }} @error('graduation_certificate_number') {{ $errorClass }} @enderror">
@@ -526,6 +548,7 @@
                             <input type="text" name="graduation_year" inputmode="numeric" maxlength="4" value="{{ old('graduation_year', $student->graduation_year ?? '') }}" placeholder="Contoh: 2024" class="{{ $inputClass }} @error('graduation_year') {{ $errorClass }} @enderror">
                             @error('graduation_year') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
                     </div>
                 </form>
                 @endif

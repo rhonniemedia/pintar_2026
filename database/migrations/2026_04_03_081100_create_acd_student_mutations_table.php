@@ -30,10 +30,14 @@ return new class extends Migration
             // Detail sekolah asal (relevan untuk TRANSFER_IN)
             $table->string('origin_school')->nullable();
             $table->string('origin_school_npsn', 20)->nullable();
+            $table->string('origin_school_city', 100)->nullable();
+            $table->string('origin_school_province', 100)->nullable();
 
             // Detail sekolah tujuan (relevan untuk TRANSFER_OUT)
             $table->string('destination_school')->nullable();
             $table->string('destination_school_npsn', 20)->nullable();
+            $table->string('destination_school_city', 100)->nullable();
+            $table->string('destination_school_province', 100)->nullable();
 
             $table->text('notes')->nullable();
 

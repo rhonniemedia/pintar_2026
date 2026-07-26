@@ -4,6 +4,7 @@ namespace App\Filters;
 
 use App\Enums\Student\StudentStatus;
 use App\Traits\HasBlindIndex;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 class StudentFilter
@@ -62,6 +63,39 @@ class StudentFilter
             ->when($this->filters['religion'] ?? null, function (Builder $q, string $religion) {
                 $hash = $this->blindIndexHash($religion);
                 $q->whereHas('vault', fn(Builder $q2) => $q2->where('religion_hash', $hash));
+            })
+            ->when($this->filters['age'] ?? null, function (Builder $q, string $age) {
+                $referenceDate = $this->filters['age_reference_date'] ?? now()->toDateString();
+                $hashes = $this->generateDobHashesForAge((int) $age, $referenceDate);
+                $q->whereHas('vault', fn(Builder $q2) => $q2->whereIn('dob_hash', $hashes));
             });
+    }
+
+    /**
+     * Menghasilkan daftar blind-index hash dari seluruh kemungkinan tanggal lahir
+     * yang membuat seseorang berusia $age tepat pada $referenceDate.
+     *
+     * dob_hash bersifat deterministik per-tanggal (bukan range-queryable), sehingga
+     * pencarian rentang usia dilakukan dengan menghitung rentang tanggal lahir
+     * (maksimal ±366 hari), menghash tiap tanggal, lalu mencocokkan dengan whereIn.
+     */
+    private function generateDobHashesForAge(int $age, string $referenceDate): array
+    {
+        $reference = Carbon::parse($referenceDate);
+
+        // Tanggal lahir "termuda" yang tetap genap berusia $age di tanggal acuan
+        $end = $reference->copy()->subYears($age);
+        // Tanggal lahir "tertua" yang belum genap berusia ($age + 1) di tanggal acuan
+        $start = $reference->copy()->subYears($age + 1)->addDay();
+
+        $hashes = [];
+        $cursor = $start->copy();
+
+        while ($cursor->lte($end)) {
+            $hashes[] = $this->blindIndexHash($cursor->toDateString());
+            $cursor->addDay();
+        }
+
+        return $hashes;
     }
 }

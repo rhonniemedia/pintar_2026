@@ -8,15 +8,16 @@
 <div class="p-8"
     x-data="{ 
         filterModalOpen: false,
-        isFilterActive: {{ ($filterGrade || $filterGender || $filterReligion || $filterSpecialNeeds || $filterConcentration) ? 'true' : 'false' }},
+        isFilterActive: {{ ($filterGrade || $filterGender || $filterReligion || $filterSpecialNeeds || $filterConcentration || $filterAge) ? 'true' : 'false' }},
         checkFilterStatus() {
             const grade = document.querySelector('[name=filter_grade]')?.value || '';
             const gender = document.querySelector('[name=filter_gender]')?.value || '';
             const religion = document.querySelector('[name=filter_religion]')?.value || '';
             const special = document.querySelector('[name=filter_special_needs]')?.value || '';
             const concentration = document.querySelector('[name=filter_concentration]')?.value || '';
+            const age = document.querySelector('[name=filter_age]')?.value || '';
             
-            this.isFilterActive = (grade !== '' || gender !== '' || religion !== '' || special !== '' || concentration !== '');
+            this.isFilterActive = (grade !== '' || gender !== '' || religion !== '' || special !== '' || concentration !== '' || age !== '');
         }
     }"
     @htmx:after-request.document="checkFilterStatus()">
@@ -28,21 +29,33 @@
             <p class="text-sm text-secondary">Kelola basis data akademik siswa secara menyeluruh.</p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button type="button" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30">
-                <i data-lucide="download" class="size-4"></i>
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+            <button type="button"
+                title="Tarik data SPMB"
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-amber-600/30 whitespace-nowrap">
+                <i data-lucide="calendar-sync" class="size-4 shrink-0"></i>
+                <span>Tarik Data</span>
+            </button>
+
+            <button type="button"
+                title="Download data Excel"
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
+                <i data-lucide="file-box" class="size-4 shrink-0"></i>
                 <span>Download</span>
             </button>
 
-            <button type="button" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30">
-                <i data-lucide="printer" class="size-4"></i>
-                <span>Cetak Laporan</span>
+            <button type="button"
+                title="Cetak laporan"
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-blue-600/30 whitespace-nowrap">
+                <i data-lucide="printer" class="size-4 shrink-0"></i>
+                <span>Laporan</span>
             </button>
 
             <a href="{{ route('admin.students.data.index') }}"
+                title="Segarkan halaman"
                 onclick="document.getElementById('refresh-icon').classList.add('animate-spin');"
-                class="flex items-center gap-2 px-4 py-2.5 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer">
-                <i id="refresh-icon" data-lucide="refresh-cw" class="size-4"></i>
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer whitespace-nowrap">
+                <i id="refresh-icon" data-lucide="refresh-cw" class="size-4 shrink-0"></i>
                 <span>Segarkan</span>
             </a>
         </div>
@@ -69,8 +82,8 @@
                 <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
-            <div class="flex items-center gap-2">
-                <div class="relative">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-none">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
                     <input
                         type="text"
@@ -84,14 +97,14 @@
                         hx-swap="outerHTML"
                         hx-include="#student-filter-form"
                         hx-push-url="true"
-                        class="h-11 w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
                 </div>
 
                 <button
                     type="button"
                     @click="filterModalOpen = true"
                     title="Filter"
-                    class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
+                    class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
                     <i data-lucide="filter" class="size-4 text-secondary"></i>
 
                     {{-- Container untuk Titik Merah --}}
@@ -123,6 +136,8 @@
     'filterReligion' => $filterReligion,
     'filterSpecialNeeds' => $filterSpecialNeeds,
     'filterConcentration' => $filterConcentration,
+    'filterAge' => $filterAge,
+    'filterAgeDate' => $filterAgeDate,
     'concentrationOptions' => $concentrationOptions,
     'religionOptions' => $religionOptions,
     ])

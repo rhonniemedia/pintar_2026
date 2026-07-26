@@ -90,6 +90,7 @@ class UpdateStudentRequest extends FormRequest
             4 => [ // Akademik
                 'previous_school'               => ['nullable', 'string', 'max:255'],
                 'previous_school_npsn'          => ['nullable', 'string', 'max:20'],
+                'previous_school_status'        => ['nullable', 'in:negeri,swasta'],
                 'previous_school_city'          => ['nullable', 'string', 'max:100'],
                 'previous_school_province'      => ['nullable', 'string', 'max:100'],
                 'graduation_certificate_number' => ['nullable', 'string', 'max:100'],
@@ -226,6 +227,7 @@ class UpdateStudentRequest extends FormRequest
 
             'previous_school'       => 'Sekolah Asal',
             'previous_school_npsn'  => 'NPSN Sekolah Asal',
+            'previous_school_status' => 'Status Sekolah Asal',
         ];
     }
 }

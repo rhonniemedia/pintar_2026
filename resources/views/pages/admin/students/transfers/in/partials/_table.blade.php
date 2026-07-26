@@ -73,7 +73,7 @@
                             {{ $r->origin_school ?? '-' }}
                         </div>
                         <div class="text-xs text-secondary truncate">
-                            {{ $student->previous_school_province ?? '-' }}
+                            {{ $r->origin_school_city ?? '-' }}
                         </div>
                     </td>
 

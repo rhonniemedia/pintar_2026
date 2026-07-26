@@ -27,13 +27,13 @@
 
     <x-ui.modal show="open" maxWidth="4xl">
         {{-- Header Modal --}}
-        <div class="flex items-center justify-between px-6 py-5 border-b border-border shrink-0 bg-gray-50/50">
+        <div class="flex items-start sm:items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-border shrink-0 bg-gray-50/50 gap-4">
             <div>
                 <h3 class="font-bold text-foreground text-lg">Pembatalan Kenaikan Kelas</h3>
                 <p class="text-xs text-secondary mt-0.5">{{ $classGroup->name ?: $classGroup->grade_level . ' ' . optional($classGroup->concentration)->name }}</p>
             </div>
             <button type="button" @click="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)"
-                class="size-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer">
+                class="size-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer shrink-0">
                 <i data-lucide="x" class="size-4 text-secondary"></i>
             </button>
         </div>
@@ -45,14 +45,12 @@
                 saving = false;
                 
                 if ($event.detail.successful) {
-                    // Tutup modal secara otomatis setelah sukses
                     open = false;
                     setTimeout(() => {
                         const container = document.getElementById('modal-container');
                         if (container) container.innerHTML = '';
                     }, 150);
                 } else {
-                    // Tangkap dan tampilkan pesan error jika validasi/server gagal
                     let errorMsg = 'Gagal memproses data.';
                     try {
                         const response = JSON.parse($event.detail.xhr.responseText);
@@ -68,8 +66,8 @@
 
             <div class="flex-1 flex flex-col overflow-hidden">
                 @if ($candidates->isEmpty())
-                <!-- State Data Kosong (Dipercantik) -->
-                <div class="flex-1 flex items-center justify-center p-6">
+                <!-- State Data Kosong -->
+                <div class="flex-1 flex items-center justify-center p-4 sm:p-6">
                     <div class="flex flex-col items-center justify-center gap-3">
                         <div class="size-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-1">
                             <i data-lucide="inbox" class="size-6"></i>
@@ -82,10 +80,10 @@
                 </div>
                 @else
                 <!-- Table Controls -->
-                <div class="px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
-                    <!-- Informasi Total (Menggunakan Aksen Merah/Error) -->
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center size-10 rounded-full bg-error/10 text-error">
+                <div class="px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+                    <!-- Informasi Total -->
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="flex items-center justify-center size-10 rounded-full bg-error/10 text-error shrink-0">
                             <i data-lucide="users" class="size-5"></i>
                         </div>
                         <div>
@@ -97,8 +95,8 @@
                     </div>
 
                     <!-- Pencarian -->
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <div class="relative w-full sm:w-72">
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="relative w-full md:w-72">
                             <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-secondary pointer-events-none"></i>
                             <input type="text" x-model="search" @input="$nextTick(() => syncHeaderCheckbox())" placeholder="Cari nama atau NIS..."
                                 class="w-full bg-slate-50 hover:bg-white border border-border rounded-xl pl-10 pr-10 py-2.5 text-sm focus:bg-white focus:outline-none focus:border-error focus:ring-4 focus:ring-error/10 transition-all">
@@ -111,76 +109,81 @@
                     </div>
                 </div>
 
-                <!-- Table Container (Tanpa Card) -->
-                <div class="px-6 pb-6 overflow-y-auto flex-1">
-                    <table class="w-full text-left border-collapse relative">
-                        <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm">
-                            <tr class="border-b border-border">
-                                <th class="pb-3 pt-2 text-sm font-bold text-secondary uppercase tracking-wider w-1/2">Peserta Didik</th>
-                                <th class="pb-3 pt-2 text-sm font-bold text-secondary uppercase tracking-wider">NIS / NISN</th>
-                                <th class="pb-3 pt-2 text-right w-16">
-                                    <label class="relative inline-flex items-center justify-center cursor-pointer align-middle" title="Pilih Semua">
-                                        <input type="checkbox" x-ref="headerCb" @change="checkAll"
-                                            class="peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-error checked:border-error indeterminate:bg-error indeterminate:border-error hover:border-error/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-error/30">
-                                        <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
-                                        <i data-lucide="minus" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-indeterminate:opacity-100 peer-indeterminate:scale-100 transition-all pointer-events-none"></i>
-                                    </label>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-border/50">
-                            @foreach ($candidates as $row)
-                            <tr class="hover:bg-slate-50/80 transition-colors group"
-                                x-show="search === '' || '{{ strtolower($row->student->name) }}'.includes(search.toLowerCase()) || '{{ $row->student->nis ?? '' }}'.includes(search)">
+                <!-- Table Container -->
+                <div class="flex-1 flex flex-col min-h-0 px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div class="flex-1 overflow-auto border-y border-border/50">
+                        <table class="w-full text-left border-collapse relative min-w-[550px]">
+                            <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-sm">
+                                <tr>
+                                    <th class="py-3 pl-4 pr-2 text-sm font-bold text-secondary uppercase tracking-wider w-1/2">Peserta Didik</th>
+                                    <th class="px-2 py-3 text-sm font-bold text-secondary uppercase tracking-wider">NIS / NISN</th>
+                                    <th class="py-3 pl-2 pr-4 text-right w-16">
+                                        <label class="relative inline-flex items-center justify-center cursor-pointer align-middle" title="Pilih Semua">
+                                            <input type="checkbox" x-ref="headerCb" @change="checkAll"
+                                                class="peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-error checked:border-error indeterminate:bg-error indeterminate:border-error hover:border-error/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-error/30">
+                                            <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
+                                            <i data-lucide="minus" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-indeterminate:opacity-100 peer-indeterminate:scale-100 transition-all pointer-events-none"></i>
+                                        </label>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border/50">
+                                @foreach ($candidates as $row)
+                                <tr class="hover:bg-slate-50/80 transition-colors group"
+                                    x-show="search === '' || '{{ strtolower($row->student->name) }}'.includes(search.toLowerCase()) || '{{ $row->student->nis ?? '' }}'.includes(search)">
 
-                                <!-- Kolom Nama & Avatar -->
-                                <td class="py-3">
-                                    <div class="flex items-center gap-3">
-                                        @php
-                                        $initials = strtoupper(substr($row->student->name, 0, 2));
-                                        $colors = ['bg-blue-100 text-blue-700', 'bg-emerald-100 text-emerald-700', 'bg-purple-100 text-purple-700', 'bg-orange-100 text-orange-700'];
-                                        $avatarColor = $colors[$loop->index % 4];
-                                        @endphp
-                                        <div class="size-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-xs font-bold shrink-0">
-                                            {{ $initials }}
+                                    <!-- Kolom Nama & Avatar -->
+                                    <td class="py-3 pl-4 pr-2">
+                                        <div class="flex items-center gap-3">
+                                            @php
+                                            $initials = strtoupper(substr($row->student->name, 0, 2));
+                                            $colors = ['bg-blue-100 text-blue-700', 'bg-emerald-100 text-emerald-700', 'bg-purple-100 text-purple-700', 'bg-orange-100 text-orange-700'];
+                                            $avatarColor = $colors[$loop->index % 4];
+                                            @endphp
+                                            <div class="size-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-xs font-bold shrink-0">
+                                                {{ $initials }}
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-semibold text-foreground uppercase group-hover:text-error transition-colors">
+                                                    {{ $row->student->name }}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-foreground uppercase group-hover:text-error transition-colors">
-                                                {{ $row->student->name }}
-                                            </p>
+                                    </td>
+
+                                    <!-- Kolom NIS/NISN -->
+                                    <td class="px-2 py-3 align-middle">
+                                        <div class="flex flex-wrap gap-1.5 items-center">
+                                            <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-600 font-bold text-xs">{{ $row->student->nis ?? '-' }}</span>
+                                            <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-bold text-xs">{{ $row->student->vault->nisn_encrypted ?? '-' }}</span>
                                         </div>
-                                    </div>
-                                </td>
+                                    </td>
 
-                                <!-- Kolom NIS/NISN (Ukuran dikembalikan ke awal) -->
-                                <td class="py-3 text-sm flex gap-2 items-center h-full mt-2">
-                                    <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-600 font-bold text-xs">{{ $row->student->nis ?? '-' }}</span>
-                                    <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-bold text-xs">{{ $row->student->vault->nisn_encrypted ?? '-' }}</span>
-                                </td>
-
-                                <!-- Kolom Checkbox -->
-                                <td class="py-3 text-right">
-                                    <label class="relative inline-flex items-center justify-center cursor-pointer align-middle">
-                                        <input type="checkbox" name="student_id[]" value="{{ $row->student->id }}" @change="syncHeaderCheckbox"
-                                            class="student-cb peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-error checked:border-error hover:border-error/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-error/30">
-                                        <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
-                                    </label>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                    <!-- Kolom Checkbox -->
+                                    <td class="py-3 pl-2 pr-4 text-right">
+                                        <label class="relative inline-flex items-center justify-center cursor-pointer align-middle">
+                                            <input type="checkbox" name="student_id[]" value="{{ $row->student->id }}" @change="syncHeaderCheckbox"
+                                                class="student-cb peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-error checked:border-error hover:border-error/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-error/30">
+                                            <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
+                                        </label>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 @endif
             </div>
 
             {{-- Footer Form --}}
-            <div class="px-6 py-4 border-t border-border bg-gray-50/50 flex items-center justify-end shrink-0 gap-4">
-                <div class="flex items-center gap-2">
+            <div class="px-4 sm:px-6 py-4 border-t border-border bg-gray-50/50 flex items-center justify-end shrink-0">
+                <!-- Wrapper Tombol -->
+                <div class="grid grid-cols-2 sm:flex sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <button type="button"
                         :disabled="saving"
                         @click="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50">
+                        class="{{ $candidates->isNotEmpty() ? 'col-span-1' : 'col-span-2' }} w-full sm:w-auto justify-center inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50">
                         <i data-lucide="x" class="size-4"></i>
                         <span>Batal</span>
                     </button>
@@ -188,7 +191,7 @@
                     @if ($candidates->isNotEmpty())
                     <button type="submit"
                         :disabled="saving"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-error text-white text-sm font-bold shadow-md hover:opacity-90 hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-70">
+                        class="col-span-1 w-full sm:w-auto justify-center inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-error text-white text-sm font-bold shadow-md hover:opacity-90 hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-70">
                         <i data-lucide="alert-circle" class="size-4" x-show="!saving"></i>
                         <svg x-show="saving" x-cloak class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

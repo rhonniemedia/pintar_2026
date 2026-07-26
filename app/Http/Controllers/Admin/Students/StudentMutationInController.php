@@ -2,48 +2,25 @@
 
 namespace App\Http\Controllers\Admin\Students;
 
+use App\Enums\Student\MutationStatus;
+use App\Enums\Student\Religion;
+use App\Enums\Student\StudentStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Students\StoreMutationInRequest;
 use App\Models\ClassGroup;
 use App\Models\ClassGroupStudent;
 use App\Models\CoreSemester;
-use App\Models\Guardian;
-use App\Models\GuardianVault;
 use App\Models\Student;
 use App\Models\StudentMutation;
-use App\Models\StudentVault;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class StudentMutationInController extends Controller
 {
     use HasBlindIndex;
-
-    /**
-     * Opsi agama untuk form + filter. Disamakan persis dengan
-     * StudentController::RELIGION_OPTIONS karena pencarian/filter
-     * agama mencocokkan blind-index hash secara persis (bukan LIKE) -
-     * kalau daftar ini berbeda antar tempat, hash yang dihasilkan
-     * juga akan berbeda dan filter tidak akan menemukan hasil yang cocok.
-     */
-    private const RELIGION_OPTIONS = [
-        'Islam',
-        'Kristen',
-        'Katolik',
-        'Hindu',
-        'Buddha',
-        'Konghucu',
-        'Lainnya',
-    ];
-
-    private const GUARDIAN_RELATIONSHIPS = [
-        'father' => 'Ayah',
-        'mother' => 'Ibu',
-        'guardian' => 'Wali',
-    ];
 
     /**
      * Daftar riwayat mutasi masuk (siswa pindahan) pada semester aktif.
@@ -51,11 +28,10 @@ class StudentMutationInController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-
         $semesterAktif = CoreSemester::where('status', 'active')->first();
 
         $data = StudentMutation::with(['student.vault', 'classGroup.concentration'])
-            ->where('status', 'transfer_in')
+            ->where('status', MutationStatus::TRANSFER_IN->value)
             ->when($semesterAktif, fn($q) => $q->where('semester_id', $semesterAktif->id))
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('student', function ($q2) use ($search) {
@@ -72,223 +48,200 @@ class StudentMutationInController extends Controller
         }
 
         return view('pages.admin.students.transfers.in.index', [
-            'title' => 'Mutasi Peserta Didik - Pindahan Masuk',
-            'data' => $data,
-            'search' => $search,
+            'title'         => 'Mutasi Peserta Didik - Pindahan Masuk',
+            'data'          => $data,
+            'search'        => $search,
             'semesterAktif' => $semesterAktif,
         ]);
     }
 
     /**
-     * Form modal tambah data siswa pindahan (HTMX).
+     * Menampilkan Form Create All-in-One
      */
     public function create()
     {
-        return view('pages.admin.students.transfers.in.partials._modal-create', $this->modalData());
+        return view('pages.admin.students.transfers.in.partials._modal-create', [
+            'classGroups' => $this->activeClassGroups(),
+            'currentStep' => 1,
+        ]);
     }
 
     /**
-     * Simpan siswa pindahan: profil siswa, data vault (sensitif),
-     * data wali, riwayat mutasi, dan penempatan ke rombel - dalam
-     * satu transaksi.
+     * Memvalidasi step saat ini lalu melompat ke step berikutnya
+     * tanpa menyimpan ke database.
      */
-    public function store(Request $request)
+    public function validateStep(StoreMutationInRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            // --- Identitas Personal ---
-            'name' => 'required|string|max:255',
-            'nik' => 'nullable|string|max:16',
-            'gender' => 'required|in:L,P',
-            'religion' => 'required|in:' . implode(',', self::RELIGION_OPTIONS),
-            'pob' => 'nullable|string|max:255',
-            'dob' => 'nullable|date',
-            'nisn' => 'required|string|max:10',
-            'child_order' => 'nullable|integer|min:1',
-            'number_of_siblings' => 'nullable|integer|min:0',
+        $request->flash();
+        $nextStep = (int) $request->input('current_step', 1) + 1;
 
-            // --- Orang Tua / Wali ---
-            'guardian_name' => 'required|string|max:255',
-            'guardian_relationship' => 'required|in:father,mother,guardian',
-            'guardian_nik' => 'nullable|string|max:16',
-            'guardian_birth_year' => 'nullable|integer|min:1900|max:' . date('Y'),
-            'guardian_occupation' => 'nullable|string|max:255',
-            'guardian_education' => 'nullable|string|max:255',
-            'guardian_income_range' => 'nullable|string|max:255',
-            'guardian_phone' => 'nullable|string|max:20',
-            'guardian_address' => 'nullable|string',
-
-            // --- Sekolah Asal ---
-            'previous_school' => 'required|string|max:255',
-            'previous_school_city' => 'nullable|string|max:255',
-            'previous_school_province' => 'nullable|string|max:255',
-            'previous_school_npsn' => 'nullable|string|max:20',
-            'graduation_certificate_number' => 'nullable|string|max:50',
-            'graduation_year' => 'nullable|string|max:4',
-
-            // --- Informasi Penerimaan ---
-            'entry_date' => 'required|date',
-            'class_group_id' => 'required|uuid|exists:acd_class_groups,id',
-            'notes' => 'nullable|string',
+        return view('pages.admin.students.transfers.in.partials._modal-create', [
+            'classGroups' => $this->activeClassGroups(),
+            'currentStep' => $nextStep,
         ]);
+    }
 
-        // NISN wajib unik, tapi kolomnya terenkripsi sehingga tidak bisa
-        // divalidasi via rule `unique:` biasa - dicek manual lewat hash.
-        $validator->after(function ($v) use ($request) {
-            if ($request->filled('nisn')) {
-                $hash = $this->blindIndexHash($request->nisn);
-                if (StudentVault::where('nisn_hash', $hash)->exists()) {
-                    $v->errors()->add('nisn', 'NISN sudah terdaftar pada siswa lain.');
-                }
-            }
-        });
-
-        if ($validator->fails()) {
-            $request->flash();
-
-            return response()
-                ->view('pages.admin.students.transfers.in.partials._modal-create', array_merge(
-                    $this->modalData(),
-                    ['errors' => $validator->errors()]
-                ))
-                ->setStatusCode(422);
-        }
-
-        DB::beginTransaction();
+    /**
+     * Memproses dan menyimpan seluruh data dari Step 1-5 sekaligus.
+     */
+    public function store(StoreMutationInRequest $request)
+    {
+        $validated = $request->validated();
+        $filterNulls = fn($array) => array_filter($array, fn($val) => !is_null($val));
 
         try {
-            $semesterAktif = CoreSemester::where('status', 'active')->firstOrFail();
-            $classGroup = ClassGroup::with('concentration')->findOrFail($request->class_group_id);
+            DB::transaction(function () use ($validated, $filterNulls) {
+                $semesterAktif = CoreSemester::where('status', 'active')->firstOrFail();
+                $classGroup = ClassGroup::with('concentration')->findOrFail($validated['class_group_id']);
 
-            // === AUTO GENERATE NIS ===
-            // Format: [kode_jurusan 2 digit][tahun 2 digit][urut 3 digit].
-            // Urut dihitung GLOBAL per tahun (lintas jurusan), bukan per
-            // jurusan - mengikuti logic yang sama dengan aplikasi lama.
-            //
-            // CATATAN: "tahun" diambil dari start_date semester aktif
-            // (bukan dari nama tahun ajaran di core_academic_years, karena
-            // field itu belum dikonfirmasi). Kalau core_academic_years
-            // punya kolom nama/tahun yang lebih tepat, ganti baris ini.
-            $tahun = Carbon::parse($semesterAktif->start_date)->format('y');
-            $kodeJurusan = $classGroup->concentration->code;
+                $nis = $this->generateNis($classGroup, $semesterAktif);
 
-            $lastNis = Student::where('nis', 'LIKE', '__' . $tahun . '___')
-                ->whereRaw('LENGTH(nis) = 7')
-                ->orderByRaw('CAST(RIGHT(nis, 3) AS UNSIGNED) DESC')
-                ->lockForUpdate()
-                ->first();
+                // 1. Simpan Data Utama Siswa
+                $studentData = $filterNulls([
+                    'name'               => $validated['name'],
+                    'gender'             => $validated['gender'],
+                    'nis'                => $nis,
+                    'child_order'        => $validated['child_order'] ?? null,
+                    'number_of_siblings' => $validated['number_of_siblings'] ?? null,
+                    'entry_date'         => $validated['entry_date'],
+                    'registration_type'  => 'transfer',
+                    'entry_grade_level'  => $classGroup->grade_level,
+                    'concentration_id'   => $classGroup->concentration_id,
+                    'status'             => StudentStatus::ACTIVE->value,
+                    'status_date'        => $validated['entry_date'],
 
-            $nomorUrut = $lastNis ? ((int) substr($lastNis->nis, -3)) + 1 : 1;
-            $nis = $kodeJurusan . $tahun . str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
-            // === END AUTO GENERATE NIS ===
+                    // Alamat & Kontak
+                    'residence_type'     => $validated['residence_type'] ?? null,
+                    'transportation'     => $validated['transportation'] ?? null,
+                    'distance_to_school' => $validated['distance_to_school'] ?? null,
 
-            // 1. Profil siswa (non-sensitif)
-            $student = Student::create([
-                'name' => $request->name,
-                'gender' => $request->gender,
-                'nis' => $nis,
-                'child_order' => $request->child_order,
-                'number_of_siblings' => $request->number_of_siblings,
-                'entry_date' => $request->entry_date,
-                'registration_type' => 'transfer',
-                'entry_grade_level' => $classGroup->grade_level,
-                'concentration_id' => $classGroup->concentration_id,
-                'status' => 'active',
-                'previous_school' => $request->previous_school,
-                'previous_school_npsn' => $request->previous_school_npsn,
-                'previous_school_city' => $request->previous_school_city,
-                'previous_school_province' => $request->previous_school_province,
-                'graduation_certificate_number' => $request->graduation_certificate_number,
-                'graduation_year' => $request->graduation_year,
-            ]);
-
-            // 2. Data sensitif (vault) - kontak/alamat siswa sengaja
-            // dikosongkan, dilengkapi nanti lewat menu edit.
-            StudentVault::create([
-                'student_id' => $student->id,
-                'nisn_encrypted' => $request->nisn,
-                'nisn_hash' => $this->blindIndexHash($request->nisn),
-                'nik_encrypted' => $request->nik,
-                'nik_hash' => $request->filled('nik') ? $this->blindIndexHash($request->nik) : null,
-                'pob_encrypted' => $request->pob,
-                'dob_encrypted' => $request->dob,
-                'dob_hash' => $request->filled('dob') ? $this->blindIndexHash($request->dob) : null,
-                'religion_encrypted' => $request->religion,
-                'religion_hash' => $this->blindIndexHash($request->religion),
-            ]);
-
-            // 3. Data wali
-            $guardian = Guardian::create([
-                'student_id' => $student->id,
-                'name' => $request->guardian_name,
-                'relationship' => $request->guardian_relationship,
-                'birth_year' => $request->guardian_birth_year,
-                'occupation' => $request->guardian_occupation,
-                'education' => $request->guardian_education,
-                'income_range' => $request->guardian_income_range,
-            ]);
-
-            if ($request->filled('guardian_nik') || $request->filled('guardian_phone') || $request->filled('guardian_address')) {
-                GuardianVault::create([
-                    'guardian_id' => $guardian->id,
-                    'nik_encrypted' => $request->guardian_nik,
-                    'nik_hash' => $request->filled('guardian_nik') ? $this->blindIndexHash($request->guardian_nik) : null,
-                    'phone_number_encrypted' => $request->guardian_phone,
-                    'phone_number_hash' => $request->filled('guardian_phone') ? $this->blindIndexHash($request->guardian_phone) : null,
-                    'address_encrypted' => $request->guardian_address,
+                    // Sekolah Kelulusan Sebelumnya
+                    'previous_school'               => $validated['previous_school'] ?? null,
+                    'previous_school_npsn'          => $validated['previous_school_npsn'] ?? null,
+                    'previous_school_status'        => $validated['previous_school_status'] ?? null,
+                    'previous_school_city'          => $validated['previous_school_city'] ?? null,
+                    'previous_school_province'      => $validated['previous_school_province'] ?? null,
+                    'graduation_certificate_number' => $validated['graduation_certificate_number'] ?? null,
+                    'graduation_year'               => $validated['graduation_year'] ?? null,
                 ]);
-            }
+                $student = Student::create($studentData);
 
-            // 4. Riwayat mutasi
-            StudentMutation::create([
-                'student_id' => $student->id,
-                'semester_id' => $semesterAktif->id,
-                'class_group_id' => $classGroup->id,
-                'status' => 'transfer_in',
-                'origin_destination' => $request->previous_school,
-                'notes' => $request->notes,
-                'mutation_date' => $request->entry_date,
-            ]);
+                // 2. Simpan Brankas Identitas Siswa (Vault)
+                $vaultData = [
+                    'nisn_encrypted'         => $validated['nisn'],
+                    'nisn_hash'              => $this->blindIndexHash($validated['nisn']),
+                    'nik_encrypted'          => $validated['nik'] ?? null,
+                    'nik_hash'               => !empty($validated['nik']) ? $this->blindIndexHash($validated['nik']) : null,
+                    'pob_encrypted'          => $validated['pob'] ?? null,
+                    'dob_encrypted'          => $validated['dob'] ?? null,
+                    'dob_hash'               => !empty($validated['dob']) ? $this->blindIndexHash($validated['dob']) : null,
+                    'religion_encrypted'     => Religion::tryFrom($validated['religion'])?->value,
+                    'religion_hash'          => $this->blindIndexHash($validated['religion']),
 
-            // 5. Penempatan ke rombel aktif
-            ClassGroupStudent::create([
-                'student_id' => $student->id,
-                'class_group_id' => $classGroup->id,
-                'entry_date' => $request->entry_date,
-                'status' => 'active',
-            ]);
+                    // Alamat & Kontak Sensitif
+                    'phone_number_encrypted' => $validated['phone_number'] ?? null,
+                    'email_encrypted'        => $validated['email'] ?? null,
+                    'address_encrypted'      => $validated['address'] ?? null,
+                    'rt_encrypted'           => $validated['rt'] ?? null,
+                    'rw_encrypted'           => $validated['rw'] ?? null,
+                    'village_encrypted'      => $validated['village'] ?? null,
+                    'district_encrypted'     => $validated['district'] ?? null,
+                    'regency_encrypted'      => $validated['regency'] ?? null,
+                    'province_encrypted'     => $validated['province'] ?? null,
+                    'postal_code_encrypted'  => $validated['postal_code'] ?? null,
+                ];
+                $student->vault()->create($filterNulls($vaultData));
 
-            DB::commit();
+                // 3. Simpan Penempatan Rombel
+                ClassGroupStudent::create([
+                    'student_id'     => $student->id,
+                    'class_group_id' => $classGroup->id,
+                    'entry_date'     => $validated['entry_date'],
+                ]);
+
+                // 4. Simpan Riwayat Mutasi (Sekolah Asal Pindahan)
+                StudentMutation::create($filterNulls([
+                    'student_id'             => $student->id,
+                    'semester_id'            => $semesterAktif->id,
+                    'class_group_id'         => $classGroup->id,
+                    'status'                 => MutationStatus::TRANSFER_IN->value,
+                    'mutation_date'          => $validated['entry_date'],
+                    'origin_school'          => $validated['origin_school'] ?? null,
+                    'origin_school_npsn'     => $validated['origin_school_npsn'] ?? null,
+                    'origin_school_city'     => $validated['origin_school_city'] ?? null,
+                    'origin_school_province' => $validated['origin_school_province'] ?? null,
+                    'notes'                  => $validated['notes'] ?? null,
+                ]));
+
+                // 5. Simpan Data Orang Tua / Wali
+                if (!empty($validated['guardian_name']) && !empty($validated['guardian_relationship'])) {
+                    $relationKey = strtolower(trim($validated['guardian_relationship']));
+
+                    $guardian = $student->guardians()->create($filterNulls([
+                        'relationship' => $relationKey,
+                        'name'         => $validated['guardian_name'],
+                        'birth_year'   => $validated['guardian_birth_year'] ?? null,
+                        'occupation'   => $validated['guardian_occupation'] ?? null,
+                        'education'    => $validated['guardian_education'] ?? null,
+                        'income_range' => $validated['guardian_income_range'] ?? null,
+                    ]));
+
+                    $guardianVaultData = $filterNulls([
+                        'nik_encrypted'          => $validated['guardian_nik'] ?? null,
+                        'nik_hash'               => !empty($validated['guardian_nik']) ? $this->blindIndexHash($validated['guardian_nik']) : null,
+                        'phone_number_encrypted' => $validated['guardian_phone'] ?? null,
+                        'address_encrypted'      => $validated['guardian_address'] ?? null,
+                    ]);
+
+                    if (!empty($guardianVaultData)) {
+                        $guardian->vault()->create($guardianVaultData);
+                    }
+                }
+            });
+
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'close-modal' => true,
+                'refreshTable' => true,
+                'showAlert' => [
+                    'icon' => 'success',
+                    'title' => 'Berhasil!',
+                    'text' => 'Data siswa mutasi berhasil ditambahkan.'
+                ]
+            ]));
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Gagal menyimpan mutasi masuk: ' . $e->getMessage());
+            Log::error('Gagal membuat data mutasi masuk: ' . $e->getMessage());
 
             return response(
-                '<div class="p-4 text-sm text-error">Terjadi kesalahan saat menyimpan data: ' . e($e->getMessage()) . '</div>',
+                '<div class="p-4 text-sm text-error font-bold">Terjadi kesalahan sistem: ' . e($e->getMessage()) . '</div>',
                 500
             );
         }
-
-        // Sukses: kosongkan body, modal ditutup & tabel disegarkan lewat
-        // event yang memang sudah disiapkan di index.blade.php
-        // (@closeModal.window) dan _table.blade.php (hx-trigger="refreshTable from:body").
-        return response('', 200)
-            ->header('HX-Trigger', json_encode(['closeModal' => true, 'refreshTable' => true]));
     }
 
-    private function modalData(): array
+    private function generateNis(ClassGroup $classGroup, CoreSemester $semesterAktif): string
+    {
+        $tahun = Carbon::parse($semesterAktif->start_date)->format('y');
+        $kodeJurusan = $classGroup->concentration->code;
+
+        $lastNis = Student::where('nis', 'LIKE', '__' . $tahun . '___')
+            ->whereRaw('LENGTH(nis) = 7')
+            ->orderByRaw('CAST(RIGHT(nis, 3) AS UNSIGNED) DESC')
+            ->lockForUpdate()
+            ->first();
+
+        $nomorUrut = $lastNis ? ((int) substr($lastNis->nis, -3)) + 1 : 1;
+
+        return $kodeJurusan . $tahun . str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
+    }
+
+    private function activeClassGroups()
     {
         $semesterAktif = CoreSemester::where('status', 'active')->first();
 
-        $classGroups = ClassGroup::with('concentration')
+        return ClassGroup::with('concentration')
             ->when($semesterAktif, fn($q) => $q->where('semester_id', $semesterAktif->id))
             ->orderBy('grade_level')
             ->orderBy('name')
             ->get();
-
-        return [
-            'classGroups' => $classGroups,
-            'religionOptions' => self::RELIGION_OPTIONS,
-            'guardianRelationships' => self::GUARDIAN_RELATIONSHIPS,
-        ];
     }
 }

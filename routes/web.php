@@ -103,6 +103,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Mutasi Masuk
             Route::name('transfer.in.')->prefix('in')->group(function () {
                 Route::get('/', [StudentMutationInController::class, 'index'])->name('index');
+
+                // Route Validasi Per Step (TAMBAHKAN BARIS INI)
+                Route::post('/validate-step', [StudentMutationInController::class, 'validateStep'])->name('validate-step');
+
+                // Step 1: form awal (belum ada siswa) + submit yang membuat siswa baru
                 Route::get('/create', [StudentMutationInController::class, 'create'])->name('create');
                 Route::post('/', [StudentMutationInController::class, 'store'])->name('store');
             });
