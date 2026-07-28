@@ -17,6 +17,30 @@ class Data extends Model
     protected $keyType = 'string';
     protected $guarded = ['id'];
 
+    /**
+     * Opsi 1: Format Normal (Untuk tampilan web/UI standar)
+     * Contoh: Budi Santoso, S.Pd., M.Kom.
+     */
+    public function getNameWithTitleAttribute()
+    {
+        $front = $this->front_title ? $this->front_title . ' ' : '';
+        $back = $this->back_title ? ', ' . $this->back_title : '';
+
+        return $front . $this->name . $back;
+    }
+
+    /**
+     * Opsi 2: Format Nama Kapital (Khusus untuk cetak PDF/Laporan resmi)
+     * Contoh: BUDI SANTOSO, S.Pd., M.Kom.
+     */
+    public function getNameCapitalWithTitleAttribute()
+    {
+        $front = $this->front_title ? $this->front_title . ' ' : '';
+        $back = $this->back_title ? ', ' . $this->back_title : '';
+
+        return $front . strtoupper($this->name) . $back;
+    }
+
     // Relasi ke tabel Vault (1-to-1)
     public function vault()
     {

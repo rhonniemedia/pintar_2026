@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Master\MasterDataController;
+use App\Http\Controllers\Admin\Students\ClassGroupAttendanceController;
 use App\Http\Controllers\Admin\Students\ClassGroupController;
 use App\Http\Controllers\Admin\Students\ClassGroupPromotionController;
 use App\Http\Controllers\Admin\Students\StudentController;
@@ -68,6 +69,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/group/{id}', [ClassGroupController::class, 'update'])->name('group.update');
         Route::get('/group/{id}/show', [ClassGroupController::class, 'show'])->name('group.show');
         Route::delete('/group/{id}', [ClassGroupController::class, 'destroy'])->name('group.destroy');
+
+        // --- RUTE CETAK DAFTAR HADIR ---
+        Route::controller(ClassGroupAttendanceController::class)->group(function () {
+            Route::get('/group/attendance/modal', 'showModal')->name('attendance.modal');
+            Route::get('/group/attendance/classes', 'getFilteredClasses')->name('attendance.classes');
+            Route::get('/group/attendance/print', 'printPdf')->name('attendance.print');
+        });
 
         // Route untuk Pindah Kelas
         Route::get('/group/{classGroup}/student/{student}/move', [ClassGroupController::class, 'moveClassForm'])

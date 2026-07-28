@@ -45,7 +45,11 @@
                 <span>Tambah</span>
             </button>
 
-            <button type="button" class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
+            <button type="button"
+                @click="formModalOpen = true"
+                hx-get="{{ route('admin.students.attendance.modal') }}"
+                hx-target="#form-modal-content"
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
                 <i data-lucide="printer" class="size-4 shrink-0"></i>
                 <span>Daftar Hadir</span>
             </button>

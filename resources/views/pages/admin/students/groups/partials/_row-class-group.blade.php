@@ -7,7 +7,7 @@ $displayName = $g->name ?: trim("{$gradeLabel} {$concentrationName} {$g->group_n
 $colors = ['linear-gradient(135deg,#10B981,#6EE7B7)', 'linear-gradient(135deg,#3B82F6,#93C5FD)', 'linear-gradient(135deg,#F59E0B,#FCD34D)', 'linear-gradient(135deg,#8B5CF6,#A78BFA)'];
 $color = $colors[isset($loop) ? ($loop->index % 4) : 0];
 
-$homeroomName = $g->homeroomTeacher->name ?? null;
+$homeroomName = $g->homeroomTeacher->name_with_title ?? null;
 $totalStudents = $g->total_students_count ?? 0;
 $maleStudents = $g->male_students_count ?? 0;
 $femaleStudents = $g->female_students_count ?? 0;
@@ -44,32 +44,38 @@ $femaleStudents = $g->female_students_count ?? 0;
         </div>
 
         {{-- Statistik Siswa --}}
-        <div class="flex items-center gap-5 text-xs">
+        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
 
-            {{-- Total --}}
-            <div class="flex items-center gap-1.5 whitespace-nowrap" title="Total Siswa">
-                <i data-lucide="users" class="size-3.5 text-slate-500 shrink-0"></i>
-                <span class="text-slate-600 font-medium">Total: {{ $totalStudents }}</span>
+            <!-- Total -->
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                title="Total Siswa">
+                <i data-lucide="users" class="size-3 text-slate-500"></i>
+                <span class="font-semibold">Total</span>
+                <span class="font-bold">{{ $totalStudents }}</span>
             </div>
 
-            {{-- Laki-laki (Menggunakan SVG Simbol Laki-laki / Mars) --}}
-            <div class="flex items-center gap-1.5 whitespace-nowrap" title="Laki-laki">
-                <svg class="size-3.5 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Laki-laki -->
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+                title="Laki-laki">
+                <svg class="size-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="10" cy="14" r="5"></circle>
                     <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
                     <polyline points="15 4 20 4 20 9"></polyline>
                 </svg>
-                <span class="text-blue-600 font-medium">L: {{ $maleStudents }}</span>
+                <span class="font-semibold">L</span>
+                <span class="font-bold">{{ $maleStudents }}</span>
             </div>
 
-            {{-- Perempuan (Menggunakan SVG Simbol Perempuan / Venus) --}}
-            <div class="flex items-center gap-1.5 whitespace-nowrap" title="Perempuan">
-                <svg class="size-3.5 text-pink-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Perempuan -->
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200"
+                title="Perempuan">
+                <svg class="size-3 text-pink-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="10" r="5"></circle>
                     <line x1="12" y1="15" x2="12" y2="22"></line>
                     <line x1="9" y1="19" x2="15" y2="19"></line>
                 </svg>
-                <span class="text-pink-600 font-medium">P: {{ $femaleStudents }}</span>
+                <span class="font-semibold">P</span>
+                <span class="font-bold">{{ $femaleStudents }}</span>
             </div>
 
         </div>

@@ -128,7 +128,7 @@
             theme="slate"
             icon="user-check"
             title="Wali Kelas"
-            :value="$classGroup->homeroomTeacher->name ?? 'Belum ditentukan'"
+            :value="$classGroup->homeroomTeacher->name_with_title ?? 'Belum ditentukan'"
             valueClass="text-lg truncate" />
 
         <x-ui.stat-card
