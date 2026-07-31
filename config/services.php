@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'spmb' => [
+        'url' => env('SPMB_API_URL'),
+        'token' => env('SPMB_API_TOKEN'),
+    ],
+
 ];

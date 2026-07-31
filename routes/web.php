@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\Students\StudentHistoryController;
 use App\Http\Controllers\Admin\Students\StudentMutationInController;
 use App\Http\Controllers\Admin\Students\StudentMutationOutController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Integration\SpmbSyncController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +34,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/home', function () {
         return view('pages.admin.home.index');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Integrasi Sistem
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('integration')->name('integration.')->group(function () {
+        // Rute untuk menampilkan halaman pratinjau
+        Route::get('/spmb/sync/preview', [SpmbSyncController::class, 'preview'])->name('spmb.sync.preview');
+
+        // Rute untuk mengeksekusi penyimpanan
+        Route::post('/spmb/sync/store', [SpmbSyncController::class, 'store'])->name('spmb.sync.store');
     });
 
     /*
