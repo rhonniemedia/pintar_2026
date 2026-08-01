@@ -20,26 +20,47 @@
             <p class="text-sm text-secondary">Verifikasi data ({{ $paginatedData->total() }} siswa) sebelum disimpan ke sistem utama.</p>
         </div>
 
-        <div class="flex gap-3">
-            <a href="{{ route('admin.students.data.index') }}" class="flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-white text-secondary hover:bg-muted font-medium transition-colors text-sm">
-                <i data-lucide="arrow-left" class="size-4"></i> Kembali
+        <div class="flex gap-3 items-center">
+            <!-- Tombol Kembali (Hanya Ikon, Hover Hijau) -->
+            <a href="{{ route('admin.students.data.index') }}" title="Kembali" class="flex items-center justify-center size-10 rounded-full border border-border bg-white text-secondary hover:text-green-500 hover:border-green-500 transition-colors duration-300 cursor-pointer focus:outline-none">
+                <i data-lucide="arrow-left" class="size-4"></i>
             </a>
-            <form action="{{ route('admin.integration.spmb.sync.store') }}" method="POST">
+
+            <!-- Tombol Simpan menggunakan hx-post dan Alpine.js untuk loading state -->
+            <form hx-post="{{ route('admin.integration.spmb.sync.store') }}" hx-swap="none"
+                x-data="{ saving: false }"
+                @htmx:before-request="saving = true"
+                @htmx:after-request="saving = false">
                 @csrf
                 <button type="submit"
-                    onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'size-4 animate-spin\'></i> Menyimpan...'; this.classList.add('opacity-80', 'cursor-not-allowed');"
-                    class="flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold transition-colors text-sm shadow-sm cursor-pointer">
-                    <i data-lucide="save" class="size-4"></i> Simpan Data
+                    :disabled="saving"
+                    :class="saving ? 'opacity-80 cursor-not-allowed' : ''"
+                    class="flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-white hover:bg-primary/90 font-bold transition-colors text-sm shadow-sm shadow-primary/30 focus:outline-none min-w-[140px]">
+
+                    <!-- Ikon Save: Tampil saat normal -->
+                    <div x-show="!saving" class="flex items-center gap-2">
+                        <i data-lucide="save" class="size-4 shrink-0"></i>
+                        <span>Simpan Data</span>
+                    </div>
+
+                    <!-- Ikon Loader: Tampil saat loading -->
+                    <div x-show="saving" x-cloak class="flex items-center gap-2">
+                        <i data-lucide="loader-2" class="size-4 animate-spin shrink-0"></i>
+                        <span>Menyimpan...</span>
+                    </div>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Papan Tabel, Filter & Search -->
-    <div class="bg-white rounded-2xl border border-border p-5 shadow-sm">
+    <!-- Papan Tabel, Filter & Search (Tanpa Shadow) -->
+    <div class="bg-white rounded-2xl border border-border p-5">
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-            <h2 class="text-lg font-bold text-foreground">Daftar Hasil Sinkronisasi</h2>
+            <div>
+                <h2 class="text-lg font-bold text-foreground">Daftar Hasil Sinkronisasi</h2>
+                <p class="text-sm text-secondary mt-1">Periksa secara seksama data yang ditarik dari server SPMB.</p>
+            </div>
 
             <div class="flex items-center gap-2 w-full sm:w-auto">
                 <div class="relative flex-1 sm:flex-none">
@@ -47,7 +68,6 @@
                     <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama, nisn, reg..."
                         hx-get="{{ route('admin.integration.spmb.sync.preview') }}"
                         hx-trigger="keyup[key=='Enter'], search"
-
                         hx-target="#spmb-table-container"
                         hx-swap="outerHTML"
                         hx-include="#spmb-filter-form"
