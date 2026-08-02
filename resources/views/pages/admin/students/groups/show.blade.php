@@ -29,6 +29,17 @@
         </div>
 
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+
+            {{-- TOMBOL TAMBAH --}}
+            <button type="button"
+                hx-get="{{ route('admin.students.group.add-student.form', $classGroup->id) }}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/30 cursor-pointer w-full sm:w-auto">
+                <i data-lucide="plus" class="size-4 shrink-0"></i>
+                <span>Tambah</span>
+            </button>
+
             @if ($canPromote)
             <div class="w-full sm:w-auto">
                 <div x-data="{ open: false }" @click.outside="open = false" class="relative block sm:inline-block w-full sm:w-auto text-left">
@@ -105,10 +116,10 @@
             </div>
             @endif
 
-            <button type="button" onclick="history.back()"
-                class="flex items-center justify-center gap-2 px-4 py-2.5 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer shadow-sm w-full sm:w-auto whitespace-nowrap">
-                <i data-lucide="arrow-left" class="size-4 pointer-events-none shrink-0"></i>
-                <span>Kembali ke Daftar</span>
+            {{-- TOMBOL KEMBALI --}}
+            <button type="button" onclick="history.back()" title="Kembali"
+                class="flex items-center justify-center h-10 w-10 shrink-0 ring-1 ring-border hover:ring-emerald-500 rounded-full text-foreground hover:text-emerald-500 transition-all bg-white cursor-pointer shadow-sm">
+                <i data-lucide="arrow-left" class="size-4 pointer-events-none"></i>
             </button>
         </div>
     </div>

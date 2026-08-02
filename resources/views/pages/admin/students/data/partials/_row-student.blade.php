@@ -11,6 +11,7 @@ $nisn = $r->vault->nisn_encrypted ?? '-';
 
 $rombel = optional($r->activeClassGroup->first())->name ?? '-';
 $jurusan = $r->concentration->name ?? '-';
+$alias = $r->concentration->alias ?? '-';
 @endphp
 
 <tr id="row-student-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
@@ -26,16 +27,29 @@ $jurusan = $r->concentration->name ?? '-';
         </div>
     </td>
 
+    {{-- Kolom NIS dan NISN --}}
     <td class="px-5 py-4 min-w-[190px]">
         <div class="flex items-center gap-2">
-            <span class="inline-block w-24 text-center px-3 py-1.5 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold whitespace-nowrap">{{ $r->nis ?? '-' }}</span>
+            {{-- Badge NIS hanya tampil jika data NIS tidak kosong --}}
+            @if(!empty($r->nis))
+            <span class="inline-block w-24 text-center px-3 py-1.5 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold whitespace-nowrap">{{ $r->nis }}</span>
+            @endif
+
             <span class="px-3 py-1.5 rounded-md bg-warning/10 text-warning-dark text-xs font-bold whitespace-nowrap">{{ $nisn }}</span>
         </div>
     </td>
 
+    {{-- Kolom Rombel dan Jurusan --}}
     <td class="px-5 py-4 min-w-[160px]">
+        @if($rombel !== '-')
+        {{-- Tampilan untuk Siswa Aktif (Punya Rombel) --}}
         <div class="text-sm font-semibold text-foreground whitespace-nowrap">{{ $rombel }}</div>
         <div class="text-xs text-secondary whitespace-nowrap">{{ $jurusan }}</div>
+        @else
+        {{-- Tampilan untuk Siswa Mengambang (Hanya Jurusan) --}}
+        <div class="text-sm font-semibold text-foreground whitespace-nowrap">{{ $alias }}</div>
+        <div class="text-xs text-secondary whitespace-nowrap">{{ $jurusan }}</div>
+        @endif
     </td>
 
     <td class="px-5 py-4 min-w-[120px]">

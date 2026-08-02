@@ -39,9 +39,14 @@ class StudentController extends Controller
 
         $semesterId = CoreSemester::where('status', 'active')->value('id');
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
+
+        // 1. Kueri untuk tabel (Terpengaruh oleh filter dan pencarian)
         $baseQuery = $this->buildBaseQuery($filters, $semesterId);
 
-        $stats = $this->statsService->getStats(clone $baseQuery, $semesterId);
+        // 2. Kueri untuk Statcard (FIXED - Tidak terpengaruh filter pengguna)
+        // Mengirimkan array kosong [] agar layanan statistik menghitung total data secara utuh
+        $unfilteredQuery = $this->buildBaseQuery([], $semesterId);
+        $stats = $this->statsService->getStats($unfilteredQuery, $semesterId);
 
         $students = (clone $baseQuery)
             ->orderBy('name', 'asc')
@@ -67,6 +72,95 @@ class StudentController extends Controller
                 'concentrationOptions' => $concentrationOptions,
             ],
             $stats,
+            ['religionOptions' => Religion::cases()]
+        ));
+    }
+
+    public function floating(Request $request)
+    {
+        $filters = $request->only([
+            'search',
+            'filter_gender',
+            'filter_religion',
+            'filter_special_needs',
+            'filter_concentration',
+            'filter_age',
+            'filter_age_date',
+        ]);
+
+        $semesterId = CoreSemester::where('status', 'active')->value('id');
+        $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
+
+        // Query khusus mencari siswa yang TIDAK terdaftar di rombel manapun pada semester aktif
+        $query = Student::with(['vault', 'concentration'])
+            ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
+
+        $studentFilter = new StudentFilter([
+            'search'        => $filters['search'] ?? null,
+            'status'        => null,
+            'grade'         => null,
+            'gender'        => $filters['filter_gender'] ?? null,
+            'religion'      => $filters['filter_religion'] ?? null,
+            'special_needs' => $filters['filter_special_needs'] ?? null,
+
+            // 1. KOSONGKAN filter concentration di sini agar tidak memicu pencarian lewat Rombel 
+            'concentration' => null,
+
+            'age'           => $filters['filter_age'] ?? null,
+            'age_reference_date' => $filters['filter_age_date'] ?? null,
+        ], $semesterId);
+
+        $baseQuery = $studentFilter->apply($query);
+
+        // 2. TERAPKAN FILTER JURUSAN SECARA MANUAL DI SINI
+        if (!empty($filters['filter_concentration'])) {
+            // Gunakan relasi 'concentration' bawaan dari model Student
+            $baseQuery->whereHas('concentration', function ($q) use ($filters) {
+                $q->where('id', $filters['filter_concentration']);
+            });
+        }
+
+        // 1. Ambil semua siswa tanpa rombel di semester ini
+        $rawFloatingQuery = Student::whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
+            $q->where('semester_id', $semesterId);
+        });
+
+        // 2. Lewatkan ke StudentFilter dengan array kosong 
+        // Ini memastikan filter bawaan sistem (seperti status = aktif) tetap berjalan, 
+        // namun mengabaikan filter pencarian/gender dari user.
+        $emptyFilter = new StudentFilter([], $semesterId);
+        $unfilteredQuery = $emptyFilter->apply($rawFloatingQuery);
+
+        $floatingStats = [
+            'totalFloating'  => (clone $unfilteredQuery)->count(),
+            'maleFloating'   => (clone $unfilteredQuery)->where('gender', 'L')->count(),
+            'femaleFloating' => (clone $unfilteredQuery)->where('gender', 'P')->count(),
+        ];
+
+        $students = (clone $baseQuery)
+            ->orderBy('name', 'asc')
+            ->paginate(10)
+            ->withQueryString();
+
+        if ($request->header('HX-Request') && !$request->header('HX-History-Restore-Request')) {
+            return view('pages.admin.students.data.partials._table', compact('students'))->render();
+        }
+
+        return view('pages.admin.students.floating.index', array_merge(
+            [
+                'students'             => $students,
+                'search'               => $filters['search'] ?? null,
+                'filterGender'         => $filters['filter_gender'] ?? null,
+                'filterReligion'       => $filters['filter_religion'] ?? null,
+                'filterSpecialNeeds'   => $filters['filter_special_needs'] ?? null,
+                'filterConcentration'  => $filters['filter_concentration'] ?? null,
+                'filterAge'            => $filters['filter_age'] ?? null,
+                'filterAgeDate'        => $filters['filter_age_date'] ?? null,
+                'concentrationOptions' => $concentrationOptions,
+            ],
+            $floatingStats, // <-- Masukkan variabel statcard di sini
             ['religionOptions' => Religion::cases()]
         ));
     }

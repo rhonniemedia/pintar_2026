@@ -26,22 +26,24 @@
                 Akademik
             </p>
             <div class="grid grid-cols-2 gap-3">
+                @if($showGradeFilter ?? true)
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Kelas</label>
                     <select name="filter_grade" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                         <option value="">Semua Kelas</option>
                         @foreach (['10', '11', '12'] as $grade)
-                        <option value="{{ $grade }}" @selected($filterGrade===$grade)>Kelas {{ $grade }}</option>
+                        <option value="{{ $grade }}" @selected(isset($filterGrade) && $filterGrade===$grade)>Kelas {{ $grade }}</option>
                         @endforeach
                     </select>
                 </div>
+                @endif
 
-                <div>
+                <div class="{{ isset($showGradeFilter) && !$showGradeFilter ? 'col-span-2' : '' }}">
                     <label class="block text-sm font-bold text-foreground mb-2">Jurusan</label>
                     <select name="filter_concentration" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                         <option value="">Semua Jurusan</option>
                         @foreach ($concentrationOptions as $id => $name)
-                        <option value="{{ $id }}" @selected($filterConcentration==$id)>{{ $name }}</option>
+                        <option value="{{ $id }}" @selected(isset($filterConcentration) && $filterConcentration==$id)>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -55,28 +57,31 @@
                 Demografi
             </p>
             <div class="grid grid-cols-2 gap-3">
-                <div>
+                <div class="{{ isset($showReligionFilter) && !$showReligionFilter ? 'col-span-2' : '' }}">
                     <label class="block text-sm font-bold text-foreground mb-2">Jenis Kelamin</label>
                     <select name="filter_gender" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                         <option value="">Semua Gender</option>
-                        <option value="L" @selected($filterGender==='L' )>Laki-laki</option>
-                        <option value="P" @selected($filterGender==='P' )>Perempuan</option>
+                        <option value="L" @selected(isset($filterGender) && $filterGender==='L' )>Laki-laki</option>
+                        <option value="P" @selected(isset($filterGender) && $filterGender==='P' )>Perempuan</option>
                     </select>
                 </div>
 
+                @if($showReligionFilter ?? true)
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Agama</label>
                     <select name="filter_religion" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                         <option value="">Semua Agama</option>
                         @foreach ($religionOptions as $religion)
-                        <option value="{{ $religion->value }}" @selected($filterReligion===$religion->value)>{{ $religion->label() }}</option>
+                        <option value="{{ $religion->value }}" @selected(isset($filterReligion) && $filterReligion===$religion->value)>{{ $religion->label() }}</option>
                         @endforeach
                     </select>
                 </div>
+                @endif
             </div>
 
             {{-- Usia --}}
-            <div class="rounded-xl border border-border bg-gray-50/60 p-4">
+            @if($showAgeFilter ?? true)
+            <div class="rounded-xl border border-border bg-gray-50/60 p-4 mt-3">
                 <label class="flex items-center gap-1.5 text-sm font-bold text-foreground mb-3">
                     <i data-lucide="calendar-clock" class="size-4 text-secondary"></i>
                     Usia pada Tanggal Acuan
@@ -87,7 +92,7 @@
                             type="number"
                             name="filter_age"
                             min="0"
-                            value="{{ $filterAge }}"
+                            value="{{ $filterAge ?? '' }}"
                             placeholder="0"
                             class="h-11 w-full bg-white border border-border rounded-xl pl-3 pr-9 text-sm text-center font-semibold focus:outline-none focus:border-primary transition-all">
                         <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-secondary">thn</span>
@@ -114,9 +119,11 @@
                 </div>
                 <p class="text-xs text-secondary mt-2">Kosongkan usia jika tidak ingin memfilter berdasarkan umur.</p>
             </div>
+            @endif
         </div>
 
         {{-- Grup: Lainnya --}}
+        @if($showSpecialNeedsFilter ?? true)
         <div class="space-y-3 pt-1 border-t border-border/70">
             <p class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-secondary pt-3">
                 <i data-lucide="heart-pulse" class="size-3.5"></i>
@@ -126,11 +133,12 @@
                 <label class="block text-sm font-bold text-foreground mb-2">Kebutuhan Khusus</label>
                 <select name="filter_special_needs" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                     <option value="">Semua Kondisi</option>
-                    <option value="yes" @selected($filterSpecialNeeds==='yes' )>Berkebutuhan Khusus</option>
-                    <option value="no" @selected($filterSpecialNeeds==='no' )>Reguler</option>
+                    <option value="yes" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='yes' )>Berkebutuhan Khusus</option>
+                    <option value="no" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='no' )>Reguler</option>
                 </select>
             </div>
         </div>
+        @endif
 
     </div>
 
@@ -150,7 +158,8 @@
 
         <button type="button"
             id="btn-apply-filter"
-            hx-get="{{ route('admin.students.data.index') }}"
+            {{-- Menggunakan variabel $filterRoute yang dikirim dari halaman pemanggil --}}
+            hx-get="{{ $filterRoute ?? route('admin.students.data.index') }}"
             hx-include="#student-filter-form, [name='search']"
             hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML" hx-push-url="true"
             @click="filterModalOpen = false"

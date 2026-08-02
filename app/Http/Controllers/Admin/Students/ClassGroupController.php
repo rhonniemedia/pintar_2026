@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Students;
 
 use App\Enums\Student\MutationStatus;
 use App\Enums\Student\StudentStatus;
+use App\Filters\StudentFilter;
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\ClassGroupStudent;
@@ -156,6 +157,28 @@ class ClassGroupController extends Controller
             'filterSpecialNeeds',
             'religionOptions'
         ));
+    }
+
+    public function addStudentForm(ClassGroup $classGroup)
+    {
+        $semesterId = $classGroup->semester_id;
+
+        // 1. Kueri dasar: Siswa dengan jurusan yang sama & belum punya rombel di semester ini
+        $rawQuery = Student::with(['vault', 'concentration'])
+            ->where('concentration_id', $classGroup->concentration_id)
+            ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
+
+        // 2. Lewatkan ke StudentFilter agar membuang data alumni/mutasi (hanya ambil yang Aktif)
+        $emptyFilter = new StudentFilter([], $semesterId);
+
+        // 3. Eksekusi kueri yang sudah difilter
+        $floatingStudents = $emptyFilter->apply($rawQuery)
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return view('pages.admin.students.groups.partials._add-student-modal', compact('classGroup', 'floatingStudents'));
     }
 
     public function destroy(Request $request, string $id)

@@ -1,42 +1,31 @@
 @extends('layouts.main.admin')
 
-@section('title', 'Data Peserta Didik')
-@section('page_title', 'Peserta Didik')
-@section('page_subtitle', 'Kelola basis data akademik siswa')
+@section('title', 'Siswa Mengambang')
+@section('page_title', 'Siswa Mengambang')
+@section('page_subtitle', 'Kelola data siswa yang belum memiliki rombongan belajar')
 
 @section('content')
 <div class="p-8"
     x-data="{ 
         filterModalOpen: false,
-        isFilterActive: {{ ($filterGrade || $filterGender || $filterReligion || $filterSpecialNeeds || $filterConcentration || $filterAge) ? 'true' : 'false' }},
+        isFilterActive: {{ ($filterGender || $filterConcentration) ? 'true' : 'false' }},
         checkFilterStatus() {
-            const grade = document.querySelector('[name=filter_grade]')?.value || '';
             const gender = document.querySelector('[name=filter_gender]')?.value || '';
-            const religion = document.querySelector('[name=filter_religion]')?.value || '';
-            const special = document.querySelector('[name=filter_special_needs]')?.value || '';
             const concentration = document.querySelector('[name=filter_concentration]')?.value || '';
-            const age = document.querySelector('[name=filter_age]')?.value || '';
             
-            this.isFilterActive = (grade !== '' || gender !== '' || religion !== '' || special !== '' || concentration !== '' || age !== '');
+            this.isFilterActive = (gender !== '' || concentration !== '');
         }
     }"
     @htmx:after-request.document="checkFilterStatus()">
 
-    {{-- 1. PAGE HEADER BARU (Sesuai gambar referensi) --}}
+    {{-- PAGE HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Data Peserta Didik</h1>
-            <p class="text-sm text-secondary">Kelola basis data akademik siswa secara menyeluruh.</p>
+            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Siswa Mengambang</h1>
+            <p class="text-sm text-secondary">Daftar peserta didik yang belum dimasukkan ke dalam rombongan belajar.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-            <button type="button"
-                title="Tarik data SPMB"
-                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-amber-600/30 whitespace-nowrap">
-                <i data-lucide="calendar-sync" class="size-4 shrink-0"></i>
-                <span>Tarik Data</span>
-            </button>
-
             <button type="button"
                 title="Download data Excel"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
@@ -44,14 +33,7 @@
                 <span>Download</span>
             </button>
 
-            <button type="button"
-                title="Cetak laporan"
-                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-blue-600/30 whitespace-nowrap">
-                <i data-lucide="printer" class="size-4 shrink-0"></i>
-                <span>Laporan</span>
-            </button>
-
-            <a href="{{ route('admin.students.data.index') }}"
+            <a href="{{ route('admin.students.floating.index') }}"
                 title="Segarkan halaman"
                 onclick="document.getElementById('refresh-icon').classList.add('animate-spin');"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer whitespace-nowrap">
@@ -61,39 +43,35 @@
         </div>
     </div>
 
-    {{-- Stats Cards --}}
     @include('pages.admin.students.data.partials._stats-cards', [
-    'totalStats' => $totalStats,
-    'activeStats' => $activeStats,
-    'graduatedStats' => $graduatedStats,
-    'inactiveStats' => $inactiveStats,
-    'grade12Stats' => $grade12Stats ?? 0,
-    'grade11Stats' => $grade11Stats ?? 0,
-    'grade10Stats' => $grade10Stats ?? 0,
+    'isFloating' => true, // Menandakan bahwa ini adalah halaman mengambang
+    'totalFloating' => $totalFloating ?? 0,
+    'maleFloating' => $maleFloating ?? 0,
+    'femaleFloating' => $femaleFloating ?? 0,
     ])
 
     {{-- Tabel Data --}}
     <div class="bg-white rounded-2xl border border-border p-5">
 
-        {{-- Header Tabel (Judul disesuaikan agar tidak duplikat dengan Page Header) --}}
+        {{-- Header Tabel --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-lg font-bold text-foreground">Daftar Siswa</h2>
                 <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
-            {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter (Bersebelahan) --}}
+            {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter --}}
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
 
-                {{-- TOMBOL DROPDOWN: Tampilan Aktif "Siswa Aktif" --}}
+                {{-- TOMBOL DROPDOWN: State Mengambang --}}
                 <div x-data="{ dropdownOpen: false }" class="relative shrink-0">
                     <button
                         @click="dropdownOpen = !dropdownOpen"
                         @click.away="dropdownOpen = false"
                         type="button"
                         class="relative flex h-11 items-center gap-2 rounded-xl border border-border bg-white px-3 hover:bg-muted transition-colors focus:outline-none cursor-pointer">
-                        <i data-lucide="users" class="size-4 text-secondary"></i>
-                        <span class="text-sm font-medium text-foreground hidden sm:block">Siswa Aktif</span>
+                        <i data-lucide="user-x" class="size-4 text-secondary"></i>
+                        <span class="text-sm font-medium text-foreground hidden sm:block">Siswa Mengambang</span>
                         <i data-lucide="chevron-down" class="size-4 text-secondary"></i>
                     </button>
 
@@ -108,16 +86,16 @@
                         x-transition:leave-end="opacity-0 translate-y-2"
                         class="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 w-48 rounded-xl border border-border bg-white shadow-lg z-50 p-1.5 flex flex-col gap-1">
 
-                        {{-- State Saat Ini (Siswa Aktif - background biru) --}}
-                        <a href="{{ route('admin.students.data.index') }}" class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-primary/10 text-primary">
+                        {{-- Link ke Siswa Aktif --}}
+                        <a href="{{ route('admin.students.data.index') }}" class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg text-secondary hover:bg-muted hover:text-foreground transition-colors">
                             <i data-lucide="user-check" class="size-4"></i>
                             Siswa Aktif
                         </a>
 
                         <div class="h-px bg-border mx-1"></div>
 
-                        {{-- Link ke Siswa Mengambang --}}
-                        <a href="{{ route('admin.students.floating.index') }}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg text-secondary hover:bg-muted hover:text-foreground transition-colors">
+                        {{-- State Saat Ini (Aktif) --}}
+                        <a href="{{ route('admin.students.floating.index') }}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg bg-primary/10 text-primary">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="user-x" class="size-4"></i>
                                 Mengambang
@@ -126,7 +104,7 @@
                     </div>
                 </div>
 
-                {{-- 2. INPUT PENCARIAN --}}
+                {{-- INPUT PENCARIAN --}}
                 <div class="relative flex-1 md:flex-none">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
                     <input
@@ -134,7 +112,7 @@
                         name="search"
                         value="{{ $search }}"
                         placeholder="Cari peserta..."
-                        hx-get="{{ route('admin.students.data.index') }}"
+                        hx-get="{{ route('admin.students.floating.index') }}"
                         hx-trigger="keyup changed delay:400ms, search"
                         hx-target="#students-container"
                         hx-select="#students-container"
@@ -144,7 +122,7 @@
                         class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
                 </div>
 
-                {{-- 3. TOMBOL FILTER --}}
+                {{-- TOMBOL FILTER --}}
                 <button
                     type="button"
                     @click="filterModalOpen = true"
@@ -160,7 +138,6 @@
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-white"></span>
                     </span>
                 </button>
-
             </div>
         </div>
 
@@ -169,15 +146,17 @@
     </div>
 
     @include('pages.admin.students.data.partials._filter-modal', [
-    'filterGrade' => $filterGrade,
-    'filterGender' => $filterGender,
-    'filterReligion' => $filterReligion,
-    'filterSpecialNeeds' => $filterSpecialNeeds,
-    'filterConcentration' => $filterConcentration,
-    'filterAge' => $filterAge,
-    'filterAgeDate' => $filterAgeDate,
-    'concentrationOptions' => $concentrationOptions,
-    'religionOptions' => $religionOptions,
+    'filterRoute' => route('admin.students.floating.index'),
+
+    // Atur false untuk menyembunyikan opsi filter
+    'showGradeFilter' => false,
+    'showReligionFilter' => false,
+    'showAgeFilter' => false,
+    'showSpecialNeedsFilter' => false,
+
+    'filterGender' => $filterGender ?? null,
+    'filterConcentration' => $filterConcentration ?? null,
+    'concentrationOptions' => $concentrationOptions ?? [],
     ])
 
     <div id="modal-container"></div>

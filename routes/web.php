@@ -59,6 +59,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Data Peserta Didik
         Route::get('/data', [StudentController::class, 'index'])->name('data.index');
+        Route::get('/floating', [StudentController::class, 'floating'])->name('floating.index');
         Route::delete('/data/{id}', [StudentController::class, 'destroy'])->name('data.destroy');
 
         // Detail
@@ -82,6 +83,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/group', [ClassGroupController::class, 'store'])->name('group.store');
         Route::put('/group/{id}', [ClassGroupController::class, 'update'])->name('group.update');
         Route::get('/group/{id}/show', [ClassGroupController::class, 'show'])->name('group.show');
+        Route::get('/group/{classGroup}/add-student', [ClassGroupController::class, 'addStudentForm'])->name('group.add-student.form');
+        Route::post('/group/{classGroup}/add-student', [ClassGroupController::class, 'storeStudent'])->name('group.add-student.store');
         Route::delete('/group/{id}', [ClassGroupController::class, 'destroy'])->name('group.destroy');
 
         // --- RUTE CETAK DAFTAR HADIR ---
