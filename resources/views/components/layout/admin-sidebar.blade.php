@@ -51,7 +51,7 @@
                     class="group {{ request()->routeIs('admin.master-data.index') ? 'active' : '' }}">
                     <div
                         class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ request()->routeIs('admin.master-data.index') ? 'bg-muted' : 'hover:bg-muted' }}">
-                        <i data-lucide="school-2"
+                        <i data-lucide="landmark"
                             class="size-5 {{ request()->routeIs('admin.master-data.index') ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
 
                         <span
@@ -65,7 +65,7 @@
                     class="group {{ request()->routeIs('admin.master-data.academic') ? 'active' : '' }}">
                     <div
                         class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ request()->routeIs('admin.master-data.academic') ? 'bg-muted' : 'hover:bg-muted' }}">
-                        <i data-lucide="book-open-text"
+                        <i data-lucide="notepad-text"
                             class="size-5 {{ request()->routeIs('admin.master-data.academic') ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
 
                         <span

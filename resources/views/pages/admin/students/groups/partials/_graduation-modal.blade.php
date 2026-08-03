@@ -8,7 +8,7 @@
         checkAll(e) {
             const checked = e.target.checked;
             document.querySelectorAll('.student-cb').forEach(el => {
-                if(el.closest('tr').style.display !== 'none') {
+                if(el.closest('.student-row').style.display !== 'none') {
                     el.checked = checked;
                 }
             });
@@ -16,7 +16,7 @@
         },
         syncHeaderCheckbox() {
             const visible = Array.from(document.querySelectorAll('.student-cb'))
-                .filter(el => el.closest('tr').style.display !== 'none');
+                .filter(el => el.closest('.student-row').style.display !== 'none');
             const checkedCount = visible.filter(el => el.checked).length;
             const header = this.$refs.headerCb;
             if (!header) return;
@@ -72,8 +72,8 @@
             @csrf
 
             <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Table Controls -->
-                <div class="px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+                <!-- Kontrol Atas -->
+                <div class="px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 border-b border-border">
                     <!-- Informasi Total -->
                     <div class="flex items-center gap-3 w-full md:w-auto">
                         <div class="flex items-center justify-center size-10 rounded-full bg-primary/10 text-primary shrink-0">
@@ -102,127 +102,124 @@
                     </div>
                 </div>
 
-                <!-- Table Container -->
-                <div class="flex-1 flex flex-col min-h-0 px-4 sm:px-6 pb-4 sm:pb-6">
-                    <div class="flex-1 overflow-auto border-y border-border/50">
-                        <table class="w-full text-left border-collapse relative min-w-[550px]">
-                            <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-sm">
-                                <tr>
-                                    <th class="py-3 pl-4 pr-2 text-sm font-bold text-secondary uppercase tracking-wider w-1/2">Peserta Didik</th>
-                                    <th class="px-2 py-3 text-sm font-bold text-secondary uppercase tracking-wider">NIS / NISN</th>
-                                    <th class="py-3 pl-2 pr-4 text-right w-16">
-                                        <label class="relative inline-flex items-center justify-center cursor-pointer align-middle" title="Pilih Semua">
-                                            <input type="checkbox" x-ref="headerCb" @change="checkAll"
-                                                class="peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-primary checked:border-primary indeterminate:bg-primary indeterminate:border-primary hover:border-primary/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                            <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
-                                            <i data-lucide="minus" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-indeterminate:opacity-100 peer-indeterminate:scale-100 transition-all pointer-events-none"></i>
-                                        </label>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-border/50">
-                                @forelse($candidates as $c)
-                                <tr class="hover:bg-slate-50/80 transition-colors group"
-                                    x-show="search === '' || '{{ strtolower($c->student->name) }}'.includes(search.toLowerCase()) || '{{ $c->student->nis }}'.includes(search)">
-
-                                    <!-- Kolom Nama & Avatar -->
-                                    <td class="py-3 pl-4 pr-2">
-                                        <div class="flex items-center gap-3">
-                                            @php
-                                            $initials = strtoupper(substr($c->student->name, 0, 2));
-                                            $colors = ['bg-blue-100 text-blue-700', 'bg-emerald-100 text-emerald-700', 'bg-purple-100 text-purple-700', 'bg-orange-100 text-orange-700'];
-                                            $avatarColor = $colors[$loop->index % 4];
-                                            @endphp
-                                            <div class="size-9 rounded-full {{ $avatarColor }} flex items-center justify-center text-xs font-bold shrink-0">
-                                                {{ $initials }}
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-semibold text-foreground uppercase group-hover:text-primary transition-colors">
-                                                    {{ $c->student->name }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <!-- Kolom NIS/NISN -->
-                                    <td class="px-2 py-3 align-middle">
-                                        <div class="flex flex-wrap gap-1.5 items-center">
-                                            <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-600 font-bold text-xs">{{ $c->student->nis }}</span>
-                                            <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-bold text-xs">{{ $c->student->vault->nisn_encrypted ?? '-' }}</span>
-                                        </div>
-                                    </td>
-
-                                    <!-- Kolom Checkbox -->
-                                    <td class="py-3 pl-2 pr-4 text-right">
-                                        <label class="relative inline-flex items-center justify-center cursor-pointer align-middle">
-                                            <input type="checkbox" name="student_id[]" value="{{ $c->student->id }}" @change="syncHeaderCheckbox"
-                                                class="student-cb peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-primary checked:border-primary hover:border-primary/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                            <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
-                                        </label>
-                                    </td>
-                                </tr>
-                                @empty
-                                <!-- State Data Kosong -->
-                                <tr>
-                                    <td colspan="3" class="py-16 text-center">
-                                        <div class="flex flex-col items-center justify-center gap-3">
-                                            <div class="size-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-1">
-                                                <i data-lucide="inbox" class="size-6"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-bold text-foreground">Tidak ada siswa yang siap diproses</p>
-                                                <p class="text-xs text-secondary mt-1">Data siswa mungkin sudah diproses atau masih kosong.</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                <!-- Daftar Siswa -->
+                <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+                    @if($candidates->isEmpty())
+                    <div class="text-center py-10">
+                        <i data-lucide="inbox" class="size-12 text-border mx-auto mb-3"></i>
+                        <p class="text-sm font-medium text-foreground">Tidak ada siswa yang siap diproses</p>
+                        <p class="text-xs text-secondary mt-1">Data siswa mungkin sudah diproses atau masih kosong.</p>
                     </div>
+                    @else
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap items-center justify-between px-1 mb-3 sm:mb-4 gap-2">
+                            <span class="text-sm font-bold text-foreground">{{ $candidates->count() }} Siswa Ditemukan</span>
+
+                            {{-- Checkbox "Pilih Semua" --}}
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-secondary">Pilih Semua</span>
+                                <label class="relative inline-flex items-center justify-center cursor-pointer align-middle" title="Pilih Semua">
+                                    <input type="checkbox" x-ref="headerCb" @change="checkAll"
+                                        class="peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-primary checked:border-primary indeterminate:bg-primary indeterminate:border-primary hover:border-primary/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                    <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
+                                    <i data-lucide="minus" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-indeterminate:opacity-100 peer-indeterminate:scale-100 transition-all pointer-events-none"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        @foreach($candidates as $c)
+                        <label class="student-row flex items-start sm:items-center gap-3 p-3 sm:p-4 rounded-xl border border-border hover:bg-muted/50 transition-colors cursor-pointer group shadow-sm"
+                            x-show="search === '' || '{{ strtolower($c->student->name) }}'.includes(search.toLowerCase()) || '{{ $c->student->nis }}'.includes(search)">
+
+                            {{-- Checkbox Individual --}}
+                            <div class="relative inline-flex items-center justify-center cursor-pointer align-middle shrink-0 mt-1 sm:mt-0">
+                                <input type="checkbox" name="student_id[]" value="{{ $c->student->id }}" @change="syncHeaderCheckbox"
+                                    class="student-cb peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-primary checked:border-primary hover:border-primary/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <i data-lucide="check" class="absolute inset-0 m-auto size-3.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all pointer-events-none"></i>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2.5 sm:gap-4 overflow-hidden">
+
+                                {{-- Kolom 1: Profil Siswa & NIS/NISN --}}
+                                <div class="flex items-center gap-3 sm:gap-4">
+                                    <x-ui.avatar :name="$c->student->name" :gender="$c->student->gender ?? null" :index="$loop->index" class="size-9 text-xs shrink-0" />
+
+                                    <div class="flex flex-col gap-1">
+                                        <div class="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-tight uppercase">{{ $c->student->name }}</div>
+                                        <div class="text-xs text-secondary mt-0.5">
+                                            NIS: {{ $c->student->nis ?? '-' }} <span class="mx-1">&bull;</span> NISN: {{ $c->student->vault->nisn_encrypted ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Kolom 2: Tempat & Tanggal Lahir --}}
+                                <div class="pl-[3.25rem] sm:pl-0 shrink-0 text-left sm:w-[45%]">
+                                    <div class="text-sm font-semibold text-foreground truncate">{{ $c->student->vault->pob_encrypted ?? '-' }}</div>
+                                    <div class="text-xs text-secondary mt-0.5 flex items-center gap-1.5 overflow-hidden">
+                                        <i data-lucide="calendar" class="size-3.5 shrink-0"></i>
+                                        <span class="truncate">{{ $c->student->vault->dob_encrypted ? \Carbon\Carbon::parse($c->student->vault->dob_encrypted)->translatedFormat('d F Y') : '-' }}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+                    @endif
                 </div>
             </div>
 
             {{-- Footer Form --}}
-            <div class="px-4 sm:px-6 py-4 border-t border-border bg-gray-50/50 flex flex-col lg:flex-row items-stretch lg:items-center justify-between shrink-0 gap-5">
+            <div class="px-4 sm:px-6 py-4 border-t border-border bg-gray-50 flex flex-col gap-4">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-5">
 
-                <!-- Input Aksi Kelulusan -->
-                <div class="grid grid-cols-2 sm:flex sm:flex-row items-center gap-3 w-full lg:w-auto">
-                    <select name="decision" x-model="decision" class="col-span-1 bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="lulus">Lulus</option>
-                        <option value="tidak-lulus" @if($nextSemesterMissing) disabled @endif>Tidak Lulus</option>
-                    </select>
+                    <!-- Input Pengaturan Kelulusan -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full md:w-3/4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-secondary">Status Keputusan</label>
+                            <select name="decision" x-model="decision" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
+                                <option value="lulus">Lulus</option>
+                                <option value="tidak-lulus" @if($nextSemesterMissing) disabled @endif>Tidak Lulus</option>
+                            </select>
+                        </div>
 
-                    <input type="date" name="exit_date" value="{{ date('Y-m-d') }}" required class="col-span-1 bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-secondary">Tanggal Proses</label>
+                            <input type="date" name="exit_date" value="{{ date('Y-m-d') }}" required class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
+                        </div>
 
-                    <select name="target_class_group_id" x-show="decision === 'tidak-lulus'" x-cloak class="col-span-2 sm:col-span-1 bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all" :required="decision === 'tidak-lulus'">
-                        <option value="">-- Rombel Tujuan (Tinggal) --</option>
-                        @foreach($targetGroupsTidakLulus as $tg)
-                        <option value="{{ $tg->id }}">{{ $tg->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                        <!-- x-show dipindahkan ke div pembungkus -->
+                        <div class="flex flex-col gap-1.5" x-show="decision === 'tidak-lulus'" x-cloak>
+                            <label class="text-xs font-semibold text-secondary">Rombel Tujuan (Jika Tinggal)</label>
+                            <select name="target_class_group_id" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" :required="decision === 'tidak-lulus'">
+                                <option value="">-- Pilih Rombel --</option>
+                                @foreach($targetGroupsTidakLulus as $tg)
+                                <option value="{{ $tg->id }}">{{ $tg->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
-                <!-- Tombol Aksi -->
-                <div class="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
-                    <button type="button"
-                        :disabled="saving"
-                        @click="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)"
-                        class="col-span-1 justify-center inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50">
-                        <i data-lucide="x" class="size-4"></i>
-                        <span>Batal</span>
-                    </button>
+                    <!-- Tombol Aksi -->
+                    <div class="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 justify-end">
+                        <button type="button"
+                            :disabled="saving"
+                            @click="open = false; setTimeout(() => document.getElementById('modal-container').innerHTML = '', 150)"
+                            class="flex-1 md:flex-none justify-center inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all duration-200 cursor-pointer disabled:opacity-50">
+                            Batal
+                        </button>
 
-                    <button type="submit"
-                        :disabled="saving"
-                        class="col-span-1 justify-center inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-70">
-                        <i data-lucide="save" class="size-4" x-show="!saving"></i>
-                        <svg x-show="saving" x-cloak class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span x-text="saving ? 'Memproses...' : 'Simpan Data'"></span>
-                    </button>
+                        <button type="submit"
+                            :disabled="saving"
+                            class="flex-1 md:flex-none justify-center inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-70">
+                            <i data-lucide="save" class="size-4" x-show="!saving"></i>
+                            <svg x-show="saving" x-cloak class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="saving ? 'Memproses...' : 'Simpan'"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>

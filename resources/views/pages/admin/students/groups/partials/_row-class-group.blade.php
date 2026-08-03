@@ -16,13 +16,21 @@ $femaleStudents = $g->female_students_count ?? 0;
 <tr id="row-class-group-{{ $g->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
     <td class="px-5 py-4 min-w-[260px]">
         <a href="{{ route('admin.students.group.show', $g->id) }}" class="flex items-center gap-3 group transition-all">
-            <div @style(["background: {$color}"])
-                class="h-10 w-10 rounded-full flex items-center justify-center text-white shrink-0">
-                <i data-lucide="book-open" class="size-4 pointer-events-none"></i>
+
+            {{-- Bungkus dengan relative agar ikon bisa ditumpuk di tengah avatar --}}
+            <div class="relative size-10 shrink-0 rounded-full overflow-hidden">
+                {{-- Komponen avatar asli --}}
+                <x-ui.avatar name=" " :index="$loop->index ?? 0" class="size-10 absolute inset-0" />
+
+                {{-- Tambahkan text-white di sini agar ikon kontras dengan background --}}
+                <div class="absolute inset-0 flex items-center justify-center text-white">
+                    <i data-lucide="notebook-pen" class="size-5 stroke-[2] pointer-events-none"></i>
+                </div>
             </div>
+
             <div>
                 {{-- Teks merespon hover dari tag <a> utama menggunakan 'group-hover:' --}}
-                <div class="font-semibold text-foreground text-sm uppercase group-hover:text-primary group-hover:none transition-colors whitespace-nowrap">
+                <div class="font-semibold text-foreground text-sm uppercase group-hover:text-primary transition-colors whitespace-nowrap">
                     {{ $displayName }}
                 </div>
                 <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5 whitespace-nowrap">

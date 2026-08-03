@@ -47,8 +47,11 @@
                     </td>
 
                     <td class="px-5 py-4 text-sm">
-                        <div class="text-foreground truncate">{{ $tempatLahir }}</div>
-                        <div class="text-xs text-secondary truncate">Tanggal: {{ $tanggalLahir }}</div>
+                        <div class="font-semibold text-foreground truncate">{{ $tempatLahir ?? '-' }}</div>
+                        <div class="text-xs text-secondary mt-0.5 flex items-center gap-1.5 overflow-hidden">
+                            <i data-lucide="calendar" class="size-3.5 shrink-0"></i>
+                            <span class="truncate">{{ $tanggalLahir ? \Carbon\Carbon::parse($tanggalLahir)->translatedFormat('d F Y') : '-' }}</span>
+                        </div>
                     </td>
 
                     <td class="px-5 py-4">
