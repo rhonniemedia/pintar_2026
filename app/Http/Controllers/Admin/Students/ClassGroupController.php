@@ -12,7 +12,9 @@ use App\Models\CoreConcentration;
 use App\Models\CoreSemester;
 use App\Models\Data;
 use App\Models\Student;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class ClassGroupController extends Controller
@@ -181,6 +183,104 @@ class ClassGroupController extends Controller
         return view('pages.admin.students.groups.partials._add-student-modal', compact('classGroup', 'floatingStudents'));
     }
 
+    /**
+     * Memproses penambahan siswa mengambang (floating) ke sebuah rombel.
+     * Dipanggil dari form di _add-student-modal.blade.php
+     */
+    public function storeStudent(Request $request, ClassGroup $classGroup)
+    {
+        $validator = Validator::make($request->all(), [
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'exists:acd_students,id',
+        ], [
+            'student_ids.required' => 'Pilih minimal satu siswa terlebih dahulu.',
+            'student_ids.*.exists' => 'Salah satu siswa yang dipilih tidak valid atau sudah tidak tersedia.',
+        ]);
+
+        // Gagal validasi -> kembalikan status non-2xx (422) supaya HTMX TIDAK
+        // menutup modal atau menukar #students-container (lihat @htmx:after-request
+        // di _add-student-modal.blade.php yang hanya modalOpen=false saat successful).
+        if ($validator->fails()) {
+            return response()->noContent(422)->header('HX-Trigger', json_encode([
+                'showAlert' => [
+                    'icon' => 'error',
+                    'title' => 'Gagal!',
+                    'text' => $validator->errors()->first(),
+                ]
+            ]));
+        }
+
+        $data = $validator->validated();
+
+        $addedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($data['student_ids'] as $studentId) {
+            // Hindari duplikasi: hanya insert jika siswa belum punya baris aktif
+            // (exit_date belum terisi) di rombel ini pada semester yang sama.
+            $exists = ClassGroupStudent::where('class_group_id', $classGroup->id)
+                ->where('student_id', $studentId)
+                ->whereNull('exit_date')
+                ->exists();
+
+            if ($exists) {
+                $skippedCount++;
+                continue;
+            }
+
+            ClassGroupStudent::create([
+                'class_group_id' => $classGroup->id,
+                'student_id' => $studentId,
+                'entry_date' => now(),
+            ]);
+            $addedCount++;
+        }
+
+        // Susun pesan alert sesuai hasil: gagal total (info), sukses sebagian,
+        // atau sukses penuh - supaya user tahu persis apa yang terjadi.
+        if ($addedCount === 0) {
+            $alert = [
+                'icon' => 'info',
+                'title' => 'Tidak Ada Perubahan',
+                'text' => 'Siswa yang dipilih sudah terdaftar di rombel ini sebelumnya.',
+            ];
+        } elseif ($skippedCount > 0) {
+            $alert = [
+                'icon' => 'success',
+                'title' => 'Berhasil Sebagian',
+                'text' => "{$addedCount} siswa ditambahkan, {$skippedCount} siswa dilewati karena sudah terdaftar.",
+            ];
+        } else {
+            $alert = [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => "{$addedCount} siswa berhasil ditambahkan ke rombel.",
+            ];
+        }
+
+        // Susun ulang query anggota rombel (sama seperti method show()) supaya
+        // partial tabel yang dikembalikan konsisten dengan halaman utama.
+        $cgsTable = (new ClassGroupStudent())->getTable();
+        $memberCondition = $this->memberOfClassGroupCondition($cgsTable);
+
+        $students = $classGroup->students()
+            ->where($memberCondition)
+            ->with(['vault', 'concentration', 'activeClassGroup'])
+            ->orderBy('acd_students.name', 'asc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return response()
+            ->view('pages.admin.students.groups.partials._students-table', compact('students', 'classGroup'))
+            ->header('HX-Trigger', json_encode([
+                'showAlert' => $alert,
+                // Trigger ini yang bikin #stats-cards-container di show.blade.php
+                // ikut refresh (lihat hx-trigger="refreshClassData from:body").
+                // Sebelumnya trigger ini tidak dikirim, makanya stat card statis.
+                'refreshClassData' => true,
+            ]));
+    }
+
     public function destroy(Request $request, string $id)
     {
         $classGroup = ClassGroup::findOrFail($id);
@@ -198,7 +298,7 @@ class ClassGroupController extends Controller
 
         try {
             $classGroup->delete();
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return response()->noContent()->header('HX-Trigger', json_encode([
                 'showAlert' => [
                     'icon' => 'error',

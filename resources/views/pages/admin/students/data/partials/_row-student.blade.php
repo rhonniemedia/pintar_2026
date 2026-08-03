@@ -137,7 +137,13 @@ $alias = $r->concentration->alias ?? '-';
 
                 <div class="my-2 border-t border-border"></div>
 
-                <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Edit & Delete</p>
+                {{-- Ubah label secara dinamis --}}
+                <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">
+                    {{ $rombel !== '-' ? 'Edit & Delete' : 'Hapus' }}
+                </p>
+
+                {{-- Tampilkan tombol Edit hanya jika siswa memiliki rombel (Bukan siswa mengambang) --}}
+                @if($rombel !== '-')
                 <button type="button"
                     @click="open = false"
                     hx-get="{{ route('admin.students.edit.personal', $r->id) }}"
@@ -155,6 +161,7 @@ $alias = $r->concentration->alias ?? '-';
                     class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                     <i data-lucide="camera" class="size-4 text-secondary pointer-events-none"></i> Edit Foto
                 </button>
+                @endif
 
                 <button type="button"
                     disabled

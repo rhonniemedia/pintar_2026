@@ -72,7 +72,12 @@
                         class="relative flex h-11 items-center gap-2 rounded-xl border border-border bg-white px-3 hover:bg-muted transition-colors focus:outline-none cursor-pointer">
                         <i data-lucide="user-x" class="size-4 text-secondary"></i>
                         <span class="text-sm font-medium text-foreground hidden sm:block">Siswa Mengambang</span>
-                        <i data-lucide="chevron-down" class="size-4 text-secondary"></i>
+
+                        {{-- Ikon chevron dengan animasi putar --}}
+                        <i data-lucide="chevron-down"
+                            class="size-4 text-secondary transition-transform duration-200"
+                            :class="{ 'rotate-180': dropdownOpen }">
+                        </i>
                     </button>
 
                     <div

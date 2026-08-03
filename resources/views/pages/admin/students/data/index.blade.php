@@ -37,12 +37,22 @@
                 <span>Tarik Data</span>
             </button>
 
-            <button type="button"
-                title="Download data Excel"
+            {{--
+                Link biasa (bukan htmx) karena ini harus memicu file download,
+                bukan swap konten. URL dasar disimpan di data-export-url;
+                query string filter/pencarian TERBARU ditempelkan saat diklik
+                lewat script di bawah (lihat #btn-download-excel), supaya
+                selalu ikut URL yang sedang aktif (ter-update otomatis lewat
+                hx-push-url di search & tombol "Terapkan Filter").
+            --}}
+            <a id="btn-download-excel"
+                href="{{ route('admin.students.data.export') }}"
+                data-export-url="{{ route('admin.students.data.export') }}"
+                title="Download data Excel (mengikuti filter yang aktif)"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
                 <i data-lucide="file-box" class="size-4 shrink-0"></i>
                 <span>Download</span>
-            </button>
+            </a>
 
             <button type="button"
                 title="Cetak laporan"
@@ -75,17 +85,17 @@
     {{-- Tabel Data --}}
     <div class="bg-white rounded-2xl border border-border p-5">
 
-        {{-- Header Tabel (Judul disesuaikan agar tidak duplikat dengan Page Header) --}}
+        {{-- Header Tabel --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-lg font-bold text-foreground">Daftar Siswa</h2>
                 <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
-            {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter (Bersebelahan) --}}
+            {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter --}}
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
 
-                {{-- TOMBOL DROPDOWN: Tampilan Aktif "Siswa Aktif" --}}
+                {{-- 1. TOMBOL DROPDOWN: Tampilan Aktif "Siswa Aktif" --}}
                 <div x-data="{ dropdownOpen: false }" class="relative shrink-0">
                     <button
                         @click="dropdownOpen = !dropdownOpen"
@@ -94,9 +104,15 @@
                         class="relative flex h-11 items-center gap-2 rounded-xl border border-border bg-white px-3 hover:bg-muted transition-colors focus:outline-none cursor-pointer">
                         <i data-lucide="users" class="size-4 text-secondary"></i>
                         <span class="text-sm font-medium text-foreground hidden sm:block">Siswa Aktif</span>
-                        <i data-lucide="chevron-down" class="size-4 text-secondary"></i>
+
+                        {{-- Ikon chevron dengan animasi putar --}}
+                        <i data-lucide="chevron-down"
+                            class="size-4 text-secondary transition-transform duration-200"
+                            :class="{ 'rotate-180': dropdownOpen }">
+                        </i>
                     </button>
 
+                    {{-- Isi Dropdown --}}
                     <div
                         x-show="dropdownOpen"
                         x-cloak
@@ -183,4 +199,12 @@
     <div id="modal-container"></div>
 
 </div>
+
+<script>
+    document.getElementById('btn-download-excel')?.addEventListener('click', function(event) {
+        event.preventDefault();
+        var baseUrl = this.dataset.exportUrl;
+        window.location.href = baseUrl + window.location.search;
+    });
+</script>
 @endsection

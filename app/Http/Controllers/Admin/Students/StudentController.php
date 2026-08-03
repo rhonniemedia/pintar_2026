@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Students;
 
 use App\Enums\Student\Religion;
+use App\Exports\StudentsExport;
 use App\Filters\StudentFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Students\UpdateStudentPhotoRequest;
@@ -14,6 +15,7 @@ use App\Services\StudentStatsService;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -74,6 +76,39 @@ class StudentController extends Controller
             $stats,
             ['religionOptions' => Religion::cases()]
         ));
+    }
+
+    /**
+     * Download data siswa ke Excel, mengikuti filter & pencarian yang
+     * sedang aktif (bukan semua data). Filter diambil dari query string,
+     * jadi tombol Download di view harus menyertakan query string yang
+     * sama persis dengan yang dipakai tabel (lihat index.blade.php).
+     */
+    public function export(Request $request)
+    {
+        $filters = $request->only([
+            'search',
+            'filter_status',
+            'filter_grade',
+            'filter_gender',
+            'filter_religion',
+            'filter_special_needs',
+            'filter_concentration',
+            'filter_age',
+            'filter_age_date',
+        ]);
+
+        $semesterId = CoreSemester::where('status', 'active')->value('id');
+
+        // Pakai query builder yang SAMA dengan yang dipakai tabel (buildBaseQuery),
+        // tapi tanpa paginate -> ambil semua baris yang lolos filter.
+        $students = $this->buildBaseQuery($filters, $semesterId)
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $fileName = 'data-siswa-' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new StudentsExport($students), $fileName);
     }
 
     public function floating(Request $request)
