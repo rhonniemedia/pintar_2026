@@ -8,12 +8,14 @@
 <div class="p-8"
     x-data="{ 
         filterModalOpen: false,
-        isFilterActive: {{ ($filterGender || $filterConcentration) ? 'true' : 'false' }},
+        isFilterActive: {{ ($filterGender || $filterConcentration || $filterOrphanStatus || $filterFoodAllergy) ? 'true' : 'false' }},
         checkFilterStatus() {
             const gender = document.querySelector('[name=filter_gender]')?.value || '';
             const concentration = document.querySelector('[name=filter_concentration]')?.value || '';
-            
-            this.isFilterActive = (gender !== '' || concentration !== '');
+            const orphanStatus = document.querySelector('[name=filter_orphan_status]')?.value || '';
+            const foodAllergy = document.querySelector('[name=filter_food_allergy]')?.value || '';
+
+            this.isFilterActive = (gender !== '' || concentration !== '' || orphanStatus !== '' || foodAllergy !== '');
         }
     }"
     @htmx:after-request.document="checkFilterStatus()">
@@ -161,6 +163,8 @@
 
     'filterGender' => $filterGender ?? null,
     'filterConcentration' => $filterConcentration ?? null,
+    'filterOrphanStatus' => $filterOrphanStatus ?? null,
+    'filterFoodAllergy' => $filterFoodAllergy ?? null,
     'concentrationOptions' => $concentrationOptions ?? [],
     ])
 

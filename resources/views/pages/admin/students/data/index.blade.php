@@ -8,7 +8,7 @@
 <div class="p-8"
     x-data="{ 
         filterModalOpen: false,
-        isFilterActive: {{ ($filterGrade || $filterGender || $filterReligion || $filterSpecialNeeds || $filterConcentration || $filterAge) ? 'true' : 'false' }},
+        isFilterActive: {{ ($filterGrade || $filterGender || $filterReligion || $filterSpecialNeeds || $filterConcentration || $filterAge || $filterOrphanStatus || $filterFoodAllergy) ? 'true' : 'false' }},
         checkFilterStatus() {
             const grade = document.querySelector('[name=filter_grade]')?.value || '';
             const gender = document.querySelector('[name=filter_gender]')?.value || '';
@@ -16,8 +16,10 @@
             const special = document.querySelector('[name=filter_special_needs]')?.value || '';
             const concentration = document.querySelector('[name=filter_concentration]')?.value || '';
             const age = document.querySelector('[name=filter_age]')?.value || '';
+            const orphanStatus = document.querySelector('[name=filter_orphan_status]')?.value || '';
+            const foodAllergy = document.querySelector('[name=filter_food_allergy]')?.value || '';
             
-            this.isFilterActive = (grade !== '' || gender !== '' || religion !== '' || special !== '' || concentration !== '' || age !== '');
+            this.isFilterActive = (grade !== '' || gender !== '' || religion !== '' || special !== '' || concentration !== '' || age !== '' || orphanStatus !== '' || foodAllergy !== '');
         }
     }"
     @htmx:after-request.document="checkFilterStatus()">
@@ -192,8 +194,14 @@
     'filterConcentration' => $filterConcentration,
     'filterAge' => $filterAge,
     'filterAgeDate' => $filterAgeDate,
+    'filterOrphanStatus' => $filterOrphanStatus,
+    'filterFoodAllergy' => $filterFoodAllergy,
     'concentrationOptions' => $concentrationOptions,
     'religionOptions' => $religionOptions,
+
+    // Default filter modal sekarang menyembunyikan Alergi Makanan (dipakai
+    // khusus untuk Siswa Mengambang), jadi di sini harus dinyalakan eksplisit.
+    'showFoodAllergyFilter' => true,
     ])
 
     <div id="modal-container"></div>

@@ -37,6 +37,8 @@ class StudentController extends Controller
             'filter_concentration',
             'filter_age',
             'filter_age_date',
+            'filter_orphan_status',
+            'filter_food_allergy',
         ]);
 
         $semesterId = CoreSemester::where('status', 'active')->value('id');
@@ -71,6 +73,8 @@ class StudentController extends Controller
                 'filterConcentration'  => $filters['filter_concentration'] ?? null,
                 'filterAge'            => $filters['filter_age'] ?? null,
                 'filterAgeDate'        => $filters['filter_age_date'] ?? null,
+                'filterOrphanStatus'   => $filters['filter_orphan_status'] ?? null,
+                'filterFoodAllergy'    => $filters['filter_food_allergy'] ?? null,
                 'concentrationOptions' => $concentrationOptions,
             ],
             $stats,
@@ -96,6 +100,8 @@ class StudentController extends Controller
             'filter_concentration',
             'filter_age',
             'filter_age_date',
+            'filter_orphan_status',
+            'filter_food_allergy',
         ]);
 
         $semesterId = CoreSemester::where('status', 'active')->value('id');
@@ -121,6 +127,8 @@ class StudentController extends Controller
             'filter_concentration',
             'filter_age',
             'filter_age_date',
+            'filter_orphan_status',
+            'filter_food_allergy',
         ]);
 
         $semesterId = CoreSemester::where('status', 'active')->value('id');
@@ -145,6 +153,8 @@ class StudentController extends Controller
 
             'age'           => $filters['filter_age'] ?? null,
             'age_reference_date' => $filters['filter_age_date'] ?? null,
+            'orphan_status' => $filters['filter_orphan_status'] ?? null,
+            'food_allergy'  => $filters['filter_food_allergy'] ?? null,
         ], $semesterId);
 
         $baseQuery = $studentFilter->apply($query);
@@ -193,6 +203,8 @@ class StudentController extends Controller
                 'filterConcentration'  => $filters['filter_concentration'] ?? null,
                 'filterAge'            => $filters['filter_age'] ?? null,
                 'filterAgeDate'        => $filters['filter_age_date'] ?? null,
+                'filterOrphanStatus'   => $filters['filter_orphan_status'] ?? null,
+                'filterFoodAllergy'    => $filters['filter_food_allergy'] ?? null,
                 'concentrationOptions' => $concentrationOptions,
             ],
             $floatingStats, // <-- Masukkan variabel statcard di sini
@@ -506,6 +518,8 @@ class StudentController extends Controller
             'concentration' => $filters['filter_concentration'] ?? null,
             'age'           => $filters['filter_age'] ?? null,
             'age_reference_date' => $filters['filter_age_date'] ?? null,
+            'orphan_status' => $filters['filter_orphan_status'] ?? null,
+            'food_allergy'  => $filters['filter_food_allergy'] ?? null,
         ], $semesterId);
 
         return $studentFilter->apply($query);

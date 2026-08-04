@@ -123,19 +123,46 @@
         </div>
 
         {{-- Grup: Lainnya --}}
-        @if($showSpecialNeedsFilter ?? true)
+        @if(($showSpecialNeedsFilter ?? true) || ($showOrphanStatusFilter ?? true) || ($showFoodAllergyFilter ?? true))
         <div class="space-y-3 pt-1 border-t border-border/70">
             <p class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-secondary pt-3">
                 <i data-lucide="heart-pulse" class="size-3.5"></i>
                 Lainnya
             </p>
-            <div>
-                <label class="block text-sm font-bold text-foreground mb-2">Kebutuhan Khusus</label>
-                <select name="filter_special_needs" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                    <option value="">Semua Kondisi</option>
-                    <option value="yes" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='yes' )>Berkebutuhan Khusus</option>
-                    <option value="no" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='no' )>Reguler</option>
-                </select>
+            <div class="grid grid-cols-2 gap-3">
+                @if($showSpecialNeedsFilter ?? true)
+                <div>
+                    <label class="block text-sm font-bold text-foreground mb-2">Kebutuhan Khusus</label>
+                    <select name="filter_special_needs" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                        <option value="">Semua Kondisi</option>
+                        <option value="yes" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='yes' )>Berkebutuhan Khusus</option>
+                        <option value="no" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='no' )>Reguler</option>
+                    </select>
+                </div>
+                @endif
+
+                @if($showFoodAllergyFilter ?? false)
+                <div>
+                    <label class="block text-sm font-bold text-foreground mb-2">Alergi Makanan</label>
+                    <select name="filter_food_allergy" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                        <option value="">Semua Siswa</option>
+                        <option value="yes" @selected(isset($filterFoodAllergy) && $filterFoodAllergy==='yes' )>Punya Alergi</option>
+                        <option value="no" @selected(isset($filterFoodAllergy) && $filterFoodAllergy==='no' )>Tidak Ada Alergi</option>
+                    </select>
+                </div>
+                @endif
+
+                @if($showOrphanStatusFilter ?? true)
+                <div class="col-span-2">
+                    <label class="block text-sm font-bold text-foreground mb-2">Status Yatim/Piatu</label>
+                    <select name="filter_orphan_status" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
+                        <option value="">Semua Siswa</option>
+                        <option value="yatim" @selected(isset($filterOrphanStatus) && $filterOrphanStatus==='yatim' )>Yatim (Ayah Meninggal)</option>
+                        <option value="piatu" @selected(isset($filterOrphanStatus) && $filterOrphanStatus==='piatu' )>Piatu (Ibu Meninggal)</option>
+                        <option value="yatim_piatu" @selected(isset($filterOrphanStatus) && $filterOrphanStatus==='yatim_piatu' )>Yatim Piatu (Ayah &amp; Ibu Meninggal)</option>
+                    </select>
+                </div>
+                @endif
             </div>
         </div>
         @endif

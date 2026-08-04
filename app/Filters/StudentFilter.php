@@ -2,6 +2,8 @@
 
 namespace App\Filters;
 
+use App\Enums\Student\FamilyRelation;
+use App\Enums\Student\LivingStatus;
 use App\Enums\Student\StudentStatus;
 use App\Traits\HasBlindIndex;
 use Carbon\Carbon;
@@ -68,7 +70,45 @@ class StudentFilter
                 $referenceDate = $this->filters['age_reference_date'] ?? now()->toDateString();
                 $hashes = $this->generateDobHashesForAge((int) $age, $referenceDate);
                 $q->whereHas('vault', fn(Builder $q2) => $q2->whereIn('dob_hash', $hashes));
+            })
+            ->when($this->filters['orphan_status'] ?? null, function (Builder $q, string $orphanStatus) {
+                $this->applyOrphanStatusFilter($q, $orphanStatus);
+            })
+            ->when($this->filters['food_allergy'] ?? null, function (Builder $q, string $foodAllergy) {
+                $q->where('has_food_allergy', $foodAllergy);
             });
+    }
+
+    /**
+     * Menerapkan filter status yatim/piatu/yatim-piatu berdasarkan kolom
+     * `living_status` pada relasi guardians (relationship: 'ayah' / 'ibu').
+     *
+     * - yatim        : ayah meninggal, ibu masih hidup
+     * - piatu        : ibu meninggal, ayah masih hidup
+     * - yatim_piatu  : ayah & ibu sama-sama meninggal
+     *
+     * Nilai `living_status` mengikuti enum App\Enums\Student\LivingStatus
+     * (ALIVE = 'alive', DECEASED = 'deceased'), dan `relationship` mengikuti
+     * enum App\Enums\Student\FamilyRelation (AYAH = 'father', IBU = 'mother').
+     */
+    private function applyOrphanStatusFilter(Builder $q, string $orphanStatus): void
+    {
+        $deceased = LivingStatus::DECEASED->value;
+        $father = FamilyRelation::AYAH->value;
+        $mother = FamilyRelation::IBU->value;
+
+        $fatherDeceased = fn(Builder $q2) => $q2->where('relationship', $father)->where('living_status', $deceased);
+        $motherDeceased = fn(Builder $q2) => $q2->where('relationship', $mother)->where('living_status', $deceased);
+
+        match ($orphanStatus) {
+            'yatim' => $q->whereHas('guardians', $fatherDeceased)
+                ->whereDoesntHave('guardians', $motherDeceased),
+            'piatu' => $q->whereHas('guardians', $motherDeceased)
+                ->whereDoesntHave('guardians', $fatherDeceased),
+            'yatim_piatu' => $q->whereHas('guardians', $fatherDeceased)
+                ->whereHas('guardians', $motherDeceased),
+            default => null,
+        };
     }
 
     /**

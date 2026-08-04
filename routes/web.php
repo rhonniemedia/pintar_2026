@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\Home\HomeController;
 use App\Http\Controllers\Admin\Master\MasterDataController;
 use App\Http\Controllers\Admin\Students\ClassGroupAttendanceController;
 use App\Http\Controllers\Admin\Students\ClassGroupController;
@@ -32,9 +33,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/home', function () {
-        return view('pages.admin.home.index');
-    });
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     /*
     |--------------------------------------------------------------------------
