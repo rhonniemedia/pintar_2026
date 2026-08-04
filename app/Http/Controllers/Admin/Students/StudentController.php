@@ -212,6 +212,60 @@ class StudentController extends Controller
         ));
     }
 
+    /**
+     * Download data siswa mengambang ke Excel, mengikuti filter & pencarian yang sedang aktif.
+     */
+    public function exportFloating(Request $request)
+    {
+        $filters = $request->only([
+            'search',
+            'filter_gender',
+            'filter_religion',
+            'filter_special_needs',
+            'filter_concentration',
+            'filter_age',
+            'filter_age_date',
+            'filter_orphan_status',
+            'filter_food_allergy',
+        ]);
+
+        $semesterId = CoreSemester::where('status', 'active')->value('id');
+
+        $query = Student::with(['vault', 'concentration', 'guardians.vault'])
+            ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
+
+        $studentFilter = new StudentFilter([
+            'search'        => $filters['search'] ?? null,
+            'status'        => null,
+            'grade'         => null,
+            'gender'        => $filters['filter_gender'] ?? null,
+            'religion'      => $filters['filter_religion'] ?? null,
+            'special_needs' => $filters['filter_special_needs'] ?? null,
+            'concentration' => null,
+            'age'           => $filters['filter_age'] ?? null,
+            'age_reference_date' => $filters['filter_age_date'] ?? null,
+            'orphan_status' => $filters['filter_orphan_status'] ?? null,
+            'food_allergy'  => $filters['filter_food_allergy'] ?? null,
+        ], $semesterId);
+
+        $baseQuery = $studentFilter->apply($query);
+
+        if (!empty($filters['filter_concentration'])) {
+            $baseQuery->whereHas('concentration', function ($q) use ($filters) {
+                $q->where('id', $filters['filter_concentration']);
+            });
+        }
+
+        $students = $baseQuery->orderBy('name', 'asc')->get();
+
+        $fileName = 'data-siswa-mengambang-' . now()->format('Y-m-d_His') . '.xlsx';
+
+        // Menggunakan StudentsExport yang sama karena kolom Kelas dan Rombel otomatis akan menjadi '-'
+        return Excel::download(new StudentsExport($students), $fileName);
+    }
+
     public function show(string $id)
     {
         $student = Student::with(['vault', 'concentration', 'activeClassGroup'])->findOrFail($id);
@@ -501,7 +555,7 @@ class StudentController extends Controller
 
     private function buildBaseQuery(array $filters, ?string $semesterId)
     {
-        $query = Student::with(['vault', 'concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
+        $query = Student::with(['vault', 'concentration', 'guardians.vault', 'activeClassGroup' => function ($q) use ($semesterId) {
             $q->where('semester_id', $semesterId);
         }])
             ->whereHas('activeClassGroup', function ($q) use ($semesterId) {

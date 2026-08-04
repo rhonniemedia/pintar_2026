@@ -59,6 +59,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Data Peserta Didik
         Route::get('/data', [StudentController::class, 'index'])->name('data.index');
         Route::get('/floating', [StudentController::class, 'floating'])->name('floating.index');
+        Route::get('/floating/export', [StudentController::class, 'exportFloating'])->name('floating.export');
         Route::get('/data/export', [StudentController::class, 'export'])->name('data.export');
         Route::delete('/data/{id}', [StudentController::class, 'destroy'])->name('data.destroy');
 

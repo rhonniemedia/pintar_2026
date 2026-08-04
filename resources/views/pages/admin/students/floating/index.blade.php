@@ -28,12 +28,14 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-            <button type="button"
+            <a id="btn-download-excel"
+                href="{{ route('admin.students.floating.export') }}"
+                data-export-url="{{ route('admin.students.floating.export') }}"
                 title="Download data Excel"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
                 <i data-lucide="file-box" class="size-4 shrink-0"></i>
                 <span>Download</span>
-            </button>
+            </a>
 
             <a href="{{ route('admin.students.floating.index') }}"
                 title="Segarkan halaman"
@@ -171,4 +173,13 @@
     <div id="modal-container"></div>
 
 </div>
+
+<script>
+    document.getElementById('btn-download-excel')?.addEventListener('click', function(event) {
+        event.preventDefault();
+        var baseUrl = this.dataset.exportUrl;
+        window.location.href = baseUrl + window.location.search;
+    });
+</script>
+
 @endsection
