@@ -40,16 +40,15 @@ $datasets['ganjil'] = [
     'stats' => (object) [
         'total_active_students' => 318,
         'total_class_groups' => 5,
-        'mutations_this_month' => 14, // Tinggi karena PPDB
+        'mutations_this_month' => 14,
         'active_extracurriculars' => 8,
-        'growth_students' => 12.5, // Lonjakan positif
+        'growth_students' => 12.5,
+        'gender' => ['male' => 170, 'female' => 148],
+        // Data Rincian Siswa Per Kelas
+        'grade_10' => (object) ['total' => 120, 'male' => 65, 'female' => 55],
+        'grade_11' => (object) ['total' => 98, 'male' => 50, 'female' => 48],
+        'grade_12' => (object) ['total' => 100, 'male' => 55, 'female' => 45],
     ],
-    'concentrations' => collect([
-        (object) ['id' => 1, 'name' => 'Rekayasa Perangkat Lunak', 'alias' => 'RPL', 'color' => 'blue', 'quota' => 108, 'student_count' => 96],
-        (object) ['id' => 2, 'name' => 'Teknik Komputer Jaringan', 'alias' => 'TKJ', 'color' => 'emerald', 'quota' => 108, 'student_count' => 101],
-        (object) ['id' => 3, 'name' => 'Desain Komunikasi Visual', 'alias' => 'DKV', 'color' => 'purple', 'quota' => 72, 'student_count' => 58],
-        (object) ['id' => 4, 'name' => 'Akuntansi', 'alias' => 'AK', 'color' => 'amber', 'quota' => 72, 'student_count' => 63],
-    ]),
     'class_groups' => collect([
         (object) ['id' => 1, 'name' => 'X RPL 1', 'capacity' => 36, 'filled' => 36, 'homeroom_teacher' => 'Siti Aminah, S.Kom'],
         (object) ['id' => 2, 'name' => 'X RPL 2', 'capacity' => 36, 'filled' => 34, 'homeroom_teacher' => 'Budi Santoso, S.Kom'],
@@ -64,14 +63,14 @@ $datasets['ganjil'] = [
         (object) ['student_name' => 'Sistem', 'description' => 'mengirim jadwal pelajaran ke wali kelas', 'context' => 'Otomatisasi', 'time_ago' => 'Kemarin', 'icon_config' => ['bg' => 'bg-warning/10', 'text' => 'text-warning-dark', 'icon' => 'mail']],
     ]),
     'students' => collect([
-        (object) ['name' => 'Muhammad Rizky', 'nis' => '2627001', 'class_group_name' => 'X RPL 2', 'concentration_alias' => 'RPL', 'concentration_color' => '#3B82F6', 'status' => 'active'],
-        (object) ['name' => 'Nadia Ramadhani', 'nis' => '2627002', 'class_group_name' => 'X TKJ 1', 'concentration_alias' => 'TKJ', 'concentration_color' => '#10B981', 'status' => 'active'],
-        (object) ['name' => 'Rangga Saputra', 'nis' => '2627003', 'class_group_name' => 'X DKV 1', 'concentration_alias' => 'DKV', 'concentration_color' => '#8B5CF6', 'status' => 'active'],
-        (object) ['name' => 'Citra Lestari', 'nis' => '2627004', 'class_group_name' => 'X AK 1', 'concentration_alias' => 'AK', 'concentration_color' => '#F59E0B', 'status' => 'active'],
+        (object) ['name' => 'Muhammad Rizky', 'nisn' => '0091234567', 'birth_place' => 'Palembang', 'birth_date' => '15 Mei 2010', 'class_group_name' => 'X RPL 2', 'concentration_alias' => 'RPL', 'concentration_color' => '#3B82F6', 'status' => 'active'],
+        (object) ['name' => 'Nadia Ramadhani', 'nisn' => '0097654321', 'birth_place' => 'Curup', 'birth_date' => '20 Agustus 2010', 'class_group_name' => 'X TKJ 1', 'concentration_alias' => 'TKJ', 'concentration_color' => '#10B981', 'status' => 'active'],
+        (object) ['name' => 'Rangga Saputra', 'nisn' => '0101122334', 'birth_place' => 'Bengkulu', 'birth_date' => '02 Januari 2010', 'class_group_name' => 'X DKV 1', 'concentration_alias' => 'DKV', 'concentration_color' => '#8B5CF6', 'status' => 'active'],
+        (object) ['name' => 'Citra Lestari', 'nisn' => '0109988776', 'birth_place' => 'Lubuk Linggau', 'birth_date' => '10 November 2009', 'class_group_name' => 'X AK 1', 'concentration_alias' => 'AK', 'concentration_color' => '#F59E0B', 'status' => 'active'],
     ]),
     'mutation_trend' => [
         'labels' => ['Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu'],
-        'masuk' => [3, 5, 2, 4, 45, 62], // Lonjakan di Jul/Agu (PPDB)
+        'masuk' => [3, 5, 2, 4, 45, 62],
         'keluar' => [1, 2, 1, 3, 4, 2],
     ]
 ];
@@ -87,14 +86,13 @@ $datasets['genap'] = [
         'total_class_groups' => 5,
         'mutations_this_month' => 2,
         'active_extracurriculars' => 14,
-        'growth_students' => -1.2, // Tren sedikit menurun
+        'growth_students' => -1.2,
+        'gender' => ['male' => 165, 'female' => 145],
+        // Data Rincian Siswa Per Kelas
+        'grade_10' => (object) ['total' => 110, 'male' => 60, 'female' => 50],
+        'grade_11' => (object) ['total' => 100, 'male' => 52, 'female' => 48],
+        'grade_12' => (object) ['total' => 100, 'male' => 53, 'female' => 47],
     ],
-    'concentrations' => collect([
-        (object) ['id' => 1, 'name' => 'Rekayasa Perangkat Lunak', 'alias' => 'RPL', 'color' => 'blue', 'quota' => 108, 'student_count' => 94],
-        (object) ['id' => 2, 'name' => 'Teknik Komputer Jaringan', 'alias' => 'TKJ', 'color' => 'emerald', 'quota' => 108, 'student_count' => 98],
-        (object) ['id' => 3, 'name' => 'Desain Komunikasi Visual', 'alias' => 'DKV', 'color' => 'purple', 'quota' => 72, 'student_count' => 57],
-        (object) ['id' => 4, 'name' => 'Akuntansi', 'alias' => 'AK', 'color' => 'amber', 'quota' => 72, 'student_count' => 61],
-    ]),
     'class_groups' => collect([
         (object) ['id' => 1, 'name' => 'X RPL 1', 'capacity' => 36, 'filled' => 35, 'homeroom_teacher' => 'Siti Aminah, S.Kom'],
         (object) ['id' => 2, 'name' => 'X RPL 2', 'capacity' => 36, 'filled' => 34, 'homeroom_teacher' => 'Budi Santoso, S.Kom'],
@@ -109,15 +107,15 @@ $datasets['genap'] = [
         (object) ['student_name' => 'Tim Pramuka', 'description' => 'juara 1 Lomba Tingkat Cabang', 'context' => 'Prestasi Ekskul', 'time_ago' => '2 hari lalu', 'icon_config' => ['bg' => 'bg-success/10', 'text' => 'text-success', 'icon' => 'trophy']],
     ]),
     'students' => collect([
-        (object) ['name' => 'Ayu Kartika', 'nis' => '2425045', 'class_group_name' => 'XII AK 1', 'concentration_alias' => 'AK', 'concentration_color' => '#F59E0B', 'status' => 'graduated'],
-        (object) ['name' => 'Dimas Anggara', 'nis' => '2425088', 'class_group_name' => 'XII DKV 1', 'concentration_alias' => 'DKV', 'concentration_color' => '#8B5CF6', 'status' => 'graduated'],
-        (object) ['name' => 'Bagas Nugroho', 'nis' => '2425087', 'class_group_name' => '-', 'concentration_alias' => 'TKJ', 'concentration_color' => '#10B981', 'status' => 'transferred_out'],
-        (object) ['name' => 'Sinta Dewi', 'nis' => '2526012', 'class_group_name' => 'XI RPL 1', 'concentration_alias' => 'RPL', 'concentration_color' => '#3B82F6', 'status' => 'active'],
+        (object) ['name' => 'Ayu Kartika', 'nisn' => '0071234567', 'birth_place' => 'Rejang Lebong', 'birth_date' => '12 Februari 2007', 'class_group_name' => 'XII AK 1', 'concentration_alias' => 'AK', 'concentration_color' => '#F59E0B', 'status' => 'graduated'],
+        (object) ['name' => 'Dimas Anggara', 'nisn' => '0089876543', 'birth_place' => 'Jakarta', 'birth_date' => '05 April 2008', 'class_group_name' => 'XII DKV 1', 'concentration_alias' => 'DKV', 'concentration_color' => '#8B5CF6', 'status' => 'graduated'],
+        (object) ['name' => 'Bagas Nugroho', 'nisn' => '0085544332', 'birth_place' => 'Bandung', 'birth_date' => '21 Juni 2008', 'class_group_name' => '-', 'concentration_alias' => 'TKJ', 'concentration_color' => '#10B981', 'status' => 'transferred_out'],
+        (object) ['name' => 'Sinta Dewi', 'nisn' => '0092233445', 'birth_place' => 'Curup', 'birth_date' => '18 Desember 2009', 'class_group_name' => 'XI RPL 1', 'concentration_alias' => 'RPL', 'concentration_color' => '#3B82F6', 'status' => 'active'],
     ]),
     'mutation_trend' => [
         'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
         'masuk' => [1, 0, 2, 0, 1, 0],
-        'keluar' => [2, 3, 1, 4, 12, 25], // Lonjakan keluar di Mei/Jun (Lulus)
+        'keluar' => [2, 3, 1, 4, 12, 25],
     ]
 ];
 
@@ -125,14 +123,6 @@ $datasets['genap'] = [
 // PEMROSESAN DATA FINAL (Pre-kalkulasi UI)
 // --------------------------------------------------------------------------
 $data = (object) $datasets[$activeDataset];
-
-$data->concentrations = $data->concentrations->map(function ($c) use ($twColors) {
-    $raw = $c->color ?? '';
-    if (str_starts_with($raw, '#')) $c->dot_color = $raw;
-    elseif (isset($twColors[$raw])) $c->dot_color = $twColors[$raw];
-    else $c->dot_color = '#6B7280';
-    return $c;
-});
 
 $data->class_groups = $data->class_groups->map(function ($group) {
     $percent = $group->capacity > 0 ? round(($group->filled / $group->capacity) * 100) : 0;
@@ -161,9 +151,11 @@ $data->students = $data->students->map(function ($s) {
     return $s;
 });
 
-$chartData = $data->concentrations->map(function ($c) {
-    return ['label' => $c->alias ?? $c->name, 'count' => $c->student_count, 'color' => $c->dot_color];
-})->values();
+// Data untuk Donut Chart Gender
+$genderChartData = [
+    ['label' => 'Laki-laki', 'count' => $data->stats->gender['male'] ?? 0, 'color' => '#3B82F6'], // Biru
+    ['label' => 'Perempuan', 'count' => $data->stats->gender['female'] ?? 0, 'color' => '#EC4899'] // Pink
+];
 
 $mutationTrendData = $data->mutation_trend;
 ?>
@@ -194,24 +186,15 @@ $mutationTrendData = $data->mutation_trend;
                     <span>Laporan</span>
                     <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300" :class="open ? 'rotate-180' : ''"></i>
                 </button>
-
                 <div x-show="open" x-transition class="absolute right-0 mt-2 w-60 bg-white border border-border rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 p-2" style="display: none;">
                     <div class="px-3 pt-2 pb-1">
                         <span class="text-xs font-bold text-secondary uppercase tracking-wider">Cetak Data</span>
                     </div>
                     <div class="h-px bg-border my-2"></div>
                     <div class="flex flex-col gap-1">
-                        <a href="#" @click.prevent="open = false; $dispatch('open-modal-rekap-siswa')" class="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground rounded-xl hover:bg-muted transition-colors">
+                        <a href="#" class="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground rounded-xl hover:bg-muted transition-colors">
                             <i data-lucide="file-spreadsheet" class="size-4 text-secondary group-hover:text-primary transition-colors"></i>
                             <span>Rekap Siswa</span>
-                        </a>
-                        <a href="#" target="_blank" class="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground rounded-xl hover:bg-muted transition-colors">
-                            <i data-lucide="layout-grid" class="size-4 text-secondary group-hover:text-primary transition-colors"></i>
-                            <span>Rekap Rombel</span>
-                        </a>
-                        <a href="#" target="_blank" class="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground rounded-xl hover:bg-muted transition-colors">
-                            <i data-lucide="shuffle" class="size-4 text-secondary group-hover:text-primary transition-colors"></i>
-                            <span>Rekap Mutasi</span>
                         </a>
                     </div>
                 </div>
@@ -221,6 +204,8 @@ $mutationTrendData = $data->mutation_trend;
 
     <!-- ── Stat Cards ── -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+        <!-- Card 1: Total Peserta Didik Aktif -->
         <div class="flex flex-col rounded-2xl border border-border p-5 gap-3 bg-white hover:shadow-md transition-all duration-300 cursor-pointer">
             <div class="flex items-center justify-between">
                 <div class="size-11 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
@@ -232,112 +217,131 @@ $mutationTrendData = $data->mutation_trend;
             </div>
             <div>
                 <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->total_active_students) }}</p>
-                <p class="text-sm text-secondary mt-0.5">Total Siswa Aktif</p>
+                <p class="text-sm text-secondary mt-0.5">Total Peserta Didik Aktif</p>
                 <p class="text-xs text-secondary mt-1.5 flex items-center gap-1">
                     <i data-lucide="calendar" class="size-3"></i>Tahun Ajaran {{ $data->academic_year->name }}
                 </p>
             </div>
         </div>
 
+        <!-- Card 2: Kelas XII -->
         <div class="flex flex-col rounded-2xl border border-border p-5 gap-3 bg-white hover:shadow-md transition-all duration-300 cursor-pointer">
             <div class="flex items-center justify-between">
                 <div class="size-11 bg-info/10 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="layout-grid" class="size-5 text-info"></i>
+                    <i data-lucide="graduation-cap" class="size-5 text-info"></i>
                 </div>
                 <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700">
-                    <i data-lucide="school" class="size-3"></i>Rombel
+                    Kelas XII
                 </span>
             </div>
             <div>
-                <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->total_class_groups) }}</p>
-                <p class="text-sm text-secondary mt-0.5">Rombongan Belajar</p>
-                <p class="text-xs text-secondary mt-1.5 flex items-center gap-1">
-                    <i data-lucide="check" class="size-3"></i>Tersebar di 3 tingkat
-                </p>
+                <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->grade_12->total) }}</p>
+                <p class="text-sm text-secondary mt-0.5">Peserta Didik Kelas XII</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                    <span class="text-[11px] text-secondary"><span class="font-medium text-blue-600">Laki-laki:</span> {{ $data->stats->grade_12->male }}</span>
+                    <span class="text-border text-[10px]">|</span>
+                    <span class="text-[11px] text-secondary"><span class="font-medium text-pink-600">Perempuan:</span> {{ $data->stats->grade_12->female }}</span>
+                </div>
             </div>
         </div>
 
+        <!-- Card 3: Kelas XI -->
         <div class="flex flex-col rounded-2xl border border-border p-5 gap-3 bg-white hover:shadow-md transition-all duration-300 cursor-pointer">
             <div class="flex items-center justify-between">
                 <div class="size-11 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="shuffle" class="size-5 text-warning-dark"></i>
+                    <i data-lucide="book-open" class="size-5 text-warning-dark"></i>
                 </div>
                 <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-warning/10 text-warning-dark">
-                    {{ $data->stats->mutations_this_month }}
+                    Kelas XI
                 </span>
             </div>
             <div>
-                <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->mutations_this_month) }}</p>
-                <p class="text-sm text-secondary mt-0.5">Mutasi Bulan Ini</p>
-                <p class="text-xs text-secondary mt-1.5 flex items-center gap-1">
-                    <i data-lucide="calendar-check" class="size-3"></i>Masuk & keluar gabungan
-                </p>
+                <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->grade_11->total) }}</p>
+                <p class="text-sm text-secondary mt-0.5">Peserta Didik Kelas XI</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                    <span class="text-[11px] text-secondary"><span class="font-medium text-blue-600">Laki-laki:</span> {{ $data->stats->grade_11->male }}</span>
+                    <span class="text-border text-[10px]">|</span>
+                    <span class="text-[11px] text-secondary"><span class="font-medium text-pink-600">Perempuan:</span> {{ $data->stats->grade_11->female }}</span>
+                </div>
             </div>
         </div>
 
+        <!-- Card 4: Kelas X -->
         <div class="flex flex-col rounded-2xl border border-border p-5 gap-3 bg-white hover:shadow-md transition-all duration-300 cursor-pointer">
             <div class="flex items-center justify-between">
                 <div class="size-11 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
-                    <i data-lucide="trophy" class="size-5 text-success"></i>
+                    <i data-lucide="user-plus" class="size-5 text-success"></i>
                 </div>
                 <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-success/10 text-success-dark">
-                    Aktif
+                    Kelas X
                 </span>
             </div>
             <div>
-                <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->active_extracurriculars) }}</p>
-                <p class="text-sm text-secondary mt-0.5">Ekstrakurikuler</p>
-                <p class="text-xs text-secondary mt-1.5 flex items-center gap-1">
-                    <i data-lucide="user-check" class="size-3"></i>Semua punya pembina
-                </p>
+                <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->grade_10->total) }}</p>
+                <p class="text-sm text-secondary mt-0.5">Peserta Didik Kelas X</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                    <span class="text-[11px] text-secondary"><span class="font-medium text-blue-600">Laki-laki:</span> {{ $data->stats->grade_10->male }}</span>
+                    <span class="text-border text-[10px]">|</span>
+                    <span class="text-[11px] text-secondary"><span class="font-medium text-pink-600">Perempuan:</span> {{ $data->stats->grade_10->female }}</span>
+                </div>
             </div>
         </div>
+
     </div>
 
-    <!-- ── Chart + Distribusi Jurusan ── -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <div class="lg:col-span-2 flex flex-col h-full rounded-2xl border border-border p-6 gap-4 bg-white">
+    <!-- ── Chart + Distribusi Gender ── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+
+        <!-- Chart Tren Mutasi -->
+        <div class="flex flex-col h-full rounded-2xl border border-border p-6 gap-4 bg-white">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div>
                     <h3 class="font-bold text-lg text-foreground">Tren Mutasi Siswa</h3>
                     <p class="text-sm text-secondary">6 bulan terakhir — masuk vs keluar</p>
                 </div>
+                <!-- Indikator warna disesuaikan menjadi Hijau (Masuk) & Merah (Keluar) -->
                 <div class="flex items-center gap-3 text-xs font-semibold">
-                    <span class="flex items-center gap-1.5 text-secondary"><span class="size-2.5 rounded-full bg-[#FF1443] inline-block"></span>Masuk</span>
-                    <span class="flex items-center gap-1.5 text-secondary"><span class="size-2.5 rounded-full bg-[#080C1A]/30 inline-block"></span>Keluar</span>
+                    <span class="flex items-center gap-1.5 text-secondary">
+                        <span class="size-2.5 bg-[#10B981] inline-block"></span>Masuk
+                    </span>
+                    <span class="flex items-center gap-1.5 text-secondary">
+                        <span class="size-2.5 bg-[#EF4444] inline-block"></span>Keluar
+                    </span>
                 </div>
             </div>
+
             <div class="w-full relative flex-1 min-h-[250px] mt-2">
                 <canvas id="mutationTrendChart"></canvas>
             </div>
         </div>
 
-        <div class="lg:col-span-1 flex flex-col rounded-2xl border border-border p-6 gap-4 bg-white">
-            <div>
+        <!-- Distribusi Gender (Laki-laki & Perempuan) -->
+        <div class="flex flex-col h-full rounded-2xl border border-border p-6 gap-4 bg-white">
+            <div class="shrink-0">
                 <h3 class="font-bold text-lg text-foreground">Distribusi Siswa</h3>
-                <p class="text-sm text-secondary">Siswa aktif per jurusan</p>
+                <p class="text-sm text-secondary">Perbandingan Laki-laki & Perempuan</p>
             </div>
-            <div class="flex justify-center">
-                <div style="width:160px;height:160px;position:relative">
+
+            <!-- Posisi Chart -->
+            <div class="flex-1 flex justify-center items-center w-full relative min-h-[200px] mt-2">
+                <div style="width:200px;height:200px;position:relative">
                     <canvas id="donutChart"></canvas>
                 </div>
             </div>
-            <div class="flex flex-col gap-1.5 mt-1">
-                @foreach($data->concentrations as $concentration)
-                <div class="flex items-center justify-between text-sm py-0.5">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $concentration->dot_color }}"></div>
-                        <span class="{{ $concentration->student_count > 0 ? 'text-foreground font-medium' : 'text-secondary' }}">
-                            {{ $concentration->alias ?? $concentration->name }}
-                        </span>
-                    </div>
-                    <span class="{{ $concentration->student_count > 0 ? 'font-bold text-foreground' : 'font-medium text-secondary' }}">
-                        {{ number_format($concentration->student_count) }}
-                    </span>
+
+            <!-- Label diletakkan di bagian bawah donut chart -->
+            <div class="flex items-center justify-center gap-6 text-sm font-semibold mt-2">
+                @foreach($genderChartData as $gender)
+                <div class="flex items-center gap-2 text-secondary">
+                    <!-- Bentuk kotak (tanpa rounded) -->
+                    <span class="size-3 inline-block shrink-0" style="background-color: {{ $gender['color'] }}"></span>
+                    <span>{{ $gender['label'] }}</span>
+                    <span class="text-foreground ml-0.5">{{ number_format($gender['count']) }}</span>
                 </div>
                 @endforeach
             </div>
         </div>
+
     </div>
 
     <!-- ── Kapasitas Rombel + Aktivitas ── -->
@@ -405,8 +409,8 @@ $mutationTrendData = $data->mutation_trend;
         </div>
     </div>
 
-    <!-- ── Tabel Siswa ── -->
-    <div class="flex flex-col rounded-2xl border border-border p-6 bg-white gap-6">
+    <!-- ── Tabel Siswa Terbaru (Sesuai Gaya _table.blade.php & _row-class-group.blade.php) ── -->
+    <div class="flex flex-col rounded-2xl border border-border p-6 bg-white gap-5">
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div>
                 <h3 class="font-bold text-lg text-foreground">Siswa Terbaru</h3>
@@ -416,7 +420,7 @@ $mutationTrendData = $data->mutation_trend;
                 <form action="#" method="GET" class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto" onsubmit="event.preventDefault();">
                     <div class="relative w-full sm:w-auto">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary pointer-events-none"></i>
-                        <input type="text" name="search" placeholder="Cari siswa / NIS..." class="pl-9 pr-9 py-2 h-10 rounded-xl border border-border bg-white text-sm focus:ring-1 focus:ring-primary outline-none w-full sm:w-[220px] transition-all" />
+                        <input type="text" name="search" placeholder="Cari siswa / NISN..." class="pl-9 pr-9 py-2 h-10 rounded-xl border border-border bg-white text-sm focus:ring-1 focus:ring-primary outline-none w-full sm:w-[220px] transition-all" />
                     </div>
                     <a href="#" class="flex items-center justify-center gap-1.5 px-5 h-10 bg-primary text-white rounded-xl sm:rounded-full font-bold text-xs hover:bg-primary-hover transition-all cursor-pointer w-full sm:w-auto">
                         <i data-lucide="users" class="size-3.5"></i>Kelola Siswa
@@ -425,37 +429,82 @@ $mutationTrendData = $data->mutation_trend;
             </div>
         </div>
 
-        <div id="student-table-wrapper" class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                    <tr class="border-b border-border text-secondary text-xs uppercase tracking-wider">
-                        <th class="py-3 px-4 font-bold">Nama Siswa</th>
-                        <th class="py-3 px-4 font-bold">NIS</th>
-                        <th class="py-3 px-4 font-bold">Rombel</th>
-                        <th class="py-3 px-4 font-bold">Jurusan</th>
-                        <th class="py-3 px-4 font-bold">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-border">
-                    @foreach($data->students as $s)
-                    <tr class="hover:bg-muted/50 transition-colors">
-                        <td class="py-3 px-4 font-semibold text-foreground">{{ $s->name }}</td>
-                        <td class="py-3 px-4 text-secondary">{{ $s->nis }}</td>
-                        <td class="py-3 px-4 text-secondary">{{ $s->class_group_name }}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-0.5 rounded text-xs font-bold text-white" style="background-color: {{ $s->concentration_color }}">
-                                {{ $s->concentration_alias }}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $s->status_classes }}">
-                                {{ $s->status_label }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div id="latest-students-container">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-border">
+                            <th class="w-[35%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
+                                Siswa
+                                <div class="text-[11px] font-normal normal-case">Nama | NISN</div>
+                            </th>
+                            <th class="w-[25%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
+                                TTL
+                                <div class="text-[11px] font-normal normal-case">Tempat, Tanggal Lahir</div>
+                            </th>
+                            <th class="w-[25%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
+                                Rombel
+                                <div class="text-[11px] font-normal normal-case">Kelas | Jurusan</div>
+                            </th>
+                            <th class="w-[15%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
+                                Status
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($data->students as $s)
+                        <tr class="border-b border-border hover:bg-muted/50 transition-colors">
+                            <td class="px-5 py-4 min-w-[260px]">
+                                <a href="#" class="flex items-center gap-3 group transition-all">
+                                    <div class="relative size-10 shrink-0 rounded-full overflow-hidden">
+                                        <x-ui.avatar :name="$s->name" :index="$loop->index ?? 0" class="size-10 absolute inset-0" />
+                                        <div class="absolute inset-0 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                                            <i data-lucide="user" class="size-5 stroke-[2] pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-foreground text-sm uppercase group-hover:text-primary transition-colors whitespace-nowrap">
+                                            {{ $s->name }}
+                                        </div>
+                                        <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5 whitespace-nowrap">
+                                            {{ $s->nisn }}
+                                        </div>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="px-5 py-4 min-w-[180px]">
+                                <div class="text-sm font-semibold text-foreground whitespace-nowrap">
+                                    {{ $s->birth_place }}
+                                </div>
+                                <div class="text-xs text-secondary mt-0.5 whitespace-nowrap">
+                                    {{ $s->birth_date }}
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 min-w-[150px]">
+                                <div class="text-sm font-semibold text-foreground whitespace-nowrap">
+                                    {{ $s->class_group_name }}
+                                </div>
+                                <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5 whitespace-nowrap">
+                                    <span class="inline-block size-1.5 rounded-full shrink-0" style="background-color: {{ $s->concentration_color }}"></span>
+                                    {{ $s->concentration_alias }}
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 min-w-[110px]">
+                                <span class="px-2 py-1 rounded-full text-[11px] font-bold {{ $s->status_classes }}">
+                                    {{ $s->status_label }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-10 text-center text-secondary">
+                                <p class="font-medium">Tidak ada data siswa terbaru</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -467,22 +516,23 @@ $mutationTrendData = $data->mutation_trend;
         return {};
     }
 
-    const concentrationData = @json($chartData);
+    const genderData = @json($genderChartData);
     const mutationTrendData = @json($mutationTrendData);
 
     document.addEventListener('DOMContentLoaded', function() {
         if (window.lucide) lucide.createIcons();
 
+        // Diagram Donut (Gender Laki-Laki vs Perempuan)
         const donutCtx = document.getElementById('donutChart');
-        if (donutCtx && concentrationData.length) {
-            const donutData = concentrationData.map(d => d.count > 0 ? d.count : 0.0001);
+        if (donutCtx && genderData.length) {
+            const donutData = genderData.map(d => d.count > 0 ? d.count : 0.0001);
             new Chart(donutCtx.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: concentrationData.map(d => d.label),
+                    labels: genderData.map(d => d.label),
                     datasets: [{
                         data: donutData,
-                        backgroundColor: concentrationData.map(d => d.color),
+                        backgroundColor: genderData.map(d => d.color),
                         borderWidth: 2,
                         borderColor: '#fff',
                         hoverOffset: 4
@@ -495,11 +545,12 @@ $mutationTrendData = $data->mutation_trend;
                             display: false
                         }
                     },
-                    cutout: '72%'
+                    cutout: '60%' // Dipertebal sesuai permintaan
                 }
             });
         }
 
+        // Diagram Batang (Tren Mutasi - Tanpa borderRadius untuk efek persegi)
         const trendCtx = document.getElementById('mutationTrendChart');
         if (trendCtx) {
             new Chart(trendCtx.getContext('2d'), {
@@ -509,16 +560,14 @@ $mutationTrendData = $data->mutation_trend;
                     datasets: [{
                             label: 'Masuk',
                             data: mutationTrendData.masuk,
-                            backgroundColor: 'rgba(255,20,67,0.75)',
-                            borderRadius: 8,
-                            barThickness: 14
+                            backgroundColor: '#10B981', // Hijau untuk Masuk
+                            barThickness: 28 // <-- Nilai diperbesar agar bar lebih lebar (sebelumnya 14)
                         },
                         {
                             label: 'Keluar',
                             data: mutationTrendData.keluar,
-                            backgroundColor: 'rgba(8,12,26,0.2)',
-                            borderRadius: 8,
-                            barThickness: 14
+                            backgroundColor: '#EF4444', // Merah untuk Keluar
+                            barThickness: 28 // <-- Nilai diperbesar agar bar lebih lebar (sebelumnya 14)
                         }
                     ]
                 },
