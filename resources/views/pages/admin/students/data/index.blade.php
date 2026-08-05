@@ -36,6 +36,9 @@
             {{-- Tombol Tarik Data SPMB di index.blade.php --}}
             <button type="button"
                 @click="syncModalOpen = true"
+                hx-get="{{ route('admin.integration.spmb.sync.info') }}"
+                hx-target="#spmb-info-container"
+                hx-trigger="click"
                 title="Tarik data SPMB"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-amber-600/30 whitespace-nowrap">
                 <i data-lucide="calendar-sync" class="size-4 shrink-0"></i>

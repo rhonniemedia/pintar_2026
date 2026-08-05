@@ -103,21 +103,57 @@ class SpmbSyncController extends Controller
         }
     }
 
-    public function store(Request $request)
+    /**
+     * Mengambil ringkasan statistik dari API SPMB untuk ditampilkan di Modal
+     */
+    public function checkInfo()
     {
         $url = config('services.spmb.url');
         $token = config('services.spmb.token');
 
         try {
+            // Menggunakan cache agar tidak membebani server SPMB jika tombol sering diklik
+            $apiData = Cache::remember('spmb_api_info', 300, function () use ($url, $token) {
+                $response = Http::withToken($token)->acceptJson()->get($url);
+
+                if (!$response->successful()) {
+                    throw new \Exception('Gagal menghubungi server SPMB.');
+                }
+                return $response->json();
+            });
+
+            // Ambil data statistik dari 'meta' response API Pintar
+            $statistik = $apiData['meta']['statistik_jurusan'] ?? [];
+            $totalData = $apiData['meta']['total_data'] ?? 0;
+
+            return view('pages.admin.students.data.partials._sync-spmb-info', compact('statistik', 'totalData'));
+        } catch (\Exception $e) {
+            return response('<div class="p-4 text-center text-sm font-medium text-error bg-error/10 rounded-xl border border-error/20">Gagal memuat informasi API: ' . $e->getMessage() . '</div>');
+        }
+    }
+
+    public function store(Request $request)
+    {
+        $url = config('services.spmb.url');
+        $token = config('services.spmb.token');
+
+        // 1. Tangkap jurusan yang sedang diproses oleh antrean frontend
+        $targetJurusan = $request->input('jurusan');
+
+        try {
             $response = Http::withToken($token)->acceptJson()->get($url);
 
             if ($response->successful()) {
-                $dataSiswa = $response->json()['data'] ?? [];
+                $dataSiswaUtuh = $response->json()['data'] ?? [];
 
-                // Variabel pelacak statistik
-                $jumlahBaru = 0;
-                $jumlahDiperbarui = 0;
-                $jumlahDilewati = 0;
+                // 2. Filter data dari API SPMB HANYA untuk jurusan yang sedang di-request
+                if (!empty($targetJurusan)) {
+                    $dataSiswa = array_filter($dataSiswaUtuh, function ($siswa) use ($targetJurusan) {
+                        return strtolower(trim($siswa['konsentrasi_keahlian'] ?? '')) === strtolower(trim($targetJurusan));
+                    });
+                } else {
+                    $dataSiswa = $dataSiswaUtuh;
+                }
 
                 foreach ($dataSiswa as $siswa) {
 
@@ -132,15 +168,11 @@ class SpmbSyncController extends Controller
                         continue;
                     }
 
-                    // Penanda apakah ini siswa baru
-                    $isNewStudent = false;
-
                     if ($vaultMatch) {
                         $student = $vaultMatch->student;
                     } else {
                         $student = new Student();
                         $student->status = StudentStatus::ACTIVE->value;
-                        $isNewStudent = true;
                     }
 
                     // 1. DATA INDUK
@@ -183,8 +215,6 @@ class SpmbSyncController extends Controller
                     $student->o2sn_category = $siswa['kategori_o2sn'] ?? null;
                     $student->photo = $siswa['foto_profil'] ?? null;
 
-                    // Cek apakah ada perubahan di tabel Induk sebelum disimpan
-                    $isStudentChanged = $student->isDirty();
                     $student->save();
 
                     // 2. DATA VAULT
@@ -235,12 +265,9 @@ class SpmbSyncController extends Controller
                     $vault->province_encrypted = $siswa['provinsi'] ?? null;
                     $vault->postal_code_encrypted = $siswa['kode_pos'] ?? null;
 
-                    // Cek apakah ada perubahan di tabel Vault sebelum disimpan
-                    $isVaultChanged = $vault->isDirty();
                     $vault->save();
 
                     // 3. DATA ORANG TUA
-                    $isGuardianChanged = false;
                     if (!empty($siswa['orang_tua']) && is_array($siswa['orang_tua'])) {
                         foreach ($siswa['orang_tua'] as $ortu) {
                             $relation = $this->mapFamilyRelation($ortu['status_hubungan'] ?? '');
@@ -256,7 +283,6 @@ class SpmbSyncController extends Controller
                             $guardian->education = $this->mapEducation($ortu['pendidikan'] ?? '');
                             $guardian->income_range = $this->mapIncome($ortu['penghasilan'] ?? '');
 
-                            if ($guardian->isDirty()) $isGuardianChanged = true;
                             $guardian->save();
 
                             $guardianVault = $guardian->vault ?: new GuardianVault();
@@ -272,55 +298,31 @@ class SpmbSyncController extends Controller
                             }
                             $guardianVault->address_encrypted = $ortu['alamat'] ?? null;
 
-                            if ($guardianVault->isDirty()) $isGuardianChanged = true;
                             $guardianVault->save();
                         }
-                    }
-
-                    // 4. LOGIKA PENCATATAN STATISTIK
-                    if ($isNewStudent) {
-                        $jumlahBaru++;
-                    } elseif ($isStudentChanged || $isVaultChanged || $isGuardianChanged) {
-                        $jumlahDiperbarui++;
-                    } else {
-                        $jumlahDilewati++;
                     }
                 }
 
                 Cache::forget('spmb_verified_students');
 
-                // Pesan rincian untuk SweetAlert
-                $pesanDetail = "Hasil Sinkronisasi:\n";
-                $pesanDetail .= "- {$jumlahBaru} Siswa Baru ditambahkan.\n";
-                $pesanDetail .= "- {$jumlahDiperbarui} Data Siswa diperbarui.\n";
-                $pesanDetail .= "- {$jumlahDilewati} Data dilewati (tidak ada perubahan).";
-
-                return response()->noContent()->header('HX-Trigger', json_encode([
-                    'showAlert' => [
-                        'icon'  => 'success',
-                        'title' => 'Sinkronisasi Selesai!',
-                        'text'  => $pesanDetail
-                    ]
-                ]));
+                // 3. Menghapus respons SweetAlert dan mengubahnya menjadi JSON
+                return response()->json([
+                    'status' => 'success',
+                    'message' => "Data jurusan {$targetJurusan} berhasil disinkronkan."
+                ]);
             }
 
-            return response()->noContent()->header('HX-Trigger', json_encode([
-                'showAlert' => [
-                    'icon'  => 'error',
-                    'title' => 'Koneksi Terputus',
-                    'text'  => 'Gagal menyimpan data karena server SPMB tidak merespons dengan baik.'
-                ]
-            ]));
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal terhubung dengan server SPMB.'
+            ], 500);
         } catch (\Exception $e) {
-            Log::error('Error Simpan API SPMB (Vault Mode): ' . $e->getMessage());
+            Log::error('Error Simpan API SPMB: ' . $e->getMessage());
 
-            return response()->noContent()->header('HX-Trigger', json_encode([
-                'showAlert' => [
-                    'icon'  => 'error',
-                    'title' => 'Gagal Menyimpan!',
-                    'text'  => 'Terjadi kesalahan sistem saat menyimpan data. Silakan cek koneksi atau hubungi administrator.'
-                ]
-            ]));
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat sinkronisasi data.'
+            ], 500);
         }
     }
 

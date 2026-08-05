@@ -46,6 +46,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Rute untuk mengeksekusi penyimpanan
         Route::post('/spmb/sync/store', [SpmbSyncController::class, 'store'])->name('spmb.sync.store');
+
+        // --- RUTE BARU UNTUK CEK INFO STATISTIK SPMB ---
+        Route::get('/spmb/sync/info', [SpmbSyncController::class, 'checkInfo'])->name('spmb.sync.info');
     });
 
     /*

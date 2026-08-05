@@ -26,41 +26,73 @@
     {{-- Modal Body --}}
     <div class="p-4 sm:p-6 overflow-y-auto max-h-[55vh] sm:max-h-[60vh] bg-slate-50/30 flex-1 [scrollbar-gutter:stable]">
 
-        <form id="dummy-sync-form" class="space-y-4">
-            {{-- Pilihan Gelombang / Tahun Ajaran --}}
-            <div class="bg-white border border-border rounded-xl px-4 py-4">
-                <label for="academic_year" class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Tahun Ajaran / Gelombang</label>
-                <select id="academic_year" name="academic_year" class="w-full h-11 rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors">
-                    <option value="">-- Pilih Periode SPMB --</option>
-                    <option value="2024-g1">Tahun Ajaran 2024/2025 - Gelombang 1</option>
-                    <option value="2024-g2">Tahun Ajaran 2024/2025 - Gelombang 2</option>
-                </select>
+        {{-- Info Box --}}
+        <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex gap-3 mb-4">
+            <i data-lucide="info" class="size-5 text-blue-600 shrink-0 mt-0.5"></i>
+            <div>
+                <p class="text-sm font-bold text-blue-800">Informasi Sinkronisasi</p>
+                <p class="text-sm text-blue-700 mt-1 leading-relaxed">
+                    Data di bawah ini ditarik secara *real-time* dari aplikasi SPMB. Proses sinkronisasi akan mengimpor peserta dan mengabaikan data yang sudah ada (mencegah duplikasi).
+                </p>
             </div>
+        </div>
 
-            {{-- Info Box --}}
-            <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex gap-3">
-                <i data-lucide="info" class="size-5 text-blue-600 shrink-0 mt-0.5"></i>
-                <div>
-                    <p class="text-sm font-bold text-blue-800">Informasi Sinkronisasi</p>
-                    <p class="text-sm text-blue-700 mt-1 leading-relaxed">
-                        Proses ini akan menarik biodata dasar, jalur masuk, dan data orang tua. Data yang sudah sinkron sebelumnya tidak akan mengalami duplikasi.
-                    </p>
+        {{-- Container Target HTMX (Tanpa border/bg di wrapper utama) --}}
+        <div id="spmb-info-container">
+            {{-- Loading State (Border putus-putus diletakkan di sini agar hilang saat data load) --}}
+            <div class="min-h-[120px] flex items-center justify-center border border-dashed border-border rounded-xl bg-white p-6">
+                <div class="flex flex-col items-center justify-center text-secondary">
+                    <i data-lucide="loader-2" class="size-6 animate-spin mb-2 text-primary"></i>
+                    <span class="text-sm font-medium">Memeriksa ketersediaan data di SPMB...</span>
                 </div>
             </div>
-        </form>
+        </div>
 
     </div>
 
     {{-- Footer Modal --}}
-    <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-3 shrink-0">
-        <button type="button" @click="syncModalOpen = false"
-            class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all cursor-pointer">
+    <div x-data="{ isSyncingBtn: false, isDoneBtn: false }"
+        @all-sync-finished.window="isSyncingBtn = false; isDoneBtn = true"
+        class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-3 shrink-0">
+
+        <button type="button" x-show="!isDoneBtn" @click="syncModalOpen = false"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted transition-all cursor-pointer">
             Batal
         </button>
+
         <button type="button"
-            class="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 shadow-sm transition-all cursor-pointer">
-            <i data-lucide="download-cloud" class="size-4"></i>
-            <span>Mulai Sinkronisasi</span>
+            @click="
+                if (isDoneBtn) {
+                    // HANYA TUTUP MODAL, TANPA RELOAD HALAMAN
+                    syncModalOpen = false;
+                } else {
+                    isSyncingBtn = true;
+                    $dispatch('start-real-sync'); 
+                }
+            "
+            :disabled="isSyncingBtn"
+            :class="{
+                'bg-amber-600 hover:bg-amber-700': !isDoneBtn && !isSyncingBtn,
+                'bg-amber-600/70 cursor-not-allowed': isSyncingBtn,
+                'bg-emerald-600 hover:bg-emerald-700': isDoneBtn
+            }"
+            class="w-full sm:w-auto flex justify-center items-center px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-sm transition-all cursor-pointer">
+
+            <span x-show="!isSyncingBtn && !isDoneBtn" class="flex items-center gap-2">
+                <i data-lucide="download-cloud" class="size-4"></i>
+                <span>Mulai Sinkronisasi</span>
+            </span>
+
+            <span x-show="isSyncingBtn" x-cloak class="flex items-center gap-2">
+                <i data-lucide="loader-2" class="size-4 animate-spin"></i>
+                <span>Menyinkronkan...</span>
+            </span>
+
+            <span x-show="isDoneBtn" x-cloak class="flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="size-4"></i>
+                <span>Tutup</span>
+            </span>
+
         </button>
     </div>
 </x-ui.modal>
