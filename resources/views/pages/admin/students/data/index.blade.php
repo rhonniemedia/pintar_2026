@@ -8,6 +8,7 @@
 <div class="p-8"
     x-data="{ 
         filterModalOpen: false,
+        syncModalOpen: false,
         isFilterActive: {{ ($filterGrade || $filterGender || $filterReligion || $filterSpecialNeeds || $filterConcentration || $filterAge || $filterOrphanStatus || $filterFoodAllergy) ? 'true' : 'false' }},
         checkFilterStatus() {
             const grade = document.querySelector('[name=filter_grade]')?.value || '';
@@ -32,21 +33,14 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+            {{-- Tombol Tarik Data SPMB di index.blade.php --}}
             <button type="button"
+                @click="syncModalOpen = true"
                 title="Tarik data SPMB"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-amber-600/30 whitespace-nowrap">
                 <i data-lucide="calendar-sync" class="size-4 shrink-0"></i>
                 <span>Tarik Data</span>
             </button>
-
-            {{--
-                Link biasa (bukan htmx) karena ini harus memicu file download,
-                bukan swap konten. URL dasar disimpan di data-export-url;
-                query string filter/pencarian TERBARU ditempelkan saat diklik
-                lewat script di bawah (lihat #btn-download-excel), supaya
-                selalu ikut URL yang sedang aktif (ter-update otomatis lewat
-                hx-push-url di search & tombol "Terapkan Filter").
-            --}}
             <a id="btn-download-excel"
                 href="{{ route('admin.students.data.export') }}"
                 data-export-url="{{ route('admin.students.data.export') }}"
@@ -203,6 +197,8 @@
     // khusus untuk Siswa Mengambang), jadi di sini harus dinyalakan eksplisit.
     'showFoodAllergyFilter' => true,
     ])
+
+    @include('pages.admin.students.data.partials._sync-spmb-modal')
 
     <div id="modal-container"></div>
 
