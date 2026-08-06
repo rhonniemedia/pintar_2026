@@ -54,10 +54,10 @@
             </a>
 
             <button type="button"
-                title="Cetak laporan"
-                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-blue-600/30 whitespace-nowrap">
-                <i data-lucide="printer" class="size-4 shrink-0"></i>
-                <span>Laporan</span>
+                title="Generate NIS"
+                class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-purple-600/30 whitespace-nowrap">
+                <i data-lucide="hat-glasses" class="size-4 shrink-0"></i>
+                <span>Generate NIS</span>
             </button>
 
             <a href="{{ route('admin.students.data.index') }}"
@@ -183,6 +183,7 @@
 
     </div>
 
+    {{-- Default filter modal sekarang menyembunyikan Alergi Makanan (dipakai khusus untuk Siswa Mengambang), jadi di sini harus dinyalakan eksplisit. --}}
     @include('pages.admin.students.data.partials._filter-modal', [
     'filterGrade' => $filterGrade,
     'filterGender' => $filterGender,
@@ -195,9 +196,6 @@
     'filterFoodAllergy' => $filterFoodAllergy,
     'concentrationOptions' => $concentrationOptions,
     'religionOptions' => $religionOptions,
-
-    // Default filter modal sekarang menyembunyikan Alergi Makanan (dipakai
-    // khusus untuk Siswa Mengambang), jadi di sini harus dinyalakan eksplisit.
     'showFoodAllergyFilter' => true,
     ])
 
