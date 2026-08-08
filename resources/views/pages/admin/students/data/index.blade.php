@@ -54,6 +54,9 @@
             </a>
 
             <button type="button"
+                hx-get="{{ route('admin.students.data.generate-nis-modal') }}"
+                hx-target="#modal-container"
+                hx-trigger="click"
                 title="Generate NIS"
                 class="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-5 bg-purple-600 hover:bg-purple-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-purple-600/30 whitespace-nowrap">
                 <i data-lucide="hat-glasses" class="size-4 shrink-0"></i>

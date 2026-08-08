@@ -41,9 +41,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('integration')->name('integration.')->group(function () {
-        // Rute untuk menampilkan halaman pratinjau
-        Route::get('/spmb/sync/preview', [SpmbSyncController::class, 'preview'])->name('spmb.sync.preview');
-
         // Rute untuk mengeksekusi penyimpanan
         Route::post('/spmb/sync/store', [SpmbSyncController::class, 'store'])->name('spmb.sync.store');
 
@@ -64,6 +61,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/floating', [StudentController::class, 'floating'])->name('floating.index');
         Route::get('/floating/export', [StudentController::class, 'exportFloating'])->name('floating.export');
         Route::get('/data/export', [StudentController::class, 'export'])->name('data.export');
+
+        // --- RUTE BARU UNTUK GENERATE NIS ---
+        Route::get('/data/generate-nis-modal', [StudentController::class, 'generateNisModal'])->name('data.generate-nis-modal');
+        Route::post('/data/generate-nis', [StudentController::class, 'generateNis'])->name('data.generate-nis');
+
         Route::delete('/data/{id}', [StudentController::class, 'destroy'])->name('data.destroy');
 
         // Detail

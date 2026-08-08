@@ -21,88 +21,12 @@ use App\Models\GuardianVault;
 use App\Models\Student; // Sesuaikan dengan nama model Anda
 use App\Models\StudentVault;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SpmbSyncController extends Controller
 {
-    /**
-     * 1. Menampilkan Pratinjau Data (dengan Cache, Search & Filter)
-     */
-    public function preview(Request $request)
-    {
-        $url = config('services.spmb.url');
-        $token = config('services.spmb.token');
-
-        try {
-            // CACHE: Simpan data dari SPMB selama 10 menit.
-            $dataSiswaUtuh = Cache::remember('spmb_verified_students', 600, function () use ($url, $token) {
-                $response = Http::withToken($token)->acceptJson()->get($url);
-
-                // Lemparkan exception jika gagal, agar langsung ditangkap oleh blok catch di bawah
-                if (!$response->successful()) {
-                    throw new \Exception('Gagal mengambil data dari server SPMB. Status: ' . $response->status());
-                }
-
-                return $response->json()['data'] ?? [];
-            });
-
-            // Jadikan Collection
-            $dataSiswa = collect($dataSiswaUtuh);
-
-            // 2. Terapkan Pencarian (Search)
-            $search = $request->query('search');
-            if (!empty($search)) {
-                $search = strtolower($search);
-                $dataSiswa = $dataSiswa->filter(function ($item) use ($search) {
-                    return str_contains(strtolower($item['nama_lengkap'] ?? ''), $search) ||
-                        str_contains(strtolower($item['no_registrasi'] ?? ''), $search) ||
-                        str_contains(strtolower($item['nisn'] ?? ''), $search);
-                });
-            }
-
-            // 3. Terapkan Filter Jenis Kelamin
-            $filterGender = $request->query('filter_gender');
-            if (!empty($filterGender)) {
-                $dataSiswa = $dataSiswa->where('jk', $filterGender);
-            }
-
-            // 4. Terapkan Filter Jurusan
-            $filterConcentration = $request->query('filter_concentration');
-            if (!empty($filterConcentration)) {
-                $dataSiswa = $dataSiswa->filter(function ($item) use ($filterConcentration) {
-                    return str_contains(strtolower($item['konsentrasi_keahlian'] ?? ''), strtolower($filterConcentration));
-                });
-            }
-
-            // Daftar unik jurusan untuk dropdown filter (Ambil dari data utuh)
-            $concentrationOptions = collect($dataSiswaUtuh)->pluck('konsentrasi_keahlian')->filter()->unique();
-
-            // 5. Pagination Manual
-            $page = $request->query('page', 1);
-            $perPage = 10;
-            $paginatedData = new LengthAwarePaginator(
-                $dataSiswa->forPage($page, $perPage),
-                $dataSiswa->count(),
-                $perPage,
-                $page,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-
-            // 6. Cek apakah ini request dari HTMX
-            if ($request->header('HX-Request')) {
-                return view('pages.admin.integration.partials._table-spmb', compact('paginatedData'));
-            }
-
-            return view('pages.admin.integration.spmb-preview', compact('paginatedData', 'search', 'filterGender', 'filterConcentration', 'concentrationOptions'));
-        } catch (\Exception $e) {
-            Log::error('Error API SPMB (Preview): ' . $e->getMessage());
-            return redirect()->route('admin.students.data.index')->with('error', $e->getMessage());
-        }
-    }
-
     /**
      * Mengambil ringkasan statistik dari API SPMB untuk ditampilkan di Modal
      */

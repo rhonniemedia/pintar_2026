@@ -179,7 +179,7 @@ class MasterDataController extends Controller
 
         try {
             $academicYear->delete();
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return $this->htmxAlertResponse(
                 icon: 'error',
                 title: 'Tidak Bisa Dihapus',
@@ -343,7 +343,8 @@ class MasterDataController extends Controller
                 ClassGroup::create([
                     'semester_id'         => $semesterBaruId,
                     'concentration_id'    => $rombel->concentration_id,
-                    'homeroom_teacher_id' => null, // Wali kelas di-reset
+                    // Wali kelas diikutsertakan (naik bersama kelasnya)
+                    'homeroom_teacher_id' => $rombel->homeroom_teacher_id,
                     'grade_level'         => $gradeBaru,
                     'name'                => $namaBaru,
                     'group_number'        => $rombel->group_number,
@@ -361,6 +362,8 @@ class MasterDataController extends Controller
                         'group_number'     => $rombel->group_number,
                     ],
                     [
+                        // Wali kelas dikosongkan untuk menghindari bentrok/duplikat 
+                        // dengan kelas 11 yang baru saja membawa wali kelas ini
                         'homeroom_teacher_id' => null,
                         'name'                => $rombel->name,
                     ]
@@ -452,7 +455,7 @@ class MasterDataController extends Controller
 
         try {
             $semester->delete();
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return $this->htmxAlertResponse(
                 icon: 'error',
                 title: 'Tidak Bisa Dihapus',

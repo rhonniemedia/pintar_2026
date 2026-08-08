@@ -116,7 +116,7 @@
                             </template>
 
                             <template x-if="alert.type === 'info'">
-                                <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <svg width="36" height="36" class="text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="12" y1="16" x2="12" y2="12"></line>
                                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -124,7 +124,7 @@
                             </template>
 
                             <template x-if="alert.type === 'question'">
-                                <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <svg width="36" height="36" class="text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                     <line x1="12" y1="17" x2="12.01" y2="17"></line>

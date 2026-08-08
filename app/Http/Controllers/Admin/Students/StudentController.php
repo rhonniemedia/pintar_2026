@@ -136,6 +136,7 @@ class StudentController extends Controller
 
         // Query khusus mencari siswa yang TIDAK terdaftar di rombel manapun pada semester aktif
         $query = Student::with(['vault', 'concentration'])
+            ->where('status', '!=', 'graduated')
             ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
                 $q->where('semester_id', $semesterId);
             });
@@ -168,9 +169,10 @@ class StudentController extends Controller
         }
 
         // 1. Ambil semua siswa tanpa rombel di semester ini
-        $rawFloatingQuery = Student::whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
-            $q->where('semester_id', $semesterId);
-        });
+        $rawFloatingQuery = Student::where('status', '!=', 'graduated')
+            ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
 
         // 2. Lewatkan ke StudentFilter dengan array kosong 
         // Ini memastikan filter bawaan sistem (seperti status = aktif) tetap berjalan, 
@@ -232,6 +234,7 @@ class StudentController extends Controller
         $semesterId = CoreSemester::where('status', 'active')->value('id');
 
         $query = Student::with(['vault', 'concentration', 'guardians.vault'])
+            ->where('status', '!=', 'graduated')
             ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
                 $q->where('semester_id', $semesterId);
             });
@@ -533,6 +536,149 @@ class StudentController extends Controller
                 'icon' => 'success',
                 'title' => 'Berhasil!',
                 'text' => 'Pas foto siswa berhasil diperbarui.'
+            ],
+            'refreshStudentData' => true
+        ]));
+    }
+
+    /**
+     * Menampilkan Modal Informasi Generate NIS
+     */
+    public function generateNisModal()
+    {
+        $activeSemester = CoreSemester::where('status', 'active')->first();
+        $semesterId = $activeSemester ? $activeSemester->id : null;
+
+        // Cari siswa yang belum memiliki NIS dan sudah masuk rombel aktif
+        $eligibleStudents = Student::with(['concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
+            $q->where('semester_id', $semesterId);
+        }])
+            ->whereNull('nis')
+            ->whereHas('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            })
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return view('pages.admin.students.data.partials._generate-nis-modal', compact('eligibleStudents'));
+    }
+
+    /**
+     * Memproses Generate NIS
+     */
+    public function generateNis(Request $request)
+    {
+        // 1. Ambil Tahun Ajaran Aktif dari Database
+        $activeAcademicYear = \App\Models\CoreAcademicYear::where('status', 'active')->first();
+
+        if (!$activeAcademicYear) {
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'close-modal' => true,
+                'showAlert' => [
+                    'icon' => 'error',
+                    'title' => 'Gagal!',
+                    'text' => 'Tidak ada Tahun Ajaran yang aktif. Silakan atur terlebih dahulu di menu Data Master.'
+                ]
+            ]));
+        }
+
+        // 2. Cek kesesuaian Tahun Ajaran Aktif dengan waktu/tanggal berjalan saat ini
+        $now = \Carbon\Carbon::now();
+        $startDate = \Carbon\Carbon::parse($activeAcademicYear->start_date);
+        $endDate = \Carbon\Carbon::parse($activeAcademicYear->end_date);
+
+        if (!$now->between($startDate, $endDate)) {
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'close-modal' => true,
+                'showAlert' => [
+                    'icon' => 'warning',
+                    'title' => 'Perhatian!',
+                    'text' => "Tahun ajaran aktif saat ini ({$activeAcademicYear->name}) tidak sesuai dengan waktu berjalan. Pastikan Anda menggunakan tahun ajaran yang tepat di menu Data Master sebelum men-generate NIS."
+                ]
+            ]));
+        }
+
+        // 3. Ambil 2 digit tahun aktif (misal '2026/2027' -> ambil '26')
+        $startYear = explode('/', $activeAcademicYear->name)[0];
+        $yearCode = substr($startYear, 2, 2);
+
+        // 4. Proses pencarian siswa tanpa NIS di rombel aktif
+        $activeSemester = \App\Models\CoreSemester::where('status', 'active')->first();
+        $semesterId = $activeSemester ? $activeSemester->id : null;
+
+        // Ambil data siswa berserta relasinya (TANPA orderBy di database)
+        $eligibleStudents = \App\Models\Student::with(['concentration', 'activeClassGroup' => function ($q) use ($semesterId) {
+            $q->where('semester_id', $semesterId);
+        }])
+            ->whereNull('nis')
+            ->whereHas('activeClassGroup', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            })
+            ->get();
+
+        if ($eligibleStudents->isEmpty()) {
+            return response()->noContent()->header('HX-Trigger', json_encode([
+                'close-modal' => true,
+                'showAlert' => [
+                    'icon' => 'info',
+                    'title' => 'Tidak Ada Data',
+                    'text' => 'Semua siswa di rombel aktif sudah memiliki NIS.'
+                ]
+            ]));
+        }
+
+        // 5. PENGURUTAN BERTINGKAT (Konsentrasi -> Rombel -> Abjad Nama)
+        $sortedStudents = $eligibleStudents->sort(function ($a, $b) {
+            // Urutkan berdasarkan Nama Konsentrasi
+            $concA = $a->concentration->name ?? '';
+            $concB = $b->concentration->name ?? '';
+            if ($concA !== $concB) {
+                return strcmp($concA, $concB);
+            }
+
+            // Jika Konsentrasi sama, urutkan berdasarkan Nama Rombel
+            $rombelA = $a->activeClassGroup->first()->name ?? '';
+            $rombelB = $b->activeClassGroup->first()->name ?? '';
+            if ($rombelA !== $rombelB) {
+                return strcmp($rombelA, $rombelB);
+            }
+
+            // Jika Rombel sama, urutkan berdasarkan Nama Siswa
+            return strcmp($a->name, $b->name);
+        })->values(); // values() digunakan untuk me-reset index array setelah disortir
+
+        // 6. Cari urutan NIS terbesar di tahun ajaran aktif ini
+        $lastStudent = \App\Models\Student::whereNotNull('nis')
+            ->whereRaw("SUBSTRING(nis, 3, 2) = ?", [$yearCode])
+            ->orderByRaw("CAST(SUBSTRING(nis, 5, 3) AS UNSIGNED) DESC")
+            ->first();
+
+        $lastSequence = 0;
+        if ($lastStudent && strlen($lastStudent->nis) == 7) {
+            $lastSequence = (int) substr($lastStudent->nis, 4, 3);
+        }
+
+        $generatedCount = 0;
+
+        // 7. Eksekusi penyimpanan NIS menggunakan data yang sudah diurutkan rapi
+        foreach ($sortedStudents as $student) {
+            $concentrationCode = str_pad($student->concentration->code ?? $student->concentration_id, 2, '0', STR_PAD_LEFT);
+
+            $lastSequence++;
+            $sequenceCode = str_pad($lastSequence, 3, '0', STR_PAD_LEFT);
+
+            $newNis = $concentrationCode . $yearCode . $sequenceCode;
+
+            $student->update(['nis' => $newNis]);
+            $generatedCount++;
+        }
+
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'close-modal' => true,
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => "$generatedCount NIS siswa berhasil di-generate secara berurutan."
             ],
             'refreshStudentData' => true
         ]));

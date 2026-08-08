@@ -165,14 +165,15 @@ class ClassGroupController extends Controller
     {
         $semesterId = $classGroup->semester_id;
 
-        // 1. Kueri dasar: Siswa dengan jurusan yang sama & belum punya rombel di semester ini
+        // 1. Kueri dasar: Siswa dengan jurusan yang sama, BUKAN lulusan, & belum punya rombel di semester ini
         $rawQuery = Student::with(['vault', 'concentration'])
             ->where('concentration_id', $classGroup->concentration_id)
+            ->where('status', '!=', 'graduated') // <-- Tambahan kondisi pengecualian status graduated
             ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
                 $q->where('semester_id', $semesterId);
             });
 
-        // 2. Lewatkan ke StudentFilter agar membuang data alumni/mutasi (hanya ambil yang Aktif)
+        // 2. Lewatkan ke StudentFilter agar membuang data mutasi/drop out (hanya ambil yang Aktif)
         $emptyFilter = new StudentFilter([], $semesterId);
 
         // 3. Eksekusi kueri yang sudah difilter

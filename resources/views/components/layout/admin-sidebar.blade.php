@@ -75,21 +75,6 @@
                     </div>
                 </a>
 
-                <!-- Menu Baru: Data SPMB -->
-                <a href="{{ route('admin.integration.spmb.sync.preview') }}"
-                    class="group {{ request()->routeIs('admin.integration.spmb.sync.preview') ? 'active' : '' }}">
-                    <div
-                        class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ request()->routeIs('admin.integration.spmb.sync.preview') ? 'bg-muted' : 'hover:bg-muted' }}">
-                        <i data-lucide="database"
-                            class="size-5 {{ request()->routeIs('admin.integration.spmb.sync.preview') ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
-
-                        <span
-                            class="text-sm {{ request()->routeIs('admin.integration.spmb.sync.preview') ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
-                            Data SPMB
-                        </span>
-                    </div>
-                </a>
-
             </div>
         </div>
 
