@@ -7,7 +7,7 @@
 /* ===== LOCAL FONT ===== */
 @font-face {
     font-family: 'Sora';
-    src: url('../fonts/sora/xMQbuFFYT72XzQUpDg.woff2') format('woff2');
+    src: url('/fonts/sora/xMQbuFFYT72XzQUpDg.woff2') format('woff2');
     font-weight: 300 800;
     font-style: normal;
     font-display: swap;
