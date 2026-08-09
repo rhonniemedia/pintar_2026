@@ -12,10 +12,11 @@ use App\Http\Controllers\Admin\Students\StudentMutationInController;
 use App\Http\Controllers\Admin\Students\StudentMutationOutController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Integration\SpmbSyncController;
+use App\Http\Middleware\AuthorizeAppAccess;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('admin.home');
 });
 
 Route::middleware('guest')->group(function () {
@@ -25,7 +26,8 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-Route::prefix('admin')->name('admin.')->group(function () {
+// Menerapkan middleware auth dan AuthorizeAppAccess ke seluruh rute admin
+Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::class])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -41,10 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('integration')->name('integration.')->group(function () {
-        // Rute untuk mengeksekusi penyimpanan
         Route::post('/spmb/sync/store', [SpmbSyncController::class, 'store'])->name('spmb.sync.store');
-
-        // --- RUTE BARU UNTUK CEK INFO STATISTIK SPMB ---
         Route::get('/spmb/sync/info', [SpmbSyncController::class, 'checkInfo'])->name('spmb.sync.info');
     });
 
@@ -62,7 +61,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/floating/export', [StudentController::class, 'exportFloating'])->name('floating.export');
         Route::get('/data/export', [StudentController::class, 'export'])->name('data.export');
 
-        // --- RUTE BARU UNTUK GENERATE NIS ---
         Route::get('/data/generate-nis-modal', [StudentController::class, 'generateNisModal'])->name('data.generate-nis-modal');
         Route::post('/data/generate-nis', [StudentController::class, 'generateNis'])->name('data.generate-nis');
 
@@ -76,7 +74,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{id}/edit/personal', [StudentController::class, 'edit'])->name('edit.personal');
         Route::put('/{id}/edit/personal', [StudentController::class, 'update'])->name('edit.personal.update');
 
-        // --- RUTE BARU UNTUK FOTO ---
         Route::get('/{id}/edit/photo', [StudentController::class, 'editPhoto'])->name('edit.photo');
         Route::put('/{id}/edit/photo', [StudentController::class, 'updatePhoto'])->name('edit.photo.update');
 
@@ -93,7 +90,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/group/{classGroup}/add-student', [ClassGroupController::class, 'storeStudent'])->name('group.add-student.store');
         Route::delete('/group/{id}', [ClassGroupController::class, 'destroy'])->name('group.destroy');
 
-        // --- RUTE CETAK DAFTAR HADIR ---
+        // Rute Cetak Daftar Hadir
         Route::controller(ClassGroupAttendanceController::class)->group(function () {
             Route::get('/group/attendance/modal', 'showModal')->name('attendance.modal');
             Route::get('/group/attendance/classes', 'getFilteredClasses')->name('attendance.classes');
@@ -134,11 +131,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Mutasi Masuk
             Route::name('transfer.in.')->prefix('in')->group(function () {
                 Route::get('/', [StudentMutationInController::class, 'index'])->name('index');
-
-                // Route Validasi Per Step (TAMBAHKAN BARIS INI)
                 Route::post('/validate-step', [StudentMutationInController::class, 'validateStep'])->name('validate-step');
-
-                // Step 1: form awal (belum ada siswa) + submit yang membuat siswa baru
                 Route::get('/create', [StudentMutationInController::class, 'create'])->name('create');
                 Route::post('/', [StudentMutationInController::class, 'store'])->name('store');
             });
@@ -170,8 +163,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::prefix('master-data')->name('master-data.')->group(function () {
 
-        Route::get('/', [MasterDataController::class, 'index'])
-            ->name('academic');
+        Route::get('/', [MasterDataController::class, 'index'])->name('academic');
 
         // Route khusus Modal & Action Tahun Ajaran
         Route::get('/academic-year/create', [MasterDataController::class, 'createAcademicYear'])->name('academic-year.create');
@@ -188,7 +180,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/semester/{id}', [MasterDataController::class, 'destroySemester'])->name('semester.destroy');
 
         // Route khusus Modal & Action Jurusan
-        // --- RUTE CONCENTRATION (JURUSAN) ---
         Route::get('/concentration/create', [MasterDataController::class, 'createConcentration'])->name('concentration.create');
         Route::post('/concentration', [MasterDataController::class, 'storeConcentration'])->name('concentration.store');
         Route::get('/concentration/{id}/edit', [MasterDataController::class, 'editConcentration'])->name('concentration.edit');
@@ -196,20 +187,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/concentration/{id}', [MasterDataController::class, 'destroyConcentration'])->name('concentration.destroy');
 
         // Data Sekolah
-        Route::get('/school', [MasterDataController::class, 'school'])
-            ->name('school.update');
-
-        Route::post('/school', [MasterDataController::class, 'updateSchool'])
-            ->name('school.update');
+        Route::get('/school', [MasterDataController::class, 'school'])->name('school.update');
+        Route::post('/school', [MasterDataController::class, 'updateSchool'])->name('school.update');
 
         // Akademik
-        Route::post('/academics', [MasterDataController::class, 'storeAcademic'])
-            ->name('academic.store');
-
-        Route::put('/academics/{id}', [MasterDataController::class, 'updateAcademic'])
-            ->name('academic.update');
-
-        Route::delete('/academics/{id}', [MasterDataController::class, 'destroyAcademic'])
-            ->name('academic.destroy');
+        Route::post('/academics', [MasterDataController::class, 'storeAcademic'])->name('academic.store');
+        Route::put('/academics/{id}', [MasterDataController::class, 'updateAcademic'])->name('academic.update');
+        Route::delete('/academics/{id}', [MasterDataController::class, 'destroyAcademic'])->name('academic.destroy');
     });
 });

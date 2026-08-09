@@ -73,11 +73,15 @@
 
                     <hr class="my-1 border-border" />
 
-                    <a href="#"
-                        class="flex items-center gap-2 px-2 py-2 rounded-md text-sm text-error hover:bg-error/10 transition-colors">
-                        <i data-lucide="log-out" class="size-4"></i>
-                        <span>Sign Out</span>
-                    </a>
+                    {{-- Form Logout dengan method POST dan token CSRF --}}
+                    <form method="POST" action="{{ route('logout') }}" class="w-full m-0 p-0">
+                        @csrf
+                        <button type="submit"
+                            class="w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-error hover:bg-error/10 transition-colors text-left cursor-pointer">
+                            <i data-lucide="log-out" class="size-4"></i>
+                            <span>Sign Out</span>
+                        </button>
+                    </form>
 
                 </div>
             </div>

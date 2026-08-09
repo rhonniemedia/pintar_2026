@@ -90,7 +90,7 @@ class ClassGroupAttendanceController extends Controller
         $activeSemester = CoreSemester::where('status', 'active')->first();
 
         // 2. Susun Query Pencarian Rombel
-        $query = ClassGroup::with(['concentration', 'homeroomTeacher', 'semester'])
+        $query = ClassGroup::with(['concentration', 'homeroomTeacher.vault', 'semester'])
             ->where('semester_id', $activeSemester?->id)
             ->where('grade_level', $request->filter_grade);
 
@@ -140,7 +140,7 @@ class ClassGroupAttendanceController extends Controller
                 'dataJurusan' => (object) ['jurusan' => $classGroup->concentration->name ?? '-'],
                 'dataGuru' => (object) [
                     'nama' => $classGroup->homeroomTeacher ? $classGroup->homeroomTeacher->name_capital_with_title : 'Belum Diatur',
-                    'nip' => $classGroup->homeroomTeacher->nip ?? '~'
+                    'nip' => $classGroup->homeroomTeacher->vault?->nip ?? '~'
                 ]
             ];
 

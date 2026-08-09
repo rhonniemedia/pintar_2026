@@ -28,6 +28,8 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'core_id' => env('CORE_APP_ID', 'default-uuid-jika-perlu'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
