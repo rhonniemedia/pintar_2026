@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Student\MutationStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class StudentMutation extends Model
 
     protected $casts = [
         'mutation_date' => 'date',
+        'status'        => MutationStatus::class,
     ];
 
     public function student(): BelongsTo
@@ -26,7 +28,7 @@ class StudentMutation extends Model
 
     public function academicYear(): BelongsTo
     {
-        return $this->belongsTo(AcademicYear::class);
+        return $this->belongsTo(CoreAcademicYear::class);
     }
 
     public function classGroup(): BelongsTo

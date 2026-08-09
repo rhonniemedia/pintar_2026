@@ -14,6 +14,8 @@
     @include('pages.admin.home.partials._latest-students')
 </div>
 
+<div id="modal-container"></div>
+
 @include('pages.admin.home.partials._scripts')
 
 @endsection

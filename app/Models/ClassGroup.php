@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\Student\MutationStatus;
+use App\Enums\Student\StudentStatus;
 
 class ClassGroup extends Model
 {
@@ -40,9 +42,13 @@ class ClassGroup extends Model
     }
 
     /**
-     * Siswa yang statusnya benar-benar masih aktif DI ROMBEL INI:
-     * - baris pivot berstatus 'active'
-     * - data siswa (acd_students) juga berstatus 'active'
+     * Siswa yang statusnya benar-benar masih anggota rombel ini SELAGI
+     * SEMESTER/TAHUN AJARAN INI MASIH AKTIF:
+     * - data siswa (acd_students) berstatus 'active' ATAU 'graduated'
+     * - baris pivot belum ditutup oleh perpindahan kelas (exit_reason)
+     * - baris pivot belum ditutup oleh mutasi APAPUN, KECUALI mutasi
+     *   kelulusan (GRADUATED) — siswa lulus tetap dihitung sebagai
+     *   anggota rombel terakhirnya sampai semester benar-benar berganti.
      *
      * PENTING: sengaja TIDAK memfilter exit_date. Saat proses kenaikan kelas/kelulusan
      * (lihat ClassGroupPromotionController::promote()/graduate()), exit_date pada baris
@@ -53,19 +59,40 @@ class ClassGroup extends Model
      * difilter, siswa akan langsung "hilang" dari tampilan rombel meski data aslinya
      * belum berubah — itu bug yang pernah terjadi sebelumnya.
      *
-     * Yang membuat siswa benar-benar hilang dari rombel hanya perubahan status pivot itu
-     * sendiri (mis. jadi 'graduated' saat lulus), konsisten dengan Student::activeClassGroup()
+     * Yang membuat siswa benar-benar hilang dari rombel adalah mutasi non-kelulusan
+     * (dropout, resign, pindah sekolah, dll.) yang mengisi mutation_id, atau
+     * perpindahan kelas (exit_reason). Konsisten dengan Student::activeClassGroup()
      * dan ClassGroupPromotionController::activeCandidates().
      */
     public function activeStudents(): BelongsToMany
     {
         return $this->students()
-            // Pastikan string 'active' ini sesuai dengan value Enum StudentStatus Anda 
-            // (jika Enum Anda menggunakan huruf besar, ubah menjadi 'ACTIVE' atau panggil Enum-nya langsung)
-            ->where('acd_students.status', 'active')
+            // FIX: sebelumnya hanya mengizinkan status 'active', sehingga siswa yang
+            // sudah lulus (status cache berubah jadi 'graduated' via
+            // MutationStatus::resultingStudentStatus()) ikut ter-exclude — padahal
+            // selagi tahun ajaran masih berjalan, siswa graduated tetap harus dihitung.
+            ->whereIn('acd_students.status', [
+                StudentStatus::ACTIVE->value,
+                StudentStatus::GRADUATED->value,
+            ])
 
-            // Logika baru pengganti status pivot: belum ada tanggal keluar / belum dipindah / dimutasi
-            ->wherePivotNull('exit_date');
+            // FIX: sebelumnya pakai wherePivotNull('exit_date'), padahal exit_date
+            // diisi lebih dulu sebagai JADWAL pindah saat proses kenaikan kelas/
+            // kelulusan dijalankan (lihat komentar di atas method ini) — sehingga
+            // siswa yang sebenarnya masih aktif ikut ter-exclude dan laporan
+            // menampilkan 0. Logika yang benar (konsisten dengan
+            // Student::activeClassGroup()) adalah cek exit_reason + mutation_id,
+            // bukan exit_date.
+            ->whereNull('acd_class_group_students.exit_reason')
+            ->where(function ($q) {
+                $q->whereNull('acd_class_group_students.mutation_id')
+                    ->orWhereExists(function ($sub) {
+                        $sub->selectRaw('1')
+                            ->from('acd_student_mutations')
+                            ->whereColumn('acd_student_mutations.id', 'acd_class_group_students.mutation_id')
+                            ->where('acd_student_mutations.status', MutationStatus::GRADUATED->value);
+                    });
+            });
     }
 
     public function classGroupTeachers(): HasMany

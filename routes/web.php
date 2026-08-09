@@ -150,6 +150,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
             Route::get('/{id}', [StudentGraduationController::class, 'show'])->name('show');
         });
 
+        // Laporan / Rekapitulasi PDF
+        Route::prefix('reports')->name('reports.')->group(function () {
+            // Laporan Rekapitulasi Jurusan
+            Route::get('/concentration/modal', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'concentrationModal'])->name('concentration.modal');
+            Route::get('/concentration', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'concentrationReport'])->name('concentration');
+
+            // Laporan Keadaan Siswa
+            Route::get('/student-count/modal', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'studentCountModal'])->name('student-count.modal');
+            Route::get('/student-count', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'studentCountReport'])->name('student-count');
+
+            // Laporan Mutasi Siswa
+            Route::get('/mutation/modal', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'mutationModal'])->name('mutation.modal');
+            Route::get('/mutation', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'mutationReport'])->name('mutation');
+        });
+
         // Lainnya
         Route::get('/mutasi', fn() => 'Halaman Mutasi Peserta Didik')->name('mutasi.index');
         Route::get('/history', [StudentHistoryController::class, 'index'])->name('history.index');

@@ -29,11 +29,21 @@
             x-data="{ openProfile: false }"
             @click.outside="openProfile = false">
 
-            {{-- Avatar inisial (Dummy) --}}
+            {{-- Logic inisial: Ambil nama asli (tanpa gelar) dari relasi staff untuk inisial --}}
+            @php
+            $rawName = auth()->user()->staff?->name ?? 'Admin';
+            $nameParts = explode(' ', trim($rawName));
+            $initials = strtoupper(substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
+
+            // Variabel untuk nama lengkap bergelar
+            $fullNameWithTitle = auth()->user()->staff?->name_with_title ?? $rawName;
+            @endphp
+
+            {{-- Avatar Inisial --}}
             <div
                 class="size-11 rounded-full bg-primary flex items-center justify-center ring-2 ring-border cursor-pointer shrink-0 overflow-hidden"
                 @click="openProfile = !openProfile">
-                <span class="text-white font-black text-sm">RS</span>
+                <span class="text-white font-black text-sm">{{ $initials }}</span>
             </div>
 
             <div
@@ -48,14 +58,18 @@
                 style="display: none">
                 <div class="p-2">
 
-                    {{-- Info user di atas (Dummy) --}}
+                    {{-- Info User --}}
                     <div class="flex items-center gap-3 px-2 py-2 mb-1">
                         <div class="size-9 rounded-full bg-primary flex items-center justify-center shrink-0 overflow-hidden">
-                            <span class="text-white font-black text-xs">RS</span>
+                            <span class="text-white font-black text-xs">{{ $initials }}</span>
                         </div>
                         <div class="min-w-0">
-                            <p class="font-bold text-sm text-foreground truncate">Roni Saputra</p>
-                            <p class="text-xs text-secondary capitalize">Administrator</p>
+                            <p class="font-bold text-sm text-foreground truncate" title="{{ $fullNameWithTitle }}">
+                                {{ $fullNameWithTitle }}
+                            </p>
+                            <p class="text-xs text-secondary truncate">
+                                {{ auth()->user()->staff?->vault?->email ?? auth()->user()->username ?? 'Administrator' }}
+                            </p>
                         </div>
                     </div>
 
@@ -63,17 +77,17 @@
 
                     <a href="#"
                         class="flex items-center gap-2 px-2 py-2 rounded-md text-sm text-secondary hover:bg-muted hover:text-primary transition-colors">
-                        <i data-lucide="user" class="size-4"></i> My Profile
+                        <i data-lucide="user" class="size-4"></i> Profil Saya
                     </a>
 
                     <a href="#"
                         class="flex items-center gap-2 px-2 py-2 rounded-md text-sm text-secondary hover:bg-muted hover:text-primary transition-colors">
-                        <i data-lucide="settings" class="size-4"></i> Account Settings
+                        <i data-lucide="settings" class="size-4"></i> Pengaturan Akun
                     </a>
 
                     <hr class="my-1 border-border" />
 
-                    {{-- Form Logout dengan method POST dan token CSRF --}}
+                    {{-- Form Logout --}}
                     <form method="POST" action="{{ route('logout') }}" class="w-full m-0 p-0">
                         @csrf
                         <button type="submit"

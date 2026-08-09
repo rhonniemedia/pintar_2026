@@ -177,13 +177,24 @@
     <div class="absolute bottom-0 left-0 w-[280px]">
         <div class="flex items-center justify-between border-t bg-white border-border p-5 gap-3">
             <div class="min-w-0">
-                <p class="font-semibold text-foreground text-sm">Admin</p>
-                <p class="text-xs text-secondary mt-0.5">Pintar 2026</p>
+                {{-- Mengambil nama dari relasi staff(), menggunakan accessor name_with_title --}}
+                <p class="font-semibold text-foreground text-sm truncate" title="{{ auth()->user()->staff?->name_with_title ?? 'Admin' }}">
+                    {{ auth()->user()->staff?->name_with_title ?? 'Admin' }}
+                </p>
+                {{-- Mengambil email dari relasi vault(), fallback ke username jika email kosong --}}
+                <p class="text-xs text-secondary mt-0.5 truncate" title="{{ auth()->user()->staff?->vault?->email ?? auth()->user()->username ?? 'Pintar 2026' }}">
+                    {{ auth()->user()->staff?->vault?->email ?? auth()->user()->username ?? 'Pintar 2026' }}
+                </p>
             </div>
 
-            <div class="size-11 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="circle-power" class="size-6 text-primary"></i>
-            </div>
+            <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
+                @csrf
+                <button type="submit"
+                    class="size-11 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 hover:bg-primary/20 transition-all duration-300 cursor-pointer border-none outline-none"
+                    title="Sign Out">
+                    <i data-lucide="circle-power" class="size-6 text-primary"></i>
+                </button>
+            </form>
         </div>
     </div>
 
