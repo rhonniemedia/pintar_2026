@@ -22,7 +22,8 @@
                 // otomatis mendekripsi nilainya saat properti diambil.
                 $nik = $r->vault->nik_encrypted ?? '-';
                 $tempatLahir = $r->vault->pob_encrypted ?? '-';
-                $tanggalLahir = $r->vault->dob_encrypted ?? '-';
+                $rawDob = $r->vault->dob_encrypted ?? null;
+                $tanggalLahir = ($rawDob && $rawDob !== '-') ? $rawDob : null;
                 $nisn = $r->vault->nisn_encrypted ?? '-';
 
                 $initials = strtoupper(substr($r->name, 0, 2));
@@ -50,7 +51,17 @@
                         <div class="font-semibold text-foreground truncate">{{ $tempatLahir ?? '-' }}</div>
                         <div class="text-xs text-secondary mt-0.5 flex items-center gap-1.5 overflow-hidden">
                             <i data-lucide="calendar" class="size-3.5 shrink-0"></i>
-                            <span class="truncate">{{ $tanggalLahir ? \Carbon\Carbon::parse($tanggalLahir)->translatedFormat('d F Y') : '-' }}</span>
+                            @php
+                            $tanggalLahirFormatted = '-';
+                            if (!empty($tanggalLahir) && $tanggalLahir !== '-') {
+                            try {
+                            $tanggalLahirFormatted = \Carbon\Carbon::parse($tanggalLahir)->translatedFormat('d F Y');
+                            } catch (\Throwable $e) {
+                            $tanggalLahirFormatted = '-';
+                            }
+                            }
+                            @endphp
+                            <span class="truncate">{{ $tanggalLahirFormatted }}</span>
                         </div>
                     </td>
 

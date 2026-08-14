@@ -19,10 +19,10 @@ $mutationReasonMap = [
 'deceased' => 'Meninggal Dunia',
 ];
 
-$exitLabel = $mutationReasonMap[$r->status] ?? ucfirst(str_replace('_', ' ', $r->status));
+$exitLabel = $mutationReasonMap[$r->status->value ?? ''] ?? ucfirst(str_replace('_', ' ', $r->status->value ?? '-'));
 $exitDate = $r->mutation_date;
 
-$exitBadgeClass = match ($r->status) {
+$exitBadgeClass = match ($r->status?->value) {
 'transfer_in' => 'bg-teal-500/10 text-teal-700',
 'transfer_out' => 'bg-blue-500/10 text-blue-600',
 'dropped_out' => 'bg-error/10 text-error',
