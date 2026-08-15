@@ -150,20 +150,30 @@
 
             <div class="flex flex-col gap-1">
 
-                <a href="#" class="group cursor-pointer">
-                    <div class="flex items-center rounded-xl p-3 gap-3 hover:bg-muted transition-all duration-300">
-                        <i data-lucide="users-round" class="size-5 text-secondary group-hover:text-foreground transition-all duration-300"></i>
-                        <span class="font-medium text-sm text-secondary group-hover:text-foreground transition-all duration-300">
+                @php
+                $isUsers = request()->routeIs('admin.users.*');
+                $roleAplikasiSekarang = auth()->check()
+                ? auth()->user()->roles()->wherePivot('app_id', config('app.core_id'))->first()
+                : null;
+                $isSuperAdmin = $roleAplikasiSekarang && $roleAplikasiSekarang->name === 'superadmin';
+                @endphp
+                @if ($isSuperAdmin)
+                <a href="{{ route('admin.users.index') }}" class="group cursor-pointer {{ $isUsers ? 'active' : '' }}">
+                    <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isUsers ? 'bg-muted' : 'hover:bg-muted' }}">
+                        <i data-lucide="users-round" class="size-5 transition-all duration-300 {{ $isUsers ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
+                        <span class="text-sm transition-all duration-300 {{ $isUsers ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
                             Daftar Pengguna
                         </span>
                     </div>
                 </a>
+                @endif
 
-                <a href="#" class="group cursor-pointer">
-                    <div class="flex items-center rounded-xl p-3 gap-3 hover:bg-muted transition-all duration-300">
-                        <i data-lucide="circle-user" class="size-5 text-secondary group-hover:text-foreground transition-all duration-300"></i>
-                        <span class="font-medium text-sm text-secondary group-hover:text-foreground transition-all duration-300">
-                            Akun Pengguna
+                @php $isProfile = request()->routeIs('admin.profile.*'); @endphp
+                <a href="{{ route('admin.profile.index') }}" class="group cursor-pointer {{ $isProfile ? 'active' : '' }}">
+                    <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isProfile ? 'bg-muted' : 'hover:bg-muted' }}">
+                        <i data-lucide="user-cog" class="size-5 transition-all duration-300 {{ $isProfile ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
+                        <span class="text-sm transition-all duration-300 {{ $isProfile ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
+                            Profil Saya
                         </span>
                     </div>
                 </a>

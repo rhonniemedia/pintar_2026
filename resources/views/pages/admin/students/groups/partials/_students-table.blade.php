@@ -33,18 +33,20 @@
 
                 <tr id="row-student-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
                     <td class="px-5 py-4">
-                        <a href="{{ route('admin.students.edit.personal', $r->id) }}" title="Detail" class="flex items-center gap-3 group">
-
+                        <div class="flex items-center gap-3">
                             {{-- Memanggil komponen Avatar --}}
                             <x-ui.avatar :name="$r->name" :gender="$r->gender" :index="$loop->index" />
 
                             <div class="min-w-0">
-                                <div class="font-semibold text-foreground text-sm group-hover:text-primary group-hover:none transition-colors truncate">{{ $r->name }}</div>
+                                <div class="font-semibold text-foreground text-sm truncate">
+                                    {{ $r->name }}
+                                </div>
 
-                                {{-- Font NIK dikembalikan ke standar bawaan --}}
-                                <div class="text-xs text-secondary truncate">{{ $nik }}</div>
+                                <div class="text-xs text-secondary truncate">
+                                    {{ $nik }}
+                                </div>
                             </div>
-                        </a>
+                        </div>
                     </td>
 
                     <td class="px-5 py-4 text-sm">

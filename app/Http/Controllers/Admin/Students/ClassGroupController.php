@@ -394,14 +394,17 @@ class ClassGroupController extends Controller
     {
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
 
-        // Sesuaikan Model yang digunakan untuk Wali Kelas di sistem Anda (misal: User role 'teacher', atau Staff)
-        // $teacherOptions = User::where('role', 'teacher')->orderBy('name')->pluck('name', 'id');
+        // Menggunakan model Data kembali
         $teacherOptions = Data::where('status', 'active')
             ->whereHas('personnelType', function ($query) {
-                $query->where('alias', 'guru');
+                // Perlebar filter: Cari jika alias='guru' ATAU namanya mengandung kata 'guru'
+                $query->where('alias', 'guru')
+                    ->orWhere('alias', 'GURU')
+                    ->orWhere('name', 'like', '%Guru%');
             })
-            ->orderBy('name')
-            ->pluck('name', 'id');
+            ->get()
+            // Memanfaatkan accessor name_with_title dari model Data agar gelar tampil di form
+            ->pluck('name_with_title', 'id');
 
         return compact('concentrationOptions', 'teacherOptions');
     }

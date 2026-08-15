@@ -10,9 +10,13 @@ use App\Http\Controllers\Admin\Students\StudentGraduationController;
 use App\Http\Controllers\Admin\Students\StudentHistoryController;
 use App\Http\Controllers\Admin\Students\StudentMutationInController;
 use App\Http\Controllers\Admin\Students\StudentMutationOutController;
+use App\Http\Controllers\Admin\Students\StudentReportController;
+use App\Http\Controllers\Admin\User\UserController;
+use App\Http\Controllers\Admin\User\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Integration\SpmbSyncController;
 use App\Http\Middleware\AuthorizeAppAccess;
+use App\Http\Middleware\EnsureUserIsSuperAdmin;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -153,16 +157,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
         // Laporan / Rekapitulasi PDF
         Route::prefix('reports')->name('reports.')->group(function () {
             // Laporan Rekapitulasi Jurusan
-            Route::get('/concentration/modal', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'concentrationModal'])->name('concentration.modal');
-            Route::get('/concentration', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'concentrationReport'])->name('concentration');
+            Route::get('/concentration/modal', [StudentReportController::class, 'concentrationModal'])->name('concentration.modal');
+            Route::get('/concentration', [StudentReportController::class, 'concentrationReport'])->name('concentration');
 
             // Laporan Keadaan Siswa
-            Route::get('/student-count/modal', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'studentCountModal'])->name('student-count.modal');
-            Route::get('/student-count', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'studentCountReport'])->name('student-count');
+            Route::get('/student-count/modal', [StudentReportController::class, 'studentCountModal'])->name('student-count.modal');
+            Route::get('/student-count', [StudentReportController::class, 'studentCountReport'])->name('student-count');
 
             // Laporan Mutasi Siswa
-            Route::get('/mutation/modal', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'mutationModal'])->name('mutation.modal');
-            Route::get('/mutation', [\App\Http\Controllers\Admin\Students\StudentReportController::class, 'mutationReport'])->name('mutation');
+            Route::get('/mutation/modal', [StudentReportController::class, 'mutationModal'])->name('mutation.modal');
+            Route::get('/mutation', [StudentReportController::class, 'mutationReport'])->name('mutation');
         });
 
         // Lainnya
@@ -209,5 +213,26 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
         Route::post('/academics', [MasterDataController::class, 'storeAcademic'])->name('academic.store');
         Route::put('/academics/{id}', [MasterDataController::class, 'updateAcademic'])->name('academic.update');
         Route::delete('/academics/{id}', [MasterDataController::class, 'destroyAcademic'])->name('academic.destroy');
+    });
+
+    Route::prefix('users')->name('users.')->middleware([EnsureUserIsSuperAdmin::class])->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+
+        Route::get('/{user}/edit-role', [UserController::class, 'editRole'])->name('edit-role');
+        Route::put('/{user}/edit-role', [UserController::class, 'updateRole'])->name('edit-role.update');
+
+        Route::get('/{user}/edit-password', [UserController::class, 'editPassword'])->name('edit-password');
+        Route::put('/{user}/edit-password', [UserController::class, 'updatePassword'])->name('edit-password.update');
+    });
+
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::post('/photo', [ProfileController::class, 'uploadPhoto'])->name('upload-photo');
+
+        Route::get('/edit-data', [ProfileController::class, 'editData'])->name('edit-data');
+        Route::put('/update-data', [ProfileController::class, 'updateData'])->name('update-data');
+
+        Route::get('/edit-password', [ProfileController::class, 'editPassword'])->name('edit-password');
+        Route::put('/update-password', [ProfileController::class, 'updatePassword'])->name('update-password');
     });
 });

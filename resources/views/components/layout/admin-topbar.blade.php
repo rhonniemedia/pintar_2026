@@ -29,21 +29,29 @@
             x-data="{ openProfile: false }"
             @click.outside="openProfile = false">
 
-            {{-- Logic inisial: Ambil nama asli (tanpa gelar) dari relasi staff untuk inisial --}}
+            {{-- Logic inisial: Ambil nama asli dan cek foto dari relasi staff --}}
             @php
-            $rawName = auth()->user()->staff?->name ?? 'Admin';
+            $user = auth()->user();
+            $rawName = $user->staff?->name ?? 'Admin';
             $nameParts = explode(' ', trim($rawName));
             $initials = strtoupper(substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
 
             // Variabel untuk nama lengkap bergelar
-            $fullNameWithTitle = auth()->user()->staff?->name_with_title ?? $rawName;
+            $fullNameWithTitle = $user->staff?->name_with_title ?? $rawName;
+
+            // Variabel url foto profil
+            $photoUrl = $user->staff?->photo ? asset('storage/' . $user->staff->photo) : null;
             @endphp
 
-            {{-- Avatar Inisial --}}
+            {{-- Avatar Header (Inisial atau Foto) --}}
             <div
                 class="size-11 rounded-full bg-primary flex items-center justify-center ring-2 ring-border cursor-pointer shrink-0 overflow-hidden"
                 @click="openProfile = !openProfile">
+                @if($photoUrl)
+                <img src="{{ $photoUrl }}" alt="Avatar" class="w-full h-full object-cover">
+                @else
                 <span class="text-white font-black text-sm">{{ $initials }}</span>
+                @endif
             </div>
 
             <div
@@ -58,24 +66,29 @@
                 style="display: none">
                 <div class="p-2">
 
-                    {{-- Info User --}}
+                    {{-- Info User Dropdown --}}
                     <div class="flex items-center gap-3 px-2 py-2 mb-1">
                         <div class="size-9 rounded-full bg-primary flex items-center justify-center shrink-0 overflow-hidden">
+                            @if($photoUrl)
+                            <img src="{{ $photoUrl }}" alt="Avatar" class="w-full h-full object-cover">
+                            @else
                             <span class="text-white font-black text-xs">{{ $initials }}</span>
+                            @endif
                         </div>
                         <div class="min-w-0">
                             <p class="font-bold text-sm text-foreground truncate" title="{{ $fullNameWithTitle }}">
                                 {{ $fullNameWithTitle }}
                             </p>
                             <p class="text-xs text-secondary truncate">
-                                {{ auth()->user()->staff?->vault?->email ?? auth()->user()->username ?? 'Administrator' }}
+                                {{ $user->staff?->vault?->email ?? $user->username ?? 'Administrator' }}
                             </p>
                         </div>
                     </div>
 
                     <hr class="my-1 border-border" />
 
-                    <a href="#"
+                    {{-- Tautan telah diperbarui ke rute profil --}}
+                    <a href="{{ route('admin.profile.index') }}"
                         class="flex items-center gap-2 px-2 py-2 rounded-md text-sm text-secondary hover:bg-muted hover:text-primary transition-colors">
                         <i data-lucide="user" class="size-4"></i> Profil Saya
                     </a>

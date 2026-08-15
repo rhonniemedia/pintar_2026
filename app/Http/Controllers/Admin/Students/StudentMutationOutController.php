@@ -34,10 +34,10 @@ class StudentMutationOutController extends Controller
             ->paginate(10)
             ->withQueryString()
             ->through(function ($mutation) {
-                $mutation->is_transfer_out = $mutation->status === MutationStatus::TRANSFER_OUT->value;
+                $mutation->is_transfer_out = $mutation->status === MutationStatus::TRANSFER_OUT;
 
                 if (! $mutation->is_transfer_out) {
-                    $mutation->mutation_reason_label = MutationStatus::from($mutation->status)->label();
+                    $mutation->mutation_reason_label = $mutation->status->label();
                 }
 
                 return $mutation;

@@ -1,16 +1,14 @@
 <div
     x-data="{
         open: false,
-        gradeError: false, // State untuk melacak error validasi tingkat
+        gradeError: false,
         close() { this.open = false },
         submitForm(e) {
-            // Cek apakah tingkat sudah dipilih
             if (!$refs.grade.value) {
-                e.preventDefault(); // Hentikan proses submit
-                this.gradeError = true; // Tampilkan pesan error
+                e.preventDefault();
+                this.gradeError = true;
             } else {
                 this.gradeError = false;
-                // Jika valid, biarkan submit berjalan dan tutup modal sesaat kemudian
                 setTimeout(() => this.close(), 100);
             }
         }
@@ -24,33 +22,38 @@
     <x-ui.modal show="open" maxWidth="md">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-5 border-b border-border shrink-0 bg-gray-50/50">
-            <div>
-                <h3 class="font-bold text-foreground text-lg">Cetak Daftar Hadir</h3>
-                <p class="text-xs text-secondary mt-0.5">Pilih rombel untuk mencetak dokumen PDF</p>
+        <div class="flex items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-slate-50/50 shrink-0">
+            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div class="size-11 sm:size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-sm">
+                    <i data-lucide="printer" class="size-5 sm:size-6"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-bold text-foreground text-base sm:text-lg leading-tight truncate">Cetak Daftar Hadir</h3>
+                    <p class="text-xs sm:text-sm text-secondary mt-0.5 truncate">Pilih rombel untuk mencetak dokumen PDF</p>
+                </div>
             </div>
-            <button @click="close()" type="button" class="size-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors cursor-pointer">
-                <i data-lucide="x" class="size-4 text-secondary"></i>
+
+            <button @click="close()" type="button" class="size-8 sm:size-9 flex items-center justify-center rounded-lg border border-border bg-white text-secondary hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors cursor-pointer shrink-0">
+                <i data-lucide="x" class="size-4 pointer-events-none"></i>
             </button>
         </div>
 
         {{-- Form Body --}}
-        {{-- Tambahkan novalidate agar tooltip bawaan browser tidak muncul menimpa error kustom kita --}}
         <form id="print-attendance-form" action="{{ route('admin.students.attendance.print') }}" method="GET" target="_blank"
             @submit="submitForm" novalidate
             class="flex flex-col flex-1 overflow-hidden">
 
-            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+            <div class="block p-4 sm:p-6 overflow-y-auto bg-slate-50/30 flex-1 space-y-4">
 
-                {{-- Filter Tingkat (WAJIB) --}}
+                {{-- Filter Tingkat --}}
                 <div>
-                    <label class="block text-sm font-bold text-foreground mb-2">
-                        Tingkat <span class="text-red-500">*</span>
+                    <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">
+                        Tingkat <span class="text-error font-bold text-[12px]">*</span>
                     </label>
                     <select x-ref="grade" name="filter_grade"
-                        @change="gradeError = false" {{-- Sembunyikan error saat user mulai memilih --}}
+                        @change="gradeError = false"
                         class="w-full bg-white border rounded-xl px-3 py-2.5 text-sm focus:outline-none transition-all"
-                        :class="gradeError ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-1 focus:ring-primary'"
+                        :class="gradeError ? 'border-error focus:border-error focus:ring-1 focus:ring-error' : 'border-border focus:border-primary focus:ring-1 focus:ring-primary'"
                         hx-get="{{ route('admin.students.attendance.classes') }}"
                         hx-target="#class_group_id"
                         hx-indicator="#loading-indicator"
@@ -60,15 +63,14 @@
                         <option value="11">Kelas 11</option>
                         <option value="12">Kelas 12</option>
                     </select>
-                    {{-- Pesan Error Kustom --}}
-                    <p x-show="gradeError" x-cloak class="text-xs text-red-500 mt-1">
+                    <p x-show="gradeError" x-cloak class="text-[10px] font-medium text-error mt-1.5">
                         Tingkat harus dipilih
                     </p>
                 </div>
 
-                {{-- Filter Konsentrasi (TIDAK WAJIB) --}}
+                {{-- Filter Konsentrasi --}}
                 <div>
-                    <label class="block text-sm font-bold text-foreground mb-2">Konsentrasi Keahlian</label>
+                    <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Konsentrasi Keahlian</label>
                     <select name="filter_concentration"
                         class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all focus:ring-1 focus:ring-primary"
                         hx-get="{{ route('admin.students.attendance.classes') }}"
@@ -82,32 +84,31 @@
                     </select>
                 </div>
 
-                {{-- Pilihan Kelas (TIDAK WAJIB) --}}
+                {{-- Pilihan Kelas --}}
                 <div>
-                    <label class="flex items-center gap-2 text-sm font-bold text-foreground mb-2">
+                    <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">
                         Kelas (Rombel)
                     </label>
                     <select id="class_group_id" name="class_group_id"
                         class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all focus:ring-1 focus:ring-primary">
                         <option value="">-- Semua Kelas --</option>
-                        <!-- Opsi kelas akan dimuat secara dinamis oleh HTMX ke sini -->
+                        <!-- Opsi kelas dimuat dinamis oleh HTMX -->
                     </select>
                 </div>
 
             </div>
 
             {{-- Footer --}}
-            <div class="px-6 py-4 border-t border-border bg-gray-50/50 flex items-center justify-end gap-3 shrink-0">
+            <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-end gap-2 shrink-0">
 
                 <button type="button" @click="close()"
-                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-white text-secondary hover:bg-muted font-medium text-sm transition-colors cursor-pointer">
-                    <i data-lucide="x" class="size-4"></i> Batal
+                    class="px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all cursor-pointer">
+                    Batal
                 </button>
 
-                {{-- Hapus aksi @click dari sini, pindahkan logika ke @submit form --}}
                 <button type="submit"
-                    class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 shadow-md text-white font-bold text-sm rounded-xl transition-all cursor-pointer">
-                    <i data-lucide="printer" class="size-4"></i>
+                    class="flex items-center justify-center min-w-[140px] px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-sm shadow-primary/30 transition-all cursor-pointer">
+                    <i data-lucide="printer" class="size-4 mr-2"></i>
                     <span>Cetak PDF</span>
                 </button>
 
