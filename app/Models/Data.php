@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Models\CoreConcentration;
+use App\Models\GradeHistory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Data extends Model
 {
@@ -41,6 +44,25 @@ class Data extends Model
         return $front . strtoupper($this->name) . $back;
     }
 
+    /**
+     * Label pangkat & golongan TERKINI, format siap pakai untuk tanda tangan surat.
+     * Contoh: "Pembina Utama Muda (IV/c)". Null kalau belum ada histori golongan sama sekali.
+     *
+     * Catatan performa: mengakses ini tanpa eager load akan memicu query per pemanggilan.
+     * Saat dipakai untuk banyak staf sekaligus, eager load dengan:
+     * ->with('currentGrade.grade')
+     */
+    public function getCurrentGradeLabelAttribute(): ?string
+    {
+        $grade = $this->currentGrade?->grade;
+
+        if (! $grade) {
+            return null;
+        }
+
+        return "{$grade->grade_name} ({$grade->grade_code})";
+    }
+
     // Relasi ke tabel Vault (1-to-1)
     public function vault()
     {
@@ -62,5 +84,23 @@ class Data extends Model
     {
         // Sesuaikan 'personel_type_id' dengan nama kolom foreign key yang ada di tabel staff_data
         return $this->belongsTo(PersonnelType::class, 'personnel_id');
+    }
+
+    /**
+     * Seluruh riwayat golongan/pangkat staf ini (tiap kali ada SK kenaikan pangkat).
+     */
+    public function gradeHistories(): HasMany
+    {
+        return $this->hasMany(GradeHistory::class, 'staff_id');
+    }
+
+    /**
+     * Golongan/pangkat yang berlaku SAAT INI, diambil dari baris histori dengan
+     * effective_date (TMT) paling akhir. Dipakai untuk keperluan cetak surat,
+     * bukan status_effective_date di staff_data (itu untuk status kepegawaian, beda konsep).
+     */
+    public function currentGrade(): HasOne
+    {
+        return $this->hasOne(GradeHistory::class, 'staff_id')->latestOfMany('effective_date');
     }
 }

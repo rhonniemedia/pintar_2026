@@ -22,24 +22,37 @@
     {{-- Form filter --}}
     <div id="class-group-filter-form" class="block p-4 sm:p-6 overflow-y-auto bg-slate-50/30 flex-1 space-y-4">
 
+        @php
+        $gradeOptions = [
+        ['value' => '10', 'label' => 'Kelas X'],
+        ['value' => '11', 'label' => 'Kelas XI'],
+        ['value' => '12', 'label' => 'Kelas XII'],
+        ];
+
+        $concOptions = [];
+        if(isset($concentrationOptions)) {
+        foreach ($concentrationOptions as $id => $name) {
+        $concOptions[] = ['value' => $id, 'label' => $name];
+        }
+        }
+        @endphp
+
         <div>
             <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Kelas</label>
-            <select name="filter_grade" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                <option value="">Semua Kelas</option>
-                @foreach (['10' => 'X', '11' => 'XI', '12' => 'XII'] as $value => $label)
-                <option value="{{ $value }}" @selected($filterGrade===$value)>Kelas {{ $label }}</option>
-                @endforeach
-            </select>
+            <x-ui.select
+                name="filter_grade"
+                :options="$gradeOptions"
+                value="{{ $filterGrade ?? '' }}"
+                placeholder="Semua Kelas" />
         </div>
 
         <div>
             <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Jurusan</label>
-            <select name="filter_concentration" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                <option value="">Semua Jurusan</option>
-                @foreach ($concentrationOptions as $id => $name)
-                <option value="{{ $id }}" @selected($filterConcentration==$id)>{{ $name }}</option>
-                @endforeach
-            </select>
+            <x-ui.select
+                name="filter_concentration"
+                :options="$concOptions"
+                value="{{ $filterConcentration ?? '' }}"
+                placeholder="Semua Jurusan" />
         </div>
     </div>
 
@@ -47,8 +60,9 @@
     <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-between shrink-0">
         <button type="button"
             @click="
-                document.querySelectorAll('#class-group-filter-form select').forEach(el => el.value = '');
-                document.getElementById('btn-apply-filter').click();
+                $dispatch('reset-filters');
+                document.querySelectorAll('#class-group-filter-form input[type=hidden]').forEach(el => el.value = '');
+                setTimeout(() => { document.getElementById('btn-apply-filter').click(); }, 50);
             "
             class="px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all cursor-pointer">
             Reset

@@ -1,3 +1,18 @@
+@php
+// Persiapan data opsi role untuk x-ui.select
+$roleOptionsList = [
+['value' => '', 'label' => 'Semua Role']
+];
+if (isset($roles)) {
+foreach ($roles as $roleItem) {
+$roleOptionsList[] = [
+'value' => $roleItem->name,
+'label' => ucwords($roleItem->name)
+];
+}
+}
+@endphp
+
 @extends('layouts.main.admin')
 
 @section('title', 'Daftar Pengguna')
@@ -11,7 +26,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Daftar Pengguna</h1>
-            <p class="text-sm text-secondary">Kelola akun, hak akses (role), dan kata sandi pengguna aplikasi.</p>
+            <p class="text-sm text-secondary">Kelola akun, hak akses (role), dan kata sandi pengguna aplikasi[cite: 14].</p>
         </div>
     </div>
 
@@ -22,35 +37,33 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-lg font-bold text-foreground">Akun Pengguna</h2>
-                <p class="text-sm text-secondary mt-1">Menampilkan seluruh akun pengguna yang terdaftar.</p>
+                <p class="text-sm text-secondary mt-1">Menampilkan seluruh akun pengguna yang terdaftar[cite: 14].</p>
             </div>
 
-            {{-- Form Filter & Search (Terhubung dengan HTMX) --}}
+            {{-- Form Filter & Search (Terhubung dengan HTMX)[cite: 14] --}}
             <form id="filter-form" class="flex flex-col sm:flex-row items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }" @submit.prevent>
 
-                {{-- Filter Role --}}
-                <div class="relative w-full sm:w-auto">
-                    <select name="role"
-                        hx-get="{{ route('admin.users.index') }}"
-                        hx-include="#filter-form"
-                        hx-trigger="change"
-                        hx-target="#user-list-container"
-                        hx-push-url="true"
-                        class="h-11 w-full sm:w-40 bg-white border border-border rounded-xl pl-4 pr-10 text-sm text-foreground focus:outline-none focus:border-primary transition-all appearance-none cursor-pointer">
-                        <option value="">Semua Role</option>
+                {{-- Filter Role (Menggunakan x-ui.select dengan HTMX Wrapper & Ikon) --}}
+                <div class="relative w-full sm:w-44"
+                    hx-get="{{ route('admin.users.index') }}"
+                    hx-include="#filter-form"
+                    hx-trigger="change"
+                    hx-target="#user-list-container"
+                    hx-push-url="true">
 
-                        {{-- Looping data role dari database --}}
-                        @foreach ($roles as $roleItem)
-                        <option value="{{ $roleItem->name }}" @selected(request('role')==$roleItem->name)>
-                            {{ ucwords($roleItem->name) }}
-                        </option>
-                        @endforeach
+                    {{-- Ikon di sebelah kiri --}}
+                    <i data-lucide="shield" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-secondary z-10 pointer-events-none"></i>
 
-                    </select>
-                    <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-secondary pointer-events-none"></i>
+                    <div class="[&>div>button]:pl-10">
+                        <x-ui.select
+                            name="role"
+                            :options="$roleOptionsList"
+                            value="{{ request('role') ?? '' }}"
+                            placeholder="Semua Role" />
+                    </div>
                 </div>
 
-                {{-- Search Input --}}
+                {{-- Search Input[cite: 14] --}}
                 <div class="relative w-full sm:w-auto flex items-center">
                     <i data-lucide="search" class="absolute left-3 size-4 transition-colors"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
@@ -86,7 +99,7 @@
 
     </div>
 
-    {{-- MODAL EDIT ROLE / EDIT PASSWORD --}}
+    {{-- MODAL EDIT ROLE / EDIT PASSWORD[cite: 14] --}}
     <div id="modal-form-container"></div>
 
 </div>

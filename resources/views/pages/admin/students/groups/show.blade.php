@@ -1,3 +1,12 @@
+@php
+// Persiapan data opsi gender untuk komponen x-ui.select
+$genderOptionsList = [
+['value' => '', 'label' => 'Semua Gender'],
+['value' => 'L', 'label' => 'Laki-Laki'],
+['value' => 'P', 'label' => 'Perempuan'],
+];
+@endphp
+
 @extends('layouts.main.admin')
 
 @section('title', 'Detail Rombongan Belajar')
@@ -162,7 +171,7 @@
 
     </div>
 
-    {{-- 3. AREA TABEL PESERTA DIDIK (Menggunakan desain asli) --}}
+    {{-- 3. AREA TABEL PESERTA DIDIK --}}
     <div class="bg-white rounded-2xl border border-border p-5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
@@ -171,65 +180,56 @@
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto" id="group-students-filter-form"
-                x-data="{ gender: '{{ $filterGender }}', search: '{{ $search }}' }">
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <select name="filter_gender" x-ref="genderSelect" x-model="gender"
-                        hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
-                        hx-trigger="change"
-                        hx-target="#students-container"
-                        hx-select="#students-container"
-                        hx-include="[name='search']"
-                        hx-push-url="true"
-                        class="h-11 flex-1 sm:flex-none sm:shrink-0 sm:min-w-[9.5rem] bg-white border border-border rounded-xl pl-3 pr-8 text-sm focus:outline-none focus:border-primary">
-                        <option value="">Semua Gender</option>
-                        <option value="L" @selected($filterGender==='L' )>Laki-Laki</option>
-                        <option value="P" @selected($filterGender==='P' )>Perempuan</option>
-                    </select>
+                x-data="{ searchQuery: '{{ $search ?? '' }}' }">
 
-                    <button type="button" x-show="gender || search" x-cloak
-                        @click="
-                            gender = '';
-                            search = '';
-                            $refs.genderSelect.value = '';
-                            $refs.searchInput.value = '';
-                            htmx.trigger($refs.searchInput, 'search');
-                        "
-                        title="Reset filter & pencarian"
-                        class="hidden sm:flex items-center justify-center size-9 rounded-xl border border-border bg-white text-secondary hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors shrink-0">
-                        <i data-lucide="x" class="size-4 pointer-events-none"></i>
-                    </button>
+                {{-- Dropdown Filter Gender menggunakan x-ui.select dengan Ikon --}}
+                <div class="relative w-full sm:w-44"
+                    hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
+                    hx-trigger="change"
+                    hx-target="#students-container"
+                    hx-select="#students-container"
+                    hx-include="[name='search']"
+                    hx-push-url="true">
+
+                    <i data-lucide="users" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-secondary z-10 pointer-events-none"></i>
+
+                    <div class="[&>div>button]:pl-10">
+                        <x-ui.select
+                            name="filter_gender"
+                            :options="$genderOptionsList"
+                            value="{{ $filterGender ?? '' }}"
+                            placeholder="Semua Gender" />
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto sm:shrink-0">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary pointer-events-none"></i>
-                        <input
-                            type="text"
-                            name="search"
-                            x-ref="searchInput"
-                            x-model="search"
-                            value="{{ $search }}"
-                            placeholder="Cari nama atau NIS..."
-                            hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
-                            hx-trigger="keyup changed delay:400ms, search, refreshClassData from:body"
-                            hx-target="#students-container"
-                            hx-select="#students-container"
-                            hx-include="[name='filter_gender']"
-                            hx-push-url="true"
-                            class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
-                    </div>
+                {{-- Search Box dengan Tombol X Interaktif --}}
+                <div class="relative w-full sm:w-56 md:w-64 flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
-                    <button type="button" x-show="gender || search" x-cloak
-                        @click="
-                            gender = '';
-                            search = '';
-                            $refs.genderSelect.value = '';
-                            $refs.searchInput.value = '';
-                            htmx.trigger($refs.searchInput, 'search');
-                        "
-                        title="Reset filter & pencarian"
-                        class="flex sm:hidden items-center justify-center size-11 rounded-xl border border-border bg-white text-secondary hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors shrink-0">
-                        <i data-lucide="x" class="size-4 pointer-events-none"></i>
+                    <input
+                        x-ref="searchInput"
+                        type="text"
+                        name="search"
+                        x-model="searchQuery"
+                        placeholder="Cari nama atau NIS..."
+                        autocomplete="off"
+                        hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
+                        hx-trigger="keyup changed delay:400ms, search, refreshClassData from:body"
+                        hx-target="#students-container"
+                        hx-select="#students-container"
+                        hx-include="[name='filter_gender']"
+                        hx-push-url="true"
+                        class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                    <button
+                        type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="size-3"></i>
                     </button>
                 </div>
             </div>

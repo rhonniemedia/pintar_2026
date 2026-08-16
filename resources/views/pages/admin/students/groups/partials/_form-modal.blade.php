@@ -3,6 +3,23 @@ $isEdit = isset($classGroup);
 $actionUrl = $isEdit ? route('admin.students.group.update', $classGroup->id) : route('admin.students.group.store');
 $title = $isEdit ? 'Edit Data Rombel' : 'Tambah Data Rombel';
 $subtitle = $isEdit ? 'Perbarui informasi rombongan belajar' : 'Tambahkan rombongan belajar baru ke sistem';
+
+// Data opsi untuk komponen x-ui.select
+$gradeOptions = [
+['value' => '10', 'label' => 'Kelas X'],
+['value' => '11', 'label' => 'Kelas XI'],
+['value' => '12', 'label' => 'Kelas XII'],
+];
+
+$concOptions = [];
+foreach($concentrationOptions as $id => $name) {
+$concOptions[] = ['value' => $id, 'label' => $name];
+}
+
+$teacherListOptions = [];
+foreach($teacherOptions as $id => $name) {
+$teacherListOptions[] = ['value' => $id, 'label' => $name];
+}
 @endphp
 
 <div
@@ -73,11 +90,11 @@ $subtitle = $isEdit ? 'Perbarui informasi rombongan belajar' : 'Tambahkan rombon
 
                 <div>
                     <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Kelas</label>
-                    <select name="grade_level" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="10" @selected(($classGroup->grade_level ?? '') == '10')>Kelas X</option>
-                        <option value="11" @selected(($classGroup->grade_level ?? '') == '11')>Kelas XI</option>
-                        <option value="12" @selected(($classGroup->grade_level ?? '') == '12')>Kelas XII</option>
-                    </select>
+                    <x-ui.select
+                        name="grade_level"
+                        :options="$gradeOptions"
+                        value="{{ $classGroup->grade_level ?? '10' }}"
+                        placeholder="Pilih Tingkat Kelas" />
                 </div>
 
                 <div>
@@ -89,28 +106,25 @@ $subtitle = $isEdit ? 'Perbarui informasi rombongan belajar' : 'Tambahkan rombon
 
                 <div>
                     <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Jurusan</label>
-                    <select name="concentration_id" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Pilih Jurusan</option>
-                        @foreach($concentrationOptions as $id => $name)
-                        <option value="{{ $id }}" @selected(($classGroup->concentration_id ?? '') == $id)>{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    <x-ui.select
+                        name="concentration_id"
+                        :options="$concOptions"
+                        value="{{ $classGroup->concentration_id ?? '' }}"
+                        placeholder="Pilih Jurusan" />
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Wali Kelas (Opsional)</label>
-                    <select name="homeroom_teacher_id" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Pilih Wali Kelas</option>
-                        @foreach($teacherOptions as $id => $name)
-                        <option value="{{ $id }}" @selected(($classGroup->homeroom_teacher_id ?? '') == $id)>{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    <x-ui.select
+                        name="homeroom_teacher_id"
+                        :options="$teacherListOptions"
+                        value="{{ $classGroup->homeroom_teacher_id ?? '' }}"
+                        placeholder="Pilih Wali Kelas" />
                 </div>
             </div>
 
             {{-- Footer --}}
             <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-end gap-2 shrink-0">
-
                 <button type="button" @click="close()" :disabled="saving"
                     class="px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                     Batal
@@ -118,7 +132,6 @@ $subtitle = $isEdit ? 'Perbarui informasi rombongan belajar' : 'Tambahkan rombon
 
                 <button type="submit" :disabled="saving"
                     class="flex items-center justify-center min-w-[140px] px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-sm shadow-primary/30 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
-
                     <div x-show="!saving" class="flex items-center gap-1.5">
                         <i data-lucide="save" class="size-4"></i>
                         <span>Simpan</span>
@@ -129,7 +142,6 @@ $subtitle = $isEdit ? 'Perbarui informasi rombongan belajar' : 'Tambahkan rombon
                         <span>Menyimpan...</span>
                     </div>
                 </button>
-
             </div>
         </form>
     </x-ui.modal>

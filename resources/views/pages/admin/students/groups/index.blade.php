@@ -32,7 +32,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Rombongan Belajar</h1>
-            <p class="text-sm text-secondary">Kelola data rombel dan penempatan siswa secara menyeluruh.</p>
+            <p class="text-sm text-secondary">Kelola data rombel dan penempatan siswa secara menyeluruh[cite: 19].</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
@@ -77,17 +77,22 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-lg font-bold text-foreground">Daftar Rombel</h2>
-                <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
+                <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data[cite: 19].</p>
             </div>
 
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
+            <div class="flex items-center gap-2 w-full sm:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+                {{-- Search Box dengan Tombol X Interaktif --}}
+                <div class="relative flex-1 sm:flex-none w-56 md:w-64 flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
                     <input
+                        x-ref="searchInput"
                         type="text"
                         name="search"
-                        value="{{ $search }}"
+                        x-model="searchQuery"
                         placeholder="Cari rombel..."
+                        autocomplete="off"
                         hx-get="{{ route('admin.students.group.index') }}"
                         hx-trigger="keyup changed delay:400ms, search, classGroupSaved from:body"
                         hx-target="#class-groups-container"
@@ -95,7 +100,17 @@
                         hx-swap="outerHTML"
                         hx-include="#class-group-filter-form"
                         hx-push-url="true"
-                        class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full bg-white border border-border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                    <button
+                        type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="size-3"></i>
+                    </button>
                 </div>
 
                 <button

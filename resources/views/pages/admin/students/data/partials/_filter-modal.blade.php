@@ -19,6 +19,50 @@
     {{-- Form filter --}}
     <div id="student-filter-form" class="flex-1 overflow-y-auto p-6 space-y-6">
 
+        {{-- Persiapan Data Opsi untuk Komponen x-ui.select --}}
+        @php
+        $gradeOptions = [
+        ['value' => '10', 'label' => 'Kelas 10'],
+        ['value' => '11', 'label' => 'Kelas 11'],
+        ['value' => '12', 'label' => 'Kelas 12'],
+        ];
+
+        $concOptions = [];
+        if(isset($concentrationOptions)) {
+        foreach ($concentrationOptions as $id => $name) {
+        $concOptions[] = ['value' => $id, 'label' => $name];
+        }
+        }
+
+        $genderOptions = [
+        ['value' => 'L', 'label' => 'Laki-laki'],
+        ['value' => 'P', 'label' => 'Perempuan'],
+        ];
+
+        $relOptions = [];
+        if(isset($religionOptions)) {
+        foreach ($religionOptions as $religion) {
+        $relOptions[] = ['value' => $religion->value, 'label' => $religion->label()];
+        }
+        }
+
+        $specialNeedsOptions = [
+        ['value' => 'yes', 'label' => 'Berkebutuhan Khusus'],
+        ['value' => 'no', 'label' => 'Reguler'],
+        ];
+
+        $foodAllergyOptions = [
+        ['value' => 'yes', 'label' => 'Punya Alergi'],
+        ['value' => 'no', 'label' => 'Tidak Ada Alergi'],
+        ];
+
+        $orphanOptions = [
+        ['value' => 'yatim', 'label' => 'Yatim (Ayah Meninggal)'],
+        ['value' => 'piatu', 'label' => 'Piatu (Ibu Meninggal)'],
+        ['value' => 'yatim_piatu', 'label' => 'Yatim Piatu (Ayah & Ibu Meninggal)'],
+        ];
+        @endphp
+
         {{-- Grup: Akademik --}}
         <div class="space-y-3">
             <p class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-secondary">
@@ -29,23 +73,21 @@
                 @if($showGradeFilter ?? true)
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Kelas</label>
-                    <select name="filter_grade" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Kelas</option>
-                        @foreach (['10', '11', '12'] as $grade)
-                        <option value="{{ $grade }}" @selected(isset($filterGrade) && $filterGrade===$grade)>Kelas {{ $grade }}</option>
-                        @endforeach
-                    </select>
+                    <x-ui.select
+                        name="filter_grade"
+                        :options="$gradeOptions"
+                        value="{{ $filterGrade ?? '' }}"
+                        placeholder="Semua Kelas" />
                 </div>
                 @endif
 
                 <div class="{{ isset($showGradeFilter) && !$showGradeFilter ? 'col-span-2' : '' }}">
                     <label class="block text-sm font-bold text-foreground mb-2">Jurusan</label>
-                    <select name="filter_concentration" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Jurusan</option>
-                        @foreach ($concentrationOptions as $id => $name)
-                        <option value="{{ $id }}" @selected(isset($filterConcentration) && $filterConcentration==$id)>{{ $name }}</option>
-                        @endforeach
-                    </select>
+                    <x-ui.select
+                        name="filter_concentration"
+                        :options="$concOptions"
+                        value="{{ $filterConcentration ?? '' }}"
+                        placeholder="Semua Jurusan" />
                 </div>
             </div>
         </div>
@@ -59,22 +101,21 @@
             <div class="grid grid-cols-2 gap-3">
                 <div class="{{ isset($showReligionFilter) && !$showReligionFilter ? 'col-span-2' : '' }}">
                     <label class="block text-sm font-bold text-foreground mb-2">Jenis Kelamin</label>
-                    <select name="filter_gender" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Gender</option>
-                        <option value="L" @selected(isset($filterGender) && $filterGender==='L' )>Laki-laki</option>
-                        <option value="P" @selected(isset($filterGender) && $filterGender==='P' )>Perempuan</option>
-                    </select>
+                    <x-ui.select
+                        name="filter_gender"
+                        :options="$genderOptions"
+                        value="{{ $filterGender ?? '' }}"
+                        placeholder="Semua Gender" />
                 </div>
 
                 @if($showReligionFilter ?? true)
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Agama</label>
-                    <select name="filter_religion" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Agama</option>
-                        @foreach ($religionOptions as $religion)
-                        <option value="{{ $religion->value }}" @selected(isset($filterReligion) && $filterReligion===$religion->value)>{{ $religion->label() }}</option>
-                        @endforeach
-                    </select>
+                    <x-ui.select
+                        name="filter_religion"
+                        :options="$relOptions"
+                        value="{{ $filterReligion ?? '' }}"
+                        placeholder="Semua Agama" />
                 </div>
                 @endif
             </div>
@@ -133,34 +174,33 @@
                 @if($showSpecialNeedsFilter ?? true)
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Kebutuhan Khusus</label>
-                    <select name="filter_special_needs" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Kondisi</option>
-                        <option value="yes" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='yes' )>Berkebutuhan Khusus</option>
-                        <option value="no" @selected(isset($filterSpecialNeeds) && $filterSpecialNeeds==='no' )>Reguler</option>
-                    </select>
+                    <x-ui.select
+                        name="filter_special_needs"
+                        :options="$specialNeedsOptions"
+                        value="{{ $filterSpecialNeeds ?? '' }}"
+                        placeholder="Semua Kondisi" />
                 </div>
                 @endif
 
                 @if($showFoodAllergyFilter ?? false)
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Alergi Makanan</label>
-                    <select name="filter_food_allergy" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Siswa</option>
-                        <option value="yes" @selected(isset($filterFoodAllergy) && $filterFoodAllergy==='yes' )>Punya Alergi</option>
-                        <option value="no" @selected(isset($filterFoodAllergy) && $filterFoodAllergy==='no' )>Tidak Ada Alergi</option>
-                    </select>
+                    <x-ui.select
+                        name="filter_food_allergy"
+                        :options="$foodAllergyOptions"
+                        value="{{ $filterFoodAllergy ?? '' }}"
+                        placeholder="Semua Siswa" />
                 </div>
                 @endif
 
                 @if($showOrphanStatusFilter ?? true)
                 <div class="col-span-2">
                     <label class="block text-sm font-bold text-foreground mb-2">Status Yatim/Piatu</label>
-                    <select name="filter_orphan_status" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">Semua Siswa</option>
-                        <option value="yatim" @selected(isset($filterOrphanStatus) && $filterOrphanStatus==='yatim' )>Yatim (Ayah Meninggal)</option>
-                        <option value="piatu" @selected(isset($filterOrphanStatus) && $filterOrphanStatus==='piatu' )>Piatu (Ibu Meninggal)</option>
-                        <option value="yatim_piatu" @selected(isset($filterOrphanStatus) && $filterOrphanStatus==='yatim_piatu' )>Yatim Piatu (Ayah &amp; Ibu Meninggal)</option>
-                    </select>
+                    <x-ui.select
+                        name="filter_orphan_status"
+                        :options="$orphanOptions"
+                        value="{{ $filterOrphanStatus ?? '' }}"
+                        placeholder="Semua Siswa" />
                 </div>
                 @endif
             </div>
@@ -173,10 +213,15 @@
     <div class="px-6 py-4 border-t border-border bg-gray-50/50 flex items-center justify-between shrink-0">
         <button type="button"
             @click="
-                document.querySelectorAll('#student-filter-form select').forEach(el => el.value = '');
-                document.querySelectorAll('#student-filter-form input[type=number]').forEach(el => el.value = '');
-                document.querySelectorAll('#student-filter-form input[type=date]').forEach(el => el.value = '');
-                document.getElementById('btn-apply-filter').click();
+                // 1. Pancarkan event untuk mereset semua komponen x-ui.select
+                $dispatch('reset-filters');
+                
+                // 2. Reset nilai input number & date bawaan
+                document.querySelectorAll('#student-filter-form input[type=number], #student-filter-form input[type=date]').forEach(el => el.value = '');
+                
+                // 3. Memicu tombol apply untuk mengirim request bersih ke HTMX
+                // setTimeout digunakan agar state Alpine selesai diupdate sebelum dikirim
+                setTimeout(() => { document.getElementById('btn-apply-filter').click(); }, 50);
             "
             class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-white text-secondary hover:bg-muted transition-colors cursor-pointer">
             <i data-lucide="rotate-ccw" class="size-3.5"></i>
@@ -185,7 +230,6 @@
 
         <button type="button"
             id="btn-apply-filter"
-            {{-- Menggunakan variabel $filterRoute yang dikirim dari halaman pemanggil --}}
             hx-get="{{ $filterRoute ?? route('admin.students.data.index') }}"
             hx-include="#student-filter-form, [name='search']"
             hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML" hx-push-url="true"

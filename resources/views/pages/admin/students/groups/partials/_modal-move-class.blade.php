@@ -1,3 +1,12 @@
+@php
+$classOptions = $availableClasses->map(function($class) {
+return [
+'value' => $class->id,
+'label' => $class->name . ' (Jurusan: ' . ($class->concentration->name ?? '-') . ')'
+];
+})->toArray();
+@endphp
+
 <div id="modal-container" x-data="{ open: false }" x-init="setTimeout(() => open = true, 10)">
     <x-ui.modal show="open" maxWidth="md">
 
@@ -18,18 +27,13 @@
             @htmx:before-request="saving = true"
             @htmx:after-request="
                 saving = false;
-                
                 if ($event.detail.successful) {
-                    // 1. Jika sukses, langsung tutup modal
                     open = false;
-                    
-                    // 2. Kosongkan container modal setelah animasi selesai
                     setTimeout(() => {
                         const container = document.getElementById('modal-container');
                         if (container) container.innerHTML = '';
                     }, 150);
                 } else {
-                    // Jika gagal, tangkap pesan error dari server dan tampilkan SweetAlert
                     let errorMsg = 'Gagal memproses perpindahan kelas.';
                     try {
                         const response = JSON.parse($event.detail.xhr.responseText);
@@ -55,20 +59,13 @@
                     </div>
                 </div>
 
-                {{-- Dropdown Target Kelas --}}
+                {{-- Dropdown Target Kelas Menggunakan x-ui.select --}}
                 <div>
                     <label class="block text-sm font-bold text-foreground mb-2">Pilih Kelas Tujuan</label>
-                    <select name="target_class_group_id" required
-                        class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
-                        <option value="">-- Pilih Rombel Tujuan --</option>
-                        @forelse($availableClasses as $class)
-                        <option value="{{ $class->id }}">
-                            {{ $class->name }} (Jurusan: {{ $class->concentration->name ?? '-' }})
-                        </option>
-                        @empty
-                        <option value="" disabled>Tidak ada kelas lain di tingkat ini.</option>
-                        @endforelse
-                    </select>
+                    <x-ui.select
+                        name="target_class_group_id"
+                        :options="$classOptions"
+                        placeholder="-- Pilih Rombel Tujuan --" />
                     <p class="text-xs text-secondary mt-1.5 flex items-center gap-1">
                         <i data-lucide="info" class="size-3"></i> Hanya menampilkan kelas tingkat {{ $currentClass->grade_level }}.
                     </p>

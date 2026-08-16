@@ -30,7 +30,7 @@ class StudentMutationOutController extends Controller
                         ->orWhere('nis', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('mutation_date')
+            ->orderByDesc('created_at')
             ->paginate(10)
             ->withQueryString()
             ->through(function ($mutation) {
@@ -69,47 +69,50 @@ class StudentMutationOutController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi Input (Ubah nama form ke destination_school)
+        // 1. Validasi Input berdasarkan Form Modal yang baru
         $validated = $request->validate([
-            'student_id'         => 'required|exists:acd_students,id',
-            'status'             => 'required|in:transfer_out,dropped_out',
-            'mutation_date'      => 'required|date',
-            'destination_school' => 'nullable|required_if:status,transfer_out',
-            'notes_pindah'       => 'nullable|string',
-            'detail_reason'      => 'nullable|required_if:status,dropped_out|in:dropped_out,resigned,married,deceased',
-            'notes_meninggal'    => 'nullable|string',
+            'student_id'                   => 'required|exists:acd_students,id',
+            'status'                       => 'required|in:transfer_out,dismissed,resigned,dropped_out,deceased,married',
+            'mutation_date'                => 'required|date',
+            // Pindah Sekolah
+            'reference_number_pindah'      => 'nullable|required_if:status,transfer_out|string',
+            'destination_school'           => 'nullable|required_if:status,transfer_out|string',
+            'notes_pindah'                 => 'nullable|string',
+            // Dikeluarkan
+            'reference_number_dikeluarkan' => 'nullable|required_if:status,dismissed|string',
+            'notes_dikeluarkan'            => 'nullable|required_if:status,dismissed|string',
+            // Mengundurkan Diri
+            'reference_number_mundur'      => 'nullable|required_if:status,resigned|string',
+            'notes_mundur'                 => 'nullable|required_if:status,resigned|string',
         ]);
 
         $student = Student::with('activeClassGroup')->findOrFail($validated['student_id']);
         $semesterAktif = CoreSemester::where('status', 'active')->first();
         $activeGroup = $student->activeClassGroup->first();
 
-        // 2. Pemetaan Status menggunakan Enum yang Tersentralisasi
-        if ($validated['status'] === 'transfer_out') {
-            $finalMutationStatus = MutationStatus::TRANSFER_OUT->value;
-            $finalStudentStatus  = StudentStatus::TRANSFERRED_OUT->value;
-            $destinationSchool   = $validated['destination_school'] ?? null;
-            $notes               = $request->input('notes_pindah');
-        } else {
-            $reason = $validated['detail_reason'];
+        // 2. Pemetaan Status menggunakan Enum tersentralisasi & Ekstraksi Data Form
+        $statusEnum          = MutationStatus::from($validated['status']);
+        $finalMutationStatus = $statusEnum->value;
+        $finalStudentStatus  = $statusEnum->resultingStudentStatus()->value;
 
-            $finalMutationStatus = match ($reason) {
-                'resigned' => MutationStatus::RESIGNED->value,
-                'married'  => MutationStatus::MARRIED->value,
-                'deceased' => MutationStatus::DECEASED->value,
-                default    => MutationStatus::DROPPED_OUT->value,
-            };
+        $destinationSchool = match ($statusEnum) {
+            MutationStatus::TRANSFER_OUT => $validated['destination_school'] ?? null,
+            default => null,
+        };
 
-            $finalStudentStatus = match ($reason) {
-                'resigned' => StudentStatus::RESIGNED->value,
-                'married'  => StudentStatus::MARRIED->value,
-                'deceased' => StudentStatus::DECEASED->value,
-                default    => StudentStatus::DROPPED_OUT->value,
-            };
+        $referenceNumber = match ($statusEnum) {
+            MutationStatus::TRANSFER_OUT => $validated['reference_number_pindah'] ?? null,
+            MutationStatus::DISMISSED    => $validated['reference_number_dikeluarkan'] ?? null,
+            MutationStatus::RESIGNED     => $validated['reference_number_mundur'] ?? null,
+            default => null,
+        };
 
-            $destinationSchool = null;
-            $notes = $reason === 'deceased' ? $request->input('notes_meninggal') : null;
-        }
+        $notes = match ($statusEnum) {
+            MutationStatus::TRANSFER_OUT => $validated['notes_pindah'] ?? null,
+            MutationStatus::DISMISSED    => $validated['notes_dikeluarkan'] ?? null,
+            MutationStatus::RESIGNED     => $validated['notes_mundur'] ?? null,
+            default => null,
+        };
 
         // 3. Simpan dalam Satu Transaksi
         DB::transaction(function () use (
@@ -118,17 +121,19 @@ class StudentMutationOutController extends Controller
             $finalMutationStatus,
             $semesterAktif,
             $validated,
+            $referenceNumber,
             $destinationSchool,
             $notes,
             $activeGroup
         ) {
-            // 3a. Buat rekaman mutasi terlebih dahulu untuk mendapatkan ID-nya
+            // 3a. Buat rekaman mutasi terlebih dahulu
             $mutation = StudentMutation::create([
                 'student_id'         => $student->id,
                 'class_group_id'     => $activeGroup?->id,
                 'semester_id'        => $semesterAktif?->id,
                 'mutation_date'      => $validated['mutation_date'],
                 'status'             => $finalMutationStatus,
+                'reference_number'   => $referenceNumber,
                 'destination_school' => $destinationSchool,
                 'notes'              => $notes,
             ]);
@@ -136,8 +141,7 @@ class StudentMutationOutController extends Controller
             // 3b. Update status utama siswa
             $student->update(['status' => $finalStudentStatus]);
 
-            // 3c. Update pivot table: Hanya set exit_date dan mutation_id 
-            // (Kolom 'status' pivot sudah tidak ada)
+            // 3c. Update pivot table rombel
             if ($activeGroup) {
                 $student->classGroups()->updateExistingPivot($activeGroup->id, [
                     'exit_date'   => $validated['mutation_date'],

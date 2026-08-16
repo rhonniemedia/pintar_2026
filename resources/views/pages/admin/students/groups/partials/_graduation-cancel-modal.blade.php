@@ -80,16 +80,20 @@
                         </div>
                     </div>
 
-                    <!-- Pencarian -->
+                    <!-- Pencarian dengan Tombol X Interaktif -->
                     <div class="flex items-center gap-2 w-full md:w-auto">
-                        <div class="relative w-full md:w-72">
-                            <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-secondary pointer-events-none"></i>
-                            <input type="text" x-model="search" @input="$nextTick(() => syncHeaderCheckbox())" placeholder="Cari nama atau NIS..."
-                                class="w-full bg-slate-50 hover:bg-white border border-border rounded-xl pl-10 pr-10 py-2.5 text-sm focus:bg-white focus:outline-none focus:border-error focus:ring-4 focus:ring-error/10 transition-all">
+                        <div class="relative w-full md:w-72 flex items-center">
+                            <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                                :class="search.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
+                            <input type="text" x-ref="searchInput" x-model="search" @input="$nextTick(() => syncHeaderCheckbox())" placeholder="Cari nama atau NIS..."
+                                class="w-full bg-slate-50 hover:bg-white border border-border rounded-xl pl-10 pr-10 py-2.5 text-sm focus:bg-white focus:outline-none focus:border-error focus:ring-4 focus:ring-error/10 transition-all"
+                                :class="search.length > 0 ? 'border-error/50 font-medium' : 'border-border'">
+
                             <button type="button" x-show="search" x-cloak
                                 @click="search = ''; $nextTick(() => syncHeaderCheckbox())"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-6 rounded-md text-secondary hover:bg-error/10 hover:text-error transition-colors cursor-pointer">
-                                <i data-lucide="x" class="size-3.5 pointer-events-none"></i>
+                                class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                                <i data-lucide="x" class="size-3"></i>
                             </button>
                         </div>
                     </div>

@@ -1,3 +1,15 @@
+@php
+$targetOptionsNaik = [];
+foreach($targetGroupsNaik as $tg) {
+$targetOptionsNaik[] = ['value' => $tg->id, 'label' => $tg->name];
+}
+
+$targetOptionsTinggal = [];
+foreach($targetGroupsTinggal as $tg) {
+$targetOptionsTinggal[] = ['value' => $tg->id, 'label' => $tg->name];
+}
+@endphp
+
 <div id="modal-container"
     x-init="setTimeout(() => open = true, 10)"
     x-data="{
@@ -50,7 +62,6 @@
             @htmx:before-request="saving = true"
             @htmx:after-request="
                 saving = false;
-                
                 if ($event.detail.successful) {
                     open = false;
                     setTimeout(() => {
@@ -74,7 +85,6 @@
             <div class="flex-1 flex flex-col overflow-hidden">
                 <!-- Kontrol Atas -->
                 <div class="px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 border-b border-border">
-                    <!-- Informasi Total -->
                     <div class="flex items-center gap-3 w-full md:w-auto">
                         <div class="flex items-center justify-center size-10 rounded-full bg-primary/10 text-primary shrink-0">
                             <i data-lucide="users" class="size-5"></i>
@@ -87,16 +97,19 @@
                         </div>
                     </div>
 
-                    <!-- Pencarian -->
                     <div class="flex items-center gap-2 w-full md:w-auto">
-                        <div class="relative w-full md:w-72">
-                            <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-secondary pointer-events-none"></i>
-                            <input type="text" x-model="search" @input="$nextTick(() => syncHeaderCheckbox())" placeholder="Cari nama atau NIS..."
-                                class="w-full bg-slate-50 hover:bg-white border border-border rounded-xl pl-10 pr-10 py-2.5 text-sm focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
+                        <div class="relative w-full md:w-72 flex items-center">
+                            <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                                :class="search.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
+                            <input type="text" x-ref="searchInput" x-model="search" @input="$nextTick(() => syncHeaderCheckbox())" placeholder="Cari nama atau NIS..."
+                                class="w-full bg-slate-50 hover:bg-white border border-border rounded-xl pl-10 pr-10 py-2.5 text-sm focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+                                :class="search.length > 0 ? 'border-primary/50 font-medium' : 'border-border'">
+
                             <button type="button" x-show="search" x-cloak
                                 @click="search = ''; $nextTick(() => syncHeaderCheckbox())"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-6 rounded-md text-secondary hover:bg-error/10 hover:text-error transition-colors cursor-pointer">
-                                <i data-lucide="x" class="size-3.5 pointer-events-none"></i>
+                                class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                                <i data-lucide="x" class="size-3"></i>
                             </button>
                         </div>
                     </div>
@@ -115,7 +128,6 @@
                         <div class="flex flex-wrap items-center justify-between px-1 mb-3 sm:mb-4 gap-2">
                             <span class="text-sm font-bold text-foreground">{{ $candidates->count() }} Siswa Ditemukan</span>
 
-                            {{-- Checkbox "Pilih Semua" --}}
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-semibold text-secondary">Pilih Semua</span>
                                 <label class="relative inline-flex items-center justify-center cursor-pointer align-middle" title="Pilih Semua">
@@ -131,7 +143,6 @@
                         <label class="student-row flex items-start sm:items-center gap-3 p-3 sm:p-4 rounded-xl border border-border hover:bg-muted/50 transition-colors cursor-pointer group shadow-sm"
                             x-show="search === '' || '{{ strtolower($c->student->name) }}'.includes(search.toLowerCase()) || '{{ $c->student->nis }}'.includes(search)">
 
-                            {{-- Checkbox Individual --}}
                             <div class="relative inline-flex items-center justify-center cursor-pointer align-middle shrink-0 mt-1 sm:mt-0">
                                 <input type="checkbox" name="student_id[]" value="{{ $c->student->id }}" @change="syncHeaderCheckbox"
                                     class="student-cb peer appearance-none size-5 rounded-md border-2 border-border bg-white checked:bg-primary checked:border-primary hover:border-primary/60 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30">
@@ -139,13 +150,9 @@
                             </div>
 
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2.5 sm:gap-4 overflow-hidden">
-
-                                {{-- Kolom 1: Profil Siswa & NIS/NISN --}}
                                 <div class="flex items-center gap-3 sm:gap-4">
                                     <x-ui.avatar :name="$c->student->name" :gender="$c->student->gender ?? null" :index="$loop->index" class="size-9 text-xs shrink-0" />
-
                                     <div class="flex flex-col gap-1">
-                                        {{-- font-semibold --}}
                                         <div class="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-tight uppercase">{{ $c->student->name }}</div>
                                         <div class="text-xs text-secondary mt-0.5">
                                             NIS: {{ $c->student->nis ?? '-' }} <span class="mx-1">&bull;</span> NISN: {{ $c->student->vault->nisn_encrypted ?? '-' }}
@@ -153,16 +160,13 @@
                                     </div>
                                 </div>
 
-                                {{-- Kolom 2: Tempat & Tanggal Lahir --}}
                                 <div class="pl-[3.25rem] sm:pl-0 shrink-0 text-left sm:w-[45%]">
-                                    {{-- font-semibold --}}
                                     <div class="text-sm font-semibold text-foreground truncate">{{ $c->student->vault->pob_encrypted ?? '-' }}</div>
                                     <div class="text-xs text-secondary mt-0.5 flex items-center gap-1.5">
                                         <i data-lucide="calendar" class="size-3.5"></i>
                                         <span>{{ $c->student->vault->dob_encrypted ? \Carbon\Carbon::parse($c->student->vault->dob_encrypted)->translatedFormat('d F Y') : '-' }}</span>
                                     </div>
                                 </div>
-
                             </div>
                         </label>
                         @endforeach
@@ -179,32 +183,40 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full md:w-3/4">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-xs font-semibold text-secondary">Status Keputusan</label>
-                            <select name="decision" x-model="decision" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
-                                <option value="naik">Naik Kelas</option>
-                                <option value="tinggal">Tinggal Kelas</option>
-                            </select>
+
+                            <div @change="decision = $event.target.value">
+                                <x-ui.select
+                                    name="decision"
+                                    :options="[
+                                        ['value' => 'naik', 'label' => 'Naik Kelas'],
+                                        ['value' => 'tinggal', 'label' => 'Tinggal Kelas']
+                                    ]"
+                                    value="naik"
+                                    placeholder="-- Pilih Keputusan --" />
+                            </div>
                         </div>
 
                         <div class="flex flex-col gap-1.5">
                             <label class="text-xs font-semibold text-secondary">Tanggal Proses</label>
-                            <input type="date" name="entry_date" value="{{ date('Y-m-d') }}" required class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
+                            <input type="date" name="entry_date" value="{{ date('Y-m-d') }}" required class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all">
                         </div>
 
                         <div class="flex flex-col gap-1.5">
                             <label class="text-xs font-semibold text-secondary">Rombel Tujuan</label>
-                            <select name="target_class_group_id" x-show="decision === 'naik'" class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" :required="decision === 'naik'" :disabled="decision !== 'naik'">
-                                <option value="">-- Pilih Rombel --</option>
-                                @foreach($targetGroupsNaik as $tg)
-                                <option value="{{ $tg->id }}">{{ $tg->name }}</option>
-                                @endforeach
-                            </select>
 
-                            <select name="target_class_group_id" x-show="decision === 'tinggal'" x-cloak class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" :required="decision === 'tinggal'" :disabled="decision !== 'tinggal'">
-                                <option value="">-- Pilih Rombel --</option>
-                                @foreach($targetGroupsTinggal as $tg)
-                                <option value="{{ $tg->id }}">{{ $tg->name }}</option>
-                                @endforeach
-                            </select>
+                            <div x-show="decision === 'naik'">
+                                <x-ui.select
+                                    name="target_class_group_id"
+                                    :options="$targetOptionsNaik"
+                                    placeholder="-- Pilih Rombel --" />
+                            </div>
+
+                            <div x-show="decision === 'tinggal'" x-cloak>
+                                <x-ui.select
+                                    name="target_class_group_id"
+                                    :options="$targetOptionsTinggal"
+                                    placeholder="-- Pilih Rombel --" />
+                            </div>
                         </div>
                     </div>
 
@@ -233,7 +245,6 @@
         </form>
     </x-ui.modal>
 
-    {{-- Trigger Lucide Icons --}}
     <script>
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();

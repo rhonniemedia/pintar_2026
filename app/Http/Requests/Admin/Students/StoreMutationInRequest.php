@@ -116,6 +116,13 @@ class StoreMutationInRequest extends FormRequest
                     $v->errors()->add('nisn', 'NISN sudah terdaftar pada siswa lain.');
                 }
             }
+
+            if ($this->filled('nik')) {
+                $hash = $this->blindIndexHash($this->input('nik'));
+                if (StudentVault::where('nik_hash', $hash)->exists()) {
+                    $v->errors()->add('nik', 'NIK sudah terdaftar pada siswa lain.');
+                }
+            }
         });
     }
 

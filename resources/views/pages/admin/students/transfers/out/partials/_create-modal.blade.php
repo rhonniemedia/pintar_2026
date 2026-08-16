@@ -1,3 +1,51 @@
+@php
+// Siapkan data opsi untuk searchable select Peserta Didik
+$studentOptions = [];
+foreach($students as $st) {
+$rombel = $st->activeClassGroup->first()?->name ?? 'Tanpa Rombel';
+$nis = $st->nis ?? '-';
+$studentOptions[] = [
+'value' => $st->id,
+'label' => $st->name . " (NIS: {$nis}) — {$rombel}"
+];
+}
+
+// Mengambil Jenis Status langsung dari Enum kecuali transfer_in dan graduated
+$statusOptions = [];
+foreach (\App\Enums\Student\MutationStatus::cases() as $case) {
+if (!in_array($case->value, ['transfer_in', 'graduated'])) {
+$statusOptions[] = [
+'value' => $case->value,
+'label' => $case->label()
+];
+}
+}
+
+// Opsi alasan untuk Dikeluarkan (Dismissed) - Diperbaiki: Berisi daftar pelanggaran
+$dismissedReasons = [
+['value' => 'Pelanggaran berat tata tertib sekolah', 'label' => 'Pelanggaran berat tata tertib sekolah'],
+['value' => 'Pelanggaran disiplin berulang setelah pembinaan', 'label' => 'Pelanggaran disiplin berulang setelah pembinaan'],
+['value' => 'Pelanggaran terhadap ketentuan sekolah', 'label' => 'Pelanggaran terhadap ketentuan sekolah'],
+['value' => 'Tindakan kekerasan/perundungan yang berat', 'label' => 'Tindakan kekerasan/perundungan yang berat'],
+['value' => 'Penyalahgunaan atau peredaran zat terlarang', 'label' => 'Penyalahgunaan atau peredaran zat terlarang'],
+['value' => 'Tindakan yang membahayakan warga sekolah', 'label' => 'Tindakan yang membahayakan warga sekolah'],
+['value' => 'Tindakan yang merugikan atau mencemarkan nama baik sekolah', 'label' => 'Tindakan yang merugikan atau mencemarkan nama baik sekolah'],
+['value' => 'Pemalsuan atau manipulasi dokumen/data', 'label' => 'Pemalsuan atau manipulasi dokumen/data'],
+['value' => 'Pelanggaran berat lainnya', 'label' => 'Pelanggaran berat lainnya'],
+];
+
+// Opsi alasan untuk Mengundurkan Diri (Resigned) - Diperbaiki: Berisi alasan personal/ekonomi
+$resignedReasons = [
+['value' => 'Permintaan orang tua/wali', 'label' => 'Permintaan orang tua/wali'],
+['value' => 'Kendala ekonomi', 'label' => 'Kendala ekonomi'],
+['value' => 'Pindah domisili', 'label' => 'Pindah domisili'],
+['value' => 'Pertimbangan kesehatan', 'label' => 'Pertimbangan kesehatan'],
+['value' => 'Memilih untuk bekerja', 'label' => 'Memilih untuk bekerja'],
+['value' => 'Alasan pribadi', 'label' => 'Alasan pribadi'],
+['value' => 'Alasan lainnya', 'label' => 'Alasan lainnya'],
+];
+@endphp
+
 <div id="modal-container"
     x-data="{ open: false }"
     x-init="setTimeout(() => open = true, 50)"
@@ -28,7 +76,7 @@
                 hx-target="#modal-container"
                 hx-swap="outerHTML"
                 class="flex flex-col overflow-hidden"
-                x-data="{ mutationType: '', detailReason: '', saving: false }"
+                x-data="{ mutationType: '', saving: false }"
                 @htmx:before-request="saving = true"
                 @htmx:after-request="saving = false">
                 @csrf
@@ -46,25 +94,22 @@
                     {{-- Pilih Siswa --}}
                     <div>
                         <label class="block text-xs font-bold text-secondary uppercase tracking-wider mb-1.5">Peserta Didik Aktif <span class="text-error">*</span></label>
-                        <select name="student_id" class="w-full bg-white border border-border rounded-xl px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none" required>
-                            <option value="">— Pilih Peserta Didik —</option>
-                            @foreach($students as $st)
-                            <option value="{{ $st->id }}">
-                                {{ $st->name }} (NIS: {{ $st->nis ?? '-' }}) — {{ $st->activeClassGroup->first()?->name ?? 'Tanpa Rombel' }}
-                            </option>
-                            @endforeach
-                        </select>
+                        <x-ui.searchable-select
+                            name="student_id"
+                            :options="$studentOptions"
+                            placeholder="— Cari dan Pilih Peserta Didik —" />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {{-- Jenis Mutasi --}}
                         <div>
                             <label class="block text-xs font-bold text-secondary uppercase tracking-wider mb-1.5">Jenis Status <span class="text-error">*</span></label>
-                            <select name="status" x-model="mutationType" class="w-full bg-white border border-border rounded-xl px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none" required>
-                                <option value="">— Pilih Jenis —</option>
-                                <option value="transfer_out">Pindah Sekolah</option>
-                                <option value="dropped_out">Keluar</option>
-                            </select>
+                            <div @change="mutationType = $event.target.value">
+                                <x-ui.select
+                                    name="status"
+                                    :options="$statusOptions"
+                                    placeholder="— Pilih Jenis —" />
+                            </div>
                         </div>
 
                         {{-- Tanggal Mutasi --}}
@@ -74,48 +119,61 @@
                         </div>
                     </div>
 
-                    {{-- Form Dinamis: Pindah Sekolah --}}
+                    {{-- Form Dinamis: Pindah Sekolah (Transfer Out) --}}
                     <div x-show="mutationType === 'transfer_out'" x-cloak x-transition class="space-y-4 bg-blue-50/50 border border-blue-100 rounded-xl p-4 mt-2">
                         <div class="flex items-center gap-2 mb-1">
                             <i data-lucide="school" class="size-4 text-blue-500"></i>
                             <span class="text-sm font-bold text-blue-800">Detail Pindah Sekolah</span>
                         </div>
                         <div>
+                            <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-1">Nomor Surat <span class="text-error">*</span></label>
+                            <input type="text" name="reference_number_pindah" placeholder="Masukkan nomor surat pindah..." class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none" :required="mutationType === 'transfer_out'" :disabled="mutationType !== 'transfer_out'">
+                        </div>
+                        <div>
                             <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-1">Sekolah Tujuan <span class="text-error">*</span></label>
-                            <input type="text" name="destination_school" placeholder="Masukkan nama sekolah tujuan..." class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none" :required="mutationType === 'transfer_out'">
+                            <input type="text" name="destination_school" placeholder="Masukkan nama sekolah tujuan..." class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none" :required="mutationType === 'transfer_out'" :disabled="mutationType !== 'transfer_out'">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-1">Alasan Pindah</label>
-                            <input type="text" name="notes_pindah" placeholder="Contoh: Mengikuti orang tua pindah tugas..." class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
+                            <input type="text" name="notes_pindah" placeholder="Contoh: Mengikuti orang tua pindah tugas..." class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none" :disabled="mutationType !== 'transfer_out'">
                         </div>
                     </div>
 
-                    {{-- Form Dinamis: Berhenti / Keluar --}}
-                    <div x-show="mutationType === 'dropped_out'" x-cloak x-transition class="space-y-4 bg-slate-50 border border-border rounded-xl p-4 mt-2">
+                    {{-- Form Dinamis: Dikeluarkan (Dismissed) --}}
+                    <div x-show="mutationType === 'dismissed'" x-cloak x-transition class="space-y-4 bg-red-50/20 border border-red-100 rounded-xl p-4 mt-2">
                         <div class="flex items-center gap-2 mb-1">
-                            <i data-lucide="user-minus" class="size-4 text-secondary"></i>
-                            <span class="text-sm font-bold text-foreground">Detail Berhenti / Keluar</span>
+                            <i data-lucide="user-x" class="size-4 text-red-600"></i>
+                            <span class="text-sm font-bold text-red-800">Detail Dikeluarkan</span>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-secondary uppercase tracking-wider mb-1">Rincian Alasan Keluar <span class="text-error">*</span></label>
-                            <select name="detail_reason" x-model="detailReason" class="w-full bg-white border border-border rounded-lg px-3 py-2.5 text-sm focus:border-primary focus:outline-none" :required="mutationType === 'dropped_out'">
-                                <option value="">— Pilih Rincian —</option>
-                                @foreach (\App\Enums\Student\MutationStatus::dropoutReasons() as $reason)
-                                <option value="{{ $reason->value }}">{{ $reason->label() }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-[11px] font-bold text-red-700 uppercase tracking-wider mb-1">Nomor Surat <span class="text-error">*</span></label>
+                            <input type="text" name="reference_number_dikeluarkan" placeholder="Masukkan nomor surat keputusan..." class="w-full bg-white border border-red-200 rounded-lg px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none" :required="mutationType === 'dismissed'" :disabled="mutationType !== 'dismissed'">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-red-700 uppercase tracking-wider mb-1">Alasan atau Catatan <span class="text-error">*</span></label>
+                            <x-ui.select
+                                name="notes_dikeluarkan"
+                                :options="$dismissedReasons"
+                                placeholder="— Pilih Alasan —" />
                         </div>
                     </div>
 
-                    {{-- Form Dinamis: Meninggal Dunia --}}
-                    <div x-show="mutationType === 'dropped_out' && detailReason === 'deceased'" x-cloak x-transition class="space-y-4 bg-red-50/20 border border-red-100 rounded-xl p-4 mt-2">
+                    {{-- Form Dinamis: Mengundurkan Diri (Resigned) --}}
+                    <div x-show="mutationType === 'resigned'" x-cloak x-transition class="space-y-4 bg-orange-50/20 border border-orange-100 rounded-xl p-4 mt-2">
                         <div class="flex items-center gap-2 mb-1">
-                            <i data-lucide="heart-crack" class="size-4 text-red-500"></i>
-                            <span class="text-sm font-bold text-red-800">Detail Meninggal Dunia</span>
+                            <i data-lucide="user-minus" class="size-4 text-orange-600"></i>
+                            <span class="text-sm font-bold text-orange-800">Detail Mengundurkan Diri</span>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-red-700 uppercase tracking-wider mb-1">Keterangan Tambahan</label>
-                            <input type="text" name="notes_meninggal" placeholder="Keterangan opsional..." class="w-full bg-white border border-red-200 rounded-lg px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none">
+                            <label class="block text-[11px] font-bold text-orange-700 uppercase tracking-wider mb-1">Nomor Surat <span class="text-error">*</span></label>
+                            <input type="text" name="reference_number_mundur" placeholder="Masukkan nomor surat pengunduran diri..." class="w-full bg-white border border-orange-200 rounded-lg px-3 py-2.5 text-sm focus:border-orange-500 focus:outline-none" :required="mutationType === 'resigned'" :disabled="mutationType !== 'resigned'">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-orange-700 uppercase tracking-wider mb-1">Alasan atau Catatan <span class="text-error">*</span></label>
+                            <x-ui.select
+                                name="notes_mundur"
+                                :options="$resignedReasons"
+                                placeholder="— Pilih Alasan —" />
                         </div>
                     </div>
 

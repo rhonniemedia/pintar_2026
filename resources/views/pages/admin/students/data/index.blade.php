@@ -25,7 +25,7 @@
     }"
     @htmx:after-request.document="checkFilterStatus()">
 
-    {{-- 1. PAGE HEADER BARU (Sesuai gambar referensi) --}}
+    {{-- 1. PAGE HEADER BARU --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Data Peserta Didik</h1>
@@ -33,7 +33,7 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-            {{-- Tombol Tarik Data SPMB di index.blade.php --}}
+            {{-- Tombol Tarik Data SPMB --}}
             <button type="button"
                 @click="syncModalOpen = true"
                 hx-get="{{ route('admin.integration.spmb.sync.info') }}"
@@ -95,7 +95,7 @@
             </div>
 
             {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter --}}
-            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
 
                 {{-- 1. TOMBOL DROPDOWN: Tampilan Aktif "Siswa Aktif" --}}
                 <div x-data="{ dropdownOpen: false }" class="relative shrink-0">
@@ -144,14 +144,18 @@
                     </div>
                 </div>
 
-                {{-- 2. INPUT PENCARIAN --}}
-                <div class="relative flex-1 md:flex-none">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
+                {{-- 2. INPUT PENCARIAN DENGAN TOMBOL X INTERAKTIF --}}
+                <div class="relative flex-1 md:flex-none flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
                     <input
+                        x-ref="searchInput"
                         type="text"
                         name="search"
-                        value="{{ $search }}"
+                        x-model="searchQuery"
                         placeholder="Cari peserta..."
+                        autocomplete="off"
                         hx-get="{{ route('admin.students.data.index') }}"
                         hx-trigger="keyup changed delay:400ms, search"
                         hx-target="#students-container"
@@ -159,7 +163,17 @@
                         hx-swap="outerHTML"
                         hx-include="#student-filter-form"
                         hx-push-url="true"
-                        class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full sm:w-56 md:w-64 bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                    <button
+                        type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="size-3"></i>
+                    </button>
                 </div>
 
                 {{-- 3. TOMBOL FILTER --}}
@@ -186,7 +200,7 @@
 
     </div>
 
-    {{-- Default filter modal sekarang menyembunyikan Alergi Makanan (dipakai khusus untuk Siswa Mengambang), jadi di sini harus dinyalakan eksplisit. --}}
+    {{-- Default filter modal --}}
     @include('pages.admin.students.data.partials._filter-modal', [
     'filterGrade' => $filterGrade,
     'filterGender' => $filterGender,

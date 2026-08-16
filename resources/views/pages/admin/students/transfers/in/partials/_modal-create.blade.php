@@ -1,4 +1,65 @@
 {{-- File: resources/views/pages/admin/students/transfers/in/partials/_modal-create.blade.php --}}
+@php
+// Persiapan Data Opsi untuk Komponen Select
+
+$genderOptions = [];
+foreach(\App\Enums\Student\Gender::cases() as $option) {
+$genderOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$religionOptions = [];
+foreach(\App\Enums\Student\Religion::cases() as $option) {
+$religionOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$residenceTypeOptions = [];
+foreach(\App\Enums\Student\ResidenceType::cases() as $option) {
+$residenceTypeOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$transportationOptions = [];
+foreach(\App\Enums\Student\Transportation::cases() as $option) {
+$transportationOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$distanceToSchoolOptions = [];
+foreach(\App\Enums\Student\DistanceToSchool::cases() as $option) {
+$distanceToSchoolOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$guardianRelationOptions = [];
+foreach(\App\Enums\Student\FamilyRelation::cases() as $option) {
+$guardianRelationOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$educationOptions = [];
+foreach(\App\Enums\Student\Education::cases() as $option) {
+$educationOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$professionOptions = [];
+foreach(\App\Enums\Student\Profession::cases() as $option) {
+$professionOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$incomeOptions = [];
+foreach(\App\Enums\Student\Income::cases() as $option) {
+$incomeOptions[] = ['value' => $option->value, 'label' => $option->label()];
+}
+
+$schoolStatusOptions = [
+['value' => 'negeri', 'label' => 'Negeri'],
+['value' => 'swasta', 'label' => 'Swasta']
+];
+
+$classGroupOptions = [];
+foreach ($classGroups as $cg) {
+$label = $cg->name ?? ('Kelas ' . $cg->grade_level . ' - ' . $cg->group_number);
+$label .= ' — ' . optional($cg->concentration)->name;
+$classGroupOptions[] = ['value' => $cg->id, 'label' => $label];
+}
+@endphp
+
 <div x-data="{ 
         open: true,
         step: {{ $currentStep ?? 1 }},
@@ -151,23 +212,25 @@
 
                         <div>
                             <label class="{{ $labelClass }}">Jenis Kelamin <span class="text-error">*</span></label>
-                            <select name="gender" class="{{ $inputClass }} @error('gender') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Jenis Kelamin —</option>
-                                @foreach(\App\Enums\Student\Gender::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('gender')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('gender') }}' === '1'}">
+                                <x-ui.select
+                                    name="gender"
+                                    :options="$genderOptions"
+                                    value="{{ old('gender') }}"
+                                    placeholder="— Pilih Jenis Kelamin —" />
+                            </div>
                             @error('gender') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="{{ $labelClass }}">Agama <span class="text-error">*</span></label>
-                            <select name="religion" class="{{ $inputClass }} @error('religion') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Agama —</option>
-                                @foreach(\App\Enums\Student\Religion::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('religion')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('religion') }}' === '1'}">
+                                <x-ui.select
+                                    name="religion"
+                                    :options="$religionOptions"
+                                    value="{{ old('religion') }}"
+                                    placeholder="— Pilih Agama —" />
+                            </div>
                             @error('religion') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
@@ -200,34 +263,40 @@
                             <input type="email" name="email" value="{{ old('email') }}" placeholder="Contoh: nama@email.com" class="{{ $inputClass }} @error('email') {{ $errorClass }} @enderror">
                             @error('email') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
                         <div>
                             <label class="{{ $labelClass }}">Jenis Tempat Tinggal <span class="text-error">*</span></label>
-                            <select name="residence_type" class="{{ $inputClass }} @error('residence_type') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Jenis Tempat Tinggal —</option>
-                                @foreach(\App\Enums\Student\ResidenceType::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('residence_type')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('residence_type') }}' === '1'}">
+                                <x-ui.select
+                                    name="residence_type"
+                                    :options="$residenceTypeOptions"
+                                    value="{{ old('residence_type') }}"
+                                    placeholder="— Pilih Jenis Tempat Tinggal —" />
+                            </div>
                             @error('residence_type') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
                         <div>
                             <label class="{{ $labelClass }}">Moda Transportasi <span class="text-error">*</span></label>
-                            <select name="transportation" class="{{ $inputClass }} @error('transportation') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Moda Transportasi —</option>
-                                @foreach(\App\Enums\Student\Transportation::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('transportation')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('transportation') }}' === '1'}">
+                                <x-ui.select
+                                    name="transportation"
+                                    :options="$transportationOptions"
+                                    value="{{ old('transportation') }}"
+                                    placeholder="— Pilih Moda Transportasi —" />
+                            </div>
                             @error('transportation') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
+
                         <div class="sm:col-span-2">
                             <label class="{{ $labelClass }}">Jarak ke Sekolah (Opsional)</label>
-                            <select name="distance_to_school" class="{{ $inputClass }} @error('distance_to_school') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Jarak ke Sekolah —</option>
-                                @foreach(\App\Enums\Student\DistanceToSchool::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('distance_to_school')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('distance_to_school') }}' === '1'}">
+                                <x-ui.select
+                                    name="distance_to_school"
+                                    :options="$distanceToSchoolOptions"
+                                    value="{{ old('distance_to_school') }}"
+                                    placeholder="— Pilih Jarak ke Sekolah —" />
+                            </div>
                             @error('distance_to_school') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -300,12 +369,13 @@
 
                         <div>
                             <label class="{{ $labelClass }}">Hubungan Keluarga <span class="text-error">*</span></label>
-                            <select name="guardian_relationship" class="{{ $inputClass }} @error('guardian_relationship') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Hubungan —</option>
-                                @foreach(\App\Enums\Student\FamilyRelation::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('guardian_relationship')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('guardian_relationship') }}' === '1'}">
+                                <x-ui.select
+                                    name="guardian_relationship"
+                                    :options="$guardianRelationOptions"
+                                    value="{{ old('guardian_relationship') }}"
+                                    placeholder="— Pilih Hubungan —" />
+                            </div>
                             @error('guardian_relationship') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
@@ -323,34 +393,37 @@
 
                         <div>
                             <label class="{{ $labelClass }}">Pendidikan Terakhir (Opsional)</label>
-                            <select name="guardian_education" class="{{ $inputClass }} @error('guardian_education') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Pendidikan —</option>
-                                @foreach(\App\Enums\Student\Education::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('guardian_education')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('guardian_education') }}' === '1'}">
+                                <x-ui.select
+                                    name="guardian_education"
+                                    :options="$educationOptions"
+                                    value="{{ old('guardian_education') }}"
+                                    placeholder="— Pilih Pendidikan —" />
+                            </div>
                             @error('guardian_education') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="{{ $labelClass }}">Pekerjaan (Opsional)</label>
-                            <select name="guardian_occupation" class="{{ $inputClass }} @error('guardian_occupation') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Pekerjaan —</option>
-                                @foreach(\App\Enums\Student\Profession::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('guardian_occupation')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('guardian_occupation') }}' === '1'}">
+                                <x-ui.select
+                                    name="guardian_occupation"
+                                    :options="$professionOptions"
+                                    value="{{ old('guardian_occupation') }}"
+                                    placeholder="— Pilih Pekerjaan —" />
+                            </div>
                             @error('guardian_occupation') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="{{ $labelClass }}">Penghasilan Bulanan (Opsional)</label>
-                            <select name="guardian_income_range" class="{{ $inputClass }} @error('guardian_income_range') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Rentang Penghasilan —</option>
-                                @foreach(\App\Enums\Student\Income::cases() as $option)
-                                <option value="{{ $option->value }}" @selected(old('guardian_income_range')===$option->value)>{{ $option->label() }}</option>
-                                @endforeach
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('guardian_income_range') }}' === '1'}">
+                                <x-ui.select
+                                    name="guardian_income_range"
+                                    :options="$incomeOptions"
+                                    value="{{ old('guardian_income_range') }}"
+                                    placeholder="— Pilih Rentang Penghasilan —" />
+                            </div>
                             @error('guardian_income_range') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
@@ -420,11 +493,13 @@
 
                             <div>
                                 <label class="{{ $labelClass }}">Status Sekolah (Opsional)</label>
-                                <select name="previous_school_status" class="{{ $inputClass }} @error('previous_school_status') {{ $errorClass }} @enderror">
-                                    <option value="">— Pilih Status —</option>
-                                    <option value="negeri" @selected(old('previous_school_status')==='negeri' )>Negeri</option>
-                                    <option value="swasta" @selected(old('previous_school_status')==='swasta' )>Swasta</option>
-                                </select>
+                                <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('previous_school_status') }}' === '1'}">
+                                    <x-ui.select
+                                        name="previous_school_status"
+                                        :options="$schoolStatusOptions"
+                                        value="{{ old('previous_school_status') }}"
+                                        placeholder="— Pilih Status —" />
+                                </div>
                                 @error('previous_school_status') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                             </div>
 
@@ -468,17 +543,13 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="{{ $labelClass }}">Rombongan Belajar Tujuan <span class="text-error">*</span></label>
-                            <select name="class_group_id" class="{{ $inputClass }} @error('class_group_id') {{ $errorClass }} @enderror">
-                                <option value="">— Pilih Rombel —</option>
-                                @forelse ($classGroups as $cg)
-                                <option value="{{ $cg->id }}" @selected(old('class_group_id')==$cg->id)>
-                                    {{ $cg->name ?? ('Kelas ' . $cg->grade_level . ' - ' . $cg->group_number) }}
-                                    &mdash; {{ optional($cg->concentration)->name }}
-                                </option>
-                                @empty
-                                <option value="" disabled>Tidak ada rombel aktif pada tahun ajaran ini</option>
-                                @endforelse
-                            </select>
+                            <div :class="{'{{ $errorClass }} rounded-xl': '{{ $errors->has('class_group_id') }}' === '1'}">
+                                <x-ui.select
+                                    name="class_group_id"
+                                    :options="$classGroupOptions"
+                                    value="{{ old('class_group_id') }}"
+                                    placeholder="— Pilih Rombel —" />
+                            </div>
                             @error('class_group_id') <span class="text-error text-[10px] mt-1 block">{{ $message }}</span> @enderror
                         </div>
 

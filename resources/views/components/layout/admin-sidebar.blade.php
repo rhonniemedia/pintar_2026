@@ -47,15 +47,15 @@
 
             <div class="flex flex-col gap-1">
 
-                <a href="#"
-                    class="group {{ request()->routeIs('admin.master-data.index') ? 'active' : '' }}">
+                <a href="{{ route('admin.master-data.school.index') }}"
+                    class="group {{ request()->routeIs('admin.master-data.school.*') ? 'active' : '' }}">
                     <div
-                        class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ request()->routeIs('admin.master-data.index') ? 'bg-muted' : 'hover:bg-muted' }}">
+                        class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ request()->routeIs('admin.master-data.school.*') ? 'bg-muted' : 'hover:bg-muted' }}">
                         <i data-lucide="landmark"
-                            class="size-5 {{ request()->routeIs('admin.master-data.index') ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
+                            class="size-5 {{ request()->routeIs('admin.master-data.school.*') ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
 
                         <span
-                            class="text-sm {{ request()->routeIs('admin.master-data.index') ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
+                            class="text-sm {{ request()->routeIs('admin.master-data.school.*') ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
                             Data Sekolah
                         </span>
                     </div>
@@ -107,7 +107,7 @@
                 </a>
 
                 {{-- 3. Menu Mutasi Peserta Didik --}}
-                @php $isMutasi = request()->routeIs('admin.students.transfers.*'); @endphp
+                @php $isMutasi = request()->routeIs('admin.students.transfer.*'); @endphp
                 <a href="{{ route('admin.students.transfer.in.index') }}" class="group cursor-pointer {{ $isMutasi ? 'active' : '' }}">
                     <div class="flex items-center justify-between rounded-xl p-3 transition-all duration-300 {{ $isMutasi ? 'bg-muted' : 'hover:bg-muted' }}">
                         <div class="flex items-center gap-3">
@@ -120,7 +120,7 @@
                 </a>
 
                 {{-- 4. Menu Data Alumni (Kelulusan) --}}
-                @php $isAlumni = request()->routeIs('admin.students.alumni.*'); @endphp
+                @php $isAlumni = request()->routeIs('admin.students.graduates.*'); @endphp
                 <a href="{{ route('admin.students.graduates.index') }}" class="group cursor-pointer {{ $isAlumni ? 'active' : '' }}">
                     <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isAlumni ? 'bg-muted' : 'hover:bg-muted' }}">
                         <i data-lucide="graduation-cap" class="size-5 transition-all duration-300 {{ $isAlumni ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
@@ -141,8 +141,19 @@
                     </div>
                 </a>
 
+                {{-- 6. Menu Persuratan --}}
+                @php $isSurat = request()->routeIs('admin.students.letters.*'); @endphp
+                <a href="{{ route('admin.students.letters.index') }}" class="group cursor-pointer {{ $isSurat ? 'active' : '' }}">
+                    <div class="flex items-center rounded-xl p-3 gap-3 transition-all duration-300 {{ $isSurat ? 'bg-muted' : 'hover:bg-muted' }}">
+                        <i data-lucide="mail" class="size-5 transition-all duration-300 {{ $isSurat ? 'text-foreground' : 'text-secondary group-hover:text-foreground' }}"></i>
+                        <span class="text-sm transition-all duration-300 {{ $isSurat ? 'font-semibold text-foreground' : 'font-medium text-secondary group-hover:text-foreground' }}">
+                            Persuratan
+                        </span>
+                    </div>
+                </a>
             </div>
         </div>
+
 
         <!-- Pengguna -->
         <div class="flex flex-col gap-4">

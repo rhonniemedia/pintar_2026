@@ -13,25 +13,25 @@ namespace App\Enums\Student;
 enum StudentStatus: string
 {
     case ACTIVE = 'active';
-    case GRADUATED = 'graduated';
-    case DROPPED_OUT = 'dropped_out';
-    case DISCONTINUED = 'discontinued';
-    case RESIGNED = 'resigned';
     case TRANSFERRED_OUT = 'transferred_out';
+    case DROPPED_OUT = 'dropped_out';
+    case DISMISSED = 'dismissed';
+    case RESIGNED = 'resigned';
     case DECEASED = 'deceased';
     case MARRIED = 'married';
+    case GRADUATED = 'graduated';
 
     public function label(): string
     {
         return match ($this) {
             self::ACTIVE => 'Aktif',
-            self::GRADUATED => 'Tamat / Lulus',
-            self::DROPPED_OUT => 'Dikeluarkan (Dropout)',
-            self::DISCONTINUED => 'Putus Sekolah',
-            self::RESIGNED => 'Mengundurkan Diri',
             self::TRANSFERRED_OUT => 'Pindah Keluar',
+            self::DROPPED_OUT => 'Putus Sekolah',
+            self::DISMISSED => 'Dikeluarkan',
+            self::RESIGNED => 'Mengundurkan Diri',
             self::DECEASED => 'Meninggal',
             self::MARRIED => 'Menikah',
+            self::GRADUATED => 'Lulus',
         };
     }
 

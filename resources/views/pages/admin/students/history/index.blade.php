@@ -56,14 +56,19 @@
                 <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
-            <div class="flex items-center gap-2">
-                <div class="relative">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
+            <div class="flex items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+                {{-- Search Box dengan Tombol X Interaktif --}}
+                <div class="relative w-56 md:w-64 flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors"
+                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
                     <input
+                        x-ref="searchInput"
                         type="text"
                         name="search"
-                        value="{{ $search }}"
+                        x-model="searchQuery"
                         placeholder="Cari peserta..."
+                        autocomplete="off"
                         hx-get="{{ route('admin.students.history.index') }}"
                         hx-trigger="keyup changed delay:400ms, search"
                         hx-target="#students-history-container"
@@ -71,14 +76,24 @@
                         hx-swap="outerHTML"
                         hx-include="#student-history-filter-form"
                         hx-push-url="true"
-                        class="h-11 w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                    <button
+                        type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="size-3"></i>
+                    </button>
                 </div>
 
                 <button
                     type="button"
                     @click="filterModalOpen = true"
                     title="Filter"
-                    class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
+                    class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none shrink-0">
                     <i data-lucide="filter" class="size-4 text-secondary"></i>
 
                     <span

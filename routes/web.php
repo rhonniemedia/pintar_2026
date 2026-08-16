@@ -2,17 +2,19 @@
 
 use App\Http\Controllers\Admin\Home\HomeController;
 use App\Http\Controllers\Admin\Master\MasterDataController;
+use App\Http\Controllers\Admin\Settings\SchoolController;
 use App\Http\Controllers\Admin\Students\ClassGroupAttendanceController;
 use App\Http\Controllers\Admin\Students\ClassGroupController;
 use App\Http\Controllers\Admin\Students\ClassGroupPromotionController;
 use App\Http\Controllers\Admin\Students\StudentController;
 use App\Http\Controllers\Admin\Students\StudentGraduationController;
 use App\Http\Controllers\Admin\Students\StudentHistoryController;
+use App\Http\Controllers\Admin\Students\StudentLetterController;
 use App\Http\Controllers\Admin\Students\StudentMutationInController;
 use App\Http\Controllers\Admin\Students\StudentMutationOutController;
 use App\Http\Controllers\Admin\Students\StudentReportController;
-use App\Http\Controllers\Admin\User\UserController;
 use App\Http\Controllers\Admin\User\ProfileController;
+use App\Http\Controllers\Admin\User\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Integration\SpmbSyncController;
 use App\Http\Middleware\AuthorizeAppAccess;
@@ -154,6 +156,24 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
             Route::get('/{id}', [StudentGraduationController::class, 'show'])->name('show');
         });
 
+        // Persuratan
+        Route::name('letters.')->prefix('letters')->group(function () {
+            Route::get('/', [StudentLetterController::class, 'index'])->name('index');
+
+            Route::get('/create', [StudentLetterController::class, 'create'])->name('create');
+            Route::get('/create/active', [StudentLetterController::class, 'createActive'])->name('create-active');
+            Route::post('/active', [StudentLetterController::class, 'storeActive'])->name('store-active');
+
+            Route::get('/create/good-conduct', [StudentLetterController::class, 'createGoodConduct'])->name('create-good-conduct');
+            Route::post('/good-conduct', [StudentLetterController::class, 'storeGoodConduct'])->name('store-good-conduct');
+
+            Route::get('/create/poor-family', [StudentLetterController::class, 'createPoorFamily'])->name('create-poor-family');
+            Route::post('/poor-family', [StudentLetterController::class, 'storePoorFamily'])->name('store-poor-family');
+
+            Route::get('/{letter}/download', [StudentLetterController::class, 'download'])->name('download');
+            Route::delete('/{letter}', [StudentLetterController::class, 'destroy'])->name('destroy');
+        });
+
         // Laporan / Rekapitulasi PDF
         Route::prefix('reports')->name('reports.')->group(function () {
             // Laporan Rekapitulasi Jurusan
@@ -206,9 +226,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
         Route::delete('/concentration/{id}', [MasterDataController::class, 'destroyConcentration'])->name('concentration.destroy');
 
         // Data Sekolah
-        Route::get('/school', [MasterDataController::class, 'school'])->name('school.update');
-        Route::post('/school', [MasterDataController::class, 'updateSchool'])->name('school.update');
-
+        Route::prefix('school')->name('school.')->group(function () {
+            Route::get('/', [SchoolController::class, 'index'])->name('index');
+            Route::get('/edit', [SchoolController::class, 'edit'])->name('edit');
+            Route::put('/', [SchoolController::class, 'update'])->name('update');
+        });
         // Akademik
         Route::post('/academics', [MasterDataController::class, 'storeAcademic'])->name('academic.store');
         Route::put('/academics/{id}', [MasterDataController::class, 'updateAcademic'])->name('academic.update');

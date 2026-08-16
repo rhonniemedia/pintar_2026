@@ -7,7 +7,7 @@
 @section('content')
 <div class="p-8">
 
-    {{-- PAGE HEADER (Diadaptasi dari student data) --}}
+    {{-- PAGE HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Data Master</h1>
@@ -15,7 +15,6 @@
         </div>
 
         <div class="flex items-center gap-2">
-            {{-- Pada Bagian Tombol Tambah Data (Baris 13-20) --}}
             @php
             $modalRoute = match($activeTab) {
             'academic-year' => route('admin.master-data.academic-year.create'),
@@ -33,9 +32,6 @@
                 <i data-lucide="plus" class="size-4"></i>
                 <span>Tambah Data</span>
             </button>
-
-            {{-- Tambahkan ini di PALING BAWAH file index.blade.php (sebelum @endsection) --}}
-            <div id="modal-form-container" @closeModal.window="document.getElementById('modal-form-container').innerHTML = ''"></div>
 
             <a href="{{ route('admin.master-data.academic') }}"
                 onclick="document.getElementById('refresh-icon').classList.add('animate-spin');"
@@ -74,21 +70,36 @@
                 <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian untuk merampingkan data.</p>
             </div>
 
-            <div class="flex items-center gap-2">
-                <div class="relative">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
+            <div class="flex items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+                {{-- Input Pencarian dengan Tombol X Interaktif --}}
+                <div class="relative w-56 md:w-64 flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
                     <input
+                        x-ref="searchInput"
                         type="text"
                         name="search"
-                        value="{{ $search }}"
+                        x-model="searchQuery"
                         placeholder="Cari data..."
+                        autocomplete="off"
                         hx-get="{{ route('admin.master-data.academic', ['tab' => $activeTab]) }}"
                         hx-trigger="keyup changed delay:400ms, search"
                         hx-target="#master-data-container"
                         hx-select="#master-data-container"
                         hx-swap="outerHTML"
                         hx-push-url="true"
-                        class="h-11 w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                    <button
+                        type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="size-3"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -97,7 +108,7 @@
         @include($viewPartial, ['data' => $data])
 
         {{-- Tempat HTMX melempar form modal --}}
-        <div id="modal-form-container"></div>
+        <div id="modal-form-container" @closeModal.window="document.getElementById('modal-form-container').innerHTML = ''"></div>
 
     </div>
 </div>

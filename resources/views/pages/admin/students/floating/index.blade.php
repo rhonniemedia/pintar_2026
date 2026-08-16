@@ -48,7 +48,7 @@
     </div>
 
     @include('pages.admin.students.data.partials._stats-cards', [
-    'isFloating' => true, // Menandakan bahwa ini adalah halaman mengambang
+    'isFloating' => true,
     'totalFloating' => $totalFloating ?? 0,
     'maleFloating' => $maleFloating ?? 0,
     'femaleFloating' => $femaleFloating ?? 0,
@@ -65,7 +65,7 @@
             </div>
 
             {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter --}}
-            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
 
                 {{-- TOMBOL DROPDOWN: State Mengambang --}}
                 <div x-data="{ dropdownOpen: false }" class="relative shrink-0">
@@ -103,7 +103,7 @@
 
                         <div class="h-px bg-border mx-1"></div>
 
-                        {{-- State Saat Ini (Aktif) --}}
+                        {{-- State Saat Ini --}}
                         <a href="{{ route('admin.students.floating.index') }}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg bg-primary/10 text-primary">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="user-x" class="size-4"></i>
@@ -113,14 +113,18 @@
                     </div>
                 </div>
 
-                {{-- INPUT PENCARIAN --}}
-                <div class="relative flex-1 md:flex-none">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-secondary"></i>
+                {{-- INPUT PENCARIAN DENGAN TOMBOL X INTERAKTIF --}}
+                <div class="relative flex-1 md:flex-none flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+
                     <input
+                        x-ref="searchInput"
                         type="text"
                         name="search"
-                        value="{{ $search }}"
+                        x-model="searchQuery"
                         placeholder="Cari peserta..."
+                        autocomplete="off"
                         hx-get="{{ route('admin.students.floating.index') }}"
                         hx-trigger="keyup changed delay:400ms, search"
                         hx-target="#students-container"
@@ -128,7 +132,17 @@
                         hx-swap="outerHTML"
                         hx-include="#student-filter-form"
                         hx-push-url="true"
-                        class="h-11 w-full sm:w-56 md:w-64 bg-white border border-border rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all">
+                        class="h-11 w-full sm:w-56 md:w-64 bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                    <button
+                        type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="size-3"></i>
+                    </button>
                 </div>
 
                 {{-- TOMBOL FILTER --}}
@@ -157,7 +171,6 @@
     @include('pages.admin.students.data.partials._filter-modal', [
     'filterRoute' => route('admin.students.floating.index'),
 
-    // Atur false untuk menyembunyikan opsi filter
     'showGradeFilter' => false,
     'showReligionFilter' => false,
     'showAgeFilter' => false,

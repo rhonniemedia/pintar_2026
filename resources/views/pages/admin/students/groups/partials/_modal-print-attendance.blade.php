@@ -1,10 +1,26 @@
+@php
+$gradeOptions = [
+['value' => '10', 'label' => 'Kelas 10'],
+['value' => '11', 'label' => 'Kelas 11'],
+['value' => '12', 'label' => 'Kelas 12'],
+];
+
+$concOptions = [];
+if(isset($concentrationOptions)) {
+foreach($concentrationOptions as $id => $name) {
+$concOptions[] = ['value' => $id, 'label' => $name];
+}
+}
+@endphp
+
 <div
     x-data="{
         open: false,
         gradeError: false,
         close() { this.open = false },
         submitForm(e) {
-            if (!$refs.grade.value) {
+            const formData = new FormData(e.target);
+            if (!formData.get('filter_grade')) {
                 e.preventDefault();
                 this.gradeError = true;
             } else {
@@ -43,26 +59,28 @@
             @submit="submitForm" novalidate
             class="flex flex-col flex-1 overflow-hidden">
 
-            <div class="block p-4 sm:p-6 overflow-y-auto bg-slate-50/30 flex-1 space-y-4">
+            <div class="block p-4 sm:p-6 overflow-visible bg-slate-50/30 flex-1 space-y-4">
 
                 {{-- Filter Tingkat --}}
                 <div>
                     <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">
                         Tingkat <span class="text-error font-bold text-[12px]">*</span>
                     </label>
-                    <select x-ref="grade" name="filter_grade"
-                        @change="gradeError = false"
-                        class="w-full bg-white border rounded-xl px-3 py-2.5 text-sm focus:outline-none transition-all"
-                        :class="gradeError ? 'border-error focus:border-error focus:ring-1 focus:ring-error' : 'border-border focus:border-primary focus:ring-1 focus:ring-primary'"
+
+                    <div @change="gradeError = false"
                         hx-get="{{ route('admin.students.attendance.classes') }}"
-                        hx-target="#class_group_id"
+                        hx-trigger="change"
+                        hx-target="#hidden_class_group_id"
                         hx-indicator="#loading-indicator"
-                        hx-include="#print-attendance-form">
-                        <option value="">-- Pilih Tingkat --</option>
-                        <option value="10">Kelas 10</option>
-                        <option value="11">Kelas 11</option>
-                        <option value="12">Kelas 12</option>
-                    </select>
+                        hx-include="#print-attendance-form"
+                        :class="gradeError ? 'rounded-xl ring-1 ring-error shadow-sm' : ''">
+
+                        <x-ui.select
+                            name="filter_grade"
+                            :options="$gradeOptions"
+                            placeholder="-- Pilih Tingkat --" />
+                    </div>
+
                     <p x-show="gradeError" x-cloak class="text-[10px] font-medium text-error mt-1.5">
                         Tingkat harus dipilih
                     </p>
@@ -71,17 +89,18 @@
                 {{-- Filter Konsentrasi --}}
                 <div>
                     <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">Konsentrasi Keahlian</label>
-                    <select name="filter_concentration"
-                        class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all focus:ring-1 focus:ring-primary"
-                        hx-get="{{ route('admin.students.attendance.classes') }}"
-                        hx-target="#class_group_id"
+
+                    <div hx-get="{{ route('admin.students.attendance.classes') }}"
+                        hx-trigger="change"
+                        hx-target="#hidden_class_group_id"
                         hx-indicator="#loading-indicator"
                         hx-include="#print-attendance-form">
-                        <option value="">-- Semua Konsentrasi --</option>
-                        @foreach($concentrationOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
+
+                        <x-ui.select
+                            name="filter_concentration"
+                            :options="$concOptions"
+                            placeholder="-- Semua Konsentrasi --" />
+                    </div>
                 </div>
 
                 {{-- Pilihan Kelas --}}
@@ -89,11 +108,21 @@
                     <label class="block text-[10px] font-semibold text-secondary uppercase tracking-wider mb-2">
                         Kelas (Rombel)
                     </label>
-                    <select id="class_group_id" name="class_group_id"
-                        class="w-full bg-white border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-all focus:ring-1 focus:ring-primary">
+
+                    {{-- Select Bawaan Disembunyikan (Hanya untuk menangkap data dari HTMX) --}}
+                    <select id="hidden_class_group_id" class="hidden"
+                        @htmx:after-swap="
+                            let opts = Array.from($el.options).map(o => ({ value: o.value, label: o.text }));
+                            $dispatch('update-options', { name: 'class_group_id', options: opts });
+                        ">
                         <option value="">-- Semua Kelas --</option>
-                        <!-- Opsi kelas dimuat dinamis oleh HTMX -->
                     </select>
+
+                    {{-- Komponen UI Select Baru --}}
+                    <x-ui.select
+                        name="class_group_id"
+                        :options="[['value' => '', 'label' => '-- Semua Kelas --']]"
+                        placeholder="-- Semua Kelas --" />
                 </div>
 
             </div>
