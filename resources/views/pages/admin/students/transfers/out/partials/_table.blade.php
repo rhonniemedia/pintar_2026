@@ -15,7 +15,7 @@
                 <tr class="border-b border-border bg-gray-50/30">
                     <th class="px-4 py-3 text-sm font-bold text-secondary">
                         Peserta Didik
-                        <div class="text-[11px] font-normal normal-case">Nama | NISN</div>
+                        <div class="text-[11px] font-normal normal-case">Nama | Nomor Induk Kependudukan</div>
                     </th>
 
                     <th class="px-4 py-3 text-sm font-bold text-secondary">
@@ -186,6 +186,23 @@
                                         class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                                         <i data-lucide="users" class="size-4 text-secondary pointer-events-none"></i> Data Orang Tua
                                     </button>
+
+                                    <div class="my-2 border-t border-border"></div>
+
+                                    {{-- Cek apakah ada surat keterangan terkait mutasi --}}
+                                    @if ($r->latest_letter)
+                                    <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">
+                                        Cetak
+                                    </p>
+
+                                    <!-- Cetak Surat Keterangan -->
+                                    <a href="{{ route('admin.students.letters.download', $r->latest_letter->id) }}"
+                                        target="_blank"
+                                        class="flex items-center gap-2 mx-2 px-3 py-2 mt-1 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
+                                        <i data-lucide="file-text" class="size-4 pointer-events-none"></i>
+                                        Surat Keterangan
+                                    </a>
+                                    @endif
 
                                     <div class="my-2 border-t border-border"></div>
 

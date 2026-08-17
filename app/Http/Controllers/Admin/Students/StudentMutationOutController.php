@@ -2,14 +2,24 @@
 
 namespace App\Http\Controllers\Admin\Students;
 
+use App\Enums\Student\LetterType;
 use App\Enums\Student\MutationStatus;
 use App\Enums\Student\StudentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\ClassGroup;
+use App\Models\CoreSchool;
 use App\Models\CoreSemester;
 use App\Models\Student;
+use App\Models\StudentLetter;
 use App\Models\StudentMutation;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StudentMutationOutController extends Controller
 {
@@ -18,7 +28,12 @@ class StudentMutationOutController extends Controller
         $search = $request->input('search');
         $semesterAktif = CoreSemester::where('status', 'active')->first();
 
-        $data = StudentMutation::with(['student.vault', 'classGroup.concentration'])
+        // TAMBAHAN: Load relasi 'student.studentLetters'
+        $data = StudentMutation::with([
+            'student.vault',
+            'classGroup.concentration',
+            'student.studentLetters' // Tambahkan ini agar data surat ikut termuat
+        ])
             ->whereNotIn('status', [
                 MutationStatus::GRADUATED->value,
                 MutationStatus::TRANSFER_IN->value
@@ -39,6 +54,23 @@ class StudentMutationOutController extends Controller
                 if (! $mutation->is_transfer_out) {
                     $mutation->mutation_reason_label = $mutation->status->label();
                 }
+
+                // PERBAIKAN: Gunakan filter() agar aman dari Enum Casting di Model
+                $mutation->latest_letter = $mutation->student?->studentLetters
+                    ->filter(function ($letter) {
+                        // Cek apakah letter_type berupa objek Enum atau String biasa
+                        $type = $letter->letter_type instanceof \UnitEnum
+                            ? $letter->letter_type->value
+                            : $letter->letter_type;
+
+                        return in_array($type, [
+                            LetterType::TRANSFER->value,
+                            LetterType::DISMISSED->value,
+                            LetterType::RESIGNED->value
+                        ]);
+                    })
+                    ->sortByDesc('created_at')
+                    ->first();
 
                 return $mutation;
             });
@@ -86,7 +118,7 @@ class StudentMutationOutController extends Controller
             'notes_mundur'                 => 'nullable|required_if:status,resigned|string',
         ]);
 
-        $student = Student::with('activeClassGroup')->findOrFail($validated['student_id']);
+        $student = Student::with(['activeClassGroup', 'vault'])->findOrFail($validated['student_id']);
         $semesterAktif = CoreSemester::where('status', 'active')->first();
         $activeGroup = $student->activeClassGroup->first();
 
@@ -100,6 +132,10 @@ class StudentMutationOutController extends Controller
             default => null,
         };
 
+        // PENTING: reference_number TIDAK disimpan ke acd_student_mutations (kolom itu
+        // tidak ada di tabelnya). Untuk TRANSFER_OUT, nilainya dipakai langsung sebagai
+        // nomor Surat Keterangan Pindah di StudentLetter (lihat generateTransferLetter()).
+        // Untuk DISMISSED/RESIGNED disiapkan untuk jenis surat lain yang belum dibuat.
         $referenceNumber = match ($statusEnum) {
             MutationStatus::TRANSFER_OUT => $validated['reference_number_pindah'] ?? null,
             MutationStatus::DISMISSED    => $validated['reference_number_dikeluarkan'] ?? null,
@@ -114,14 +150,13 @@ class StudentMutationOutController extends Controller
             default => null,
         };
 
-        // 3. Simpan dalam Satu Transaksi
-        DB::transaction(function () use (
+        // 3. Simpan dalam Satu Transaksi (return $mutation supaya bisa dipakai generate surat sesudahnya)
+        $mutation = DB::transaction(function () use (
             $student,
             $finalStudentStatus,
             $finalMutationStatus,
             $semesterAktif,
             $validated,
-            $referenceNumber,
             $destinationSchool,
             $notes,
             $activeGroup
@@ -133,7 +168,6 @@ class StudentMutationOutController extends Controller
                 'semester_id'        => $semesterAktif?->id,
                 'mutation_date'      => $validated['mutation_date'],
                 'status'             => $finalMutationStatus,
-                'reference_number'   => $referenceNumber,
                 'destination_school' => $destinationSchool,
                 'notes'              => $notes,
             ]);
@@ -148,16 +182,113 @@ class StudentMutationOutController extends Controller
                     'mutation_id' => $mutation->id,
                 ]);
             }
+
+            return $mutation;
         });
+
+        // 4. Kalau statusnya "Pindah Sekolah", "Dikeluarkan", atau "Mengundurkan Diri", terbitkan Surat otomatis.
+        $letterWarning = null;
+
+        if (in_array($statusEnum, [MutationStatus::TRANSFER_OUT, MutationStatus::DISMISSED, MutationStatus::RESIGNED]) && $referenceNumber) {
+            // Panggil fungsi yang sudah diubah namanya menjadi generateMutationLetter
+            $success = $this->generateMutationLetter($student, $activeGroup, $mutation, $referenceNumber, $validated['mutation_date'], $statusEnum);
+
+            if (! $success) {
+                $letterWarning = ' Namun surat keterangan GAGAL diterbitkan karena data sekolah belum lengkap (lengkapi di Data Master > Data Sekolah, lalu terbitkan manual lewat menu Persuratan).';
+            }
+        }
 
         return response()->noContent()->header('HX-Trigger', json_encode([
             'close-modal'  => true,
             'refreshTable' => true,
             'showAlert'    => [
-                'icon'  => 'success',
-                'title' => 'Berhasil!',
-                'text'  => 'Peserta didik berhasil dimutasi dan dikeluarkan dari rombongan belajar.'
+                'icon'  => $letterWarning ? 'warning' : 'success',
+                'title' => $letterWarning ? 'Berhasil, dengan catatan' : 'Berhasil!',
+                'text'  => 'Peserta didik berhasil dimutasi dan dikeluarkan dari rombongan belajar.' . ($letterWarning ?? ''),
             ]
         ]));
+    }
+
+    /**
+     * Generate Surat Keterangan untuk mutasi (Transfer Out, Dismissed, Resigned), 
+     * simpan PDF-nya ke disk private, dan catat riwayatnya ke acd_student_letters.
+     */
+    private function generateMutationLetter(
+        Student $student,
+        ?ClassGroup $classGroup,
+        StudentMutation $mutation,
+        string $letterNumber,
+        string $mutationDate,
+        MutationStatus $statusEnum
+    ): bool {
+        $school = CoreSchool::with(['headmaster.vault', 'headmaster.currentGrade.grade'])->first();
+
+        if (! $school) {
+            return false;
+        }
+
+        $guardian = $student->guardians()
+            ->with('vault')
+            ->get()
+            ->sortBy(fn($g) => match ($g->relationship?->value) {
+                'guardian' => 0,
+                'father'   => 1,
+                'mother'   => 2,
+                default    => 3,
+            })
+            ->first();
+
+        $letterDate = Carbon::parse($mutationDate);
+
+        // Menyesuaikan View dan Letter Type berdasarkan Status
+        $viewTemplate = match ($statusEnum) {
+            MutationStatus::TRANSFER_OUT => 'pages.admin.students.letters.pdf.pindah-sekolah',
+            MutationStatus::DISMISSED    => 'pages.admin.students.letters.pdf.dikeluarkan',
+            MutationStatus::RESIGNED     => 'pages.admin.students.letters.pdf.mengundurkan-diri',
+            default                      => 'pages.admin.students.letters.pdf.pindah-sekolah',
+        };
+
+        $letterType = match ($statusEnum) {
+            MutationStatus::TRANSFER_OUT => LetterType::TRANSFER->value,
+            MutationStatus::DISMISSED    => LetterType::DISMISSED->value, // Pastikan ada di Enum LetterType
+            MutationStatus::RESIGNED     => LetterType::RESIGNED->value, // Pastikan ada di Enum LetterType
+            default                      => 'unknown',
+        };
+
+        // Ukuran kertas F4 (215mm x 330mm) dalam satuan points
+        $f4PaperSize = [0, 0, 609.448, 935.433];
+
+        $pdf = Pdf::loadView($viewTemplate, [
+            'school'       => $school,
+            'student'      => $student,
+            'classGroup'   => $classGroup,
+            'mutation'     => $mutation,
+            'guardian'     => $guardian,
+            'letterNumber' => $letterNumber,
+            'letterDate'   => $letterDate->translatedFormat('d F Y'),
+        ])->setPaper($f4PaperSize, 'portrait');
+
+        $fileName = sprintf('%s-%s-%s.pdf', $letterType, now()->format('YmdHis'), Str::random(8));
+        $path     = "surat/{$fileName}";
+
+        $this->disk()->put($path, $pdf->output());
+
+        StudentLetter::create([
+            'student_id'     => $student->id,
+            'class_group_id' => $classGroup?->id,
+            'semester_id'    => $classGroup?->semester_id,
+            'letter_type'    => $letterType,
+            'letter_number'  => $letterNumber,
+            'letter_date'    => $letterDate,
+            'file_path'      => $path,
+            'created_by'     => Auth::id(),
+        ]);
+
+        return true;
+    }
+
+    private function disk(): FilesystemAdapter
+    {
+        return Storage::disk('local');
     }
 }

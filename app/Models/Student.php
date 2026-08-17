@@ -119,4 +119,9 @@ class Student extends Model
             ->withPivot('score', 'description')
             ->withTimestamps();
     }
+
+    public function studentLetters(): HasMany
+    {
+        return $this->hasMany(StudentLetter::class);
+    }
 }

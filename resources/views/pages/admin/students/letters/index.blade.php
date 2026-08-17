@@ -11,6 +11,13 @@ $letterTypeOptionsList[] = [
 ];
 }
 }
+
+// Pemetaan Rute untuk Dropdown (Berasal dari modal create sebelumnya)
+$createRoutes = [
+\App\Enums\Student\LetterType::ACTIVE->value => 'admin.students.letters.create-active',
+\App\Enums\Student\LetterType::GOOD_CONDUCT->value => 'admin.students.letters.create-good-conduct',
+\App\Enums\Student\LetterType::POOR_FAMILY->value => 'admin.students.letters.create-poor-family',
+];
 @endphp
 
 @extends('layouts.main.admin')
@@ -20,41 +27,87 @@ $letterTypeOptionsList[] = [
 @section('page_subtitle', 'Riwayat surat keterangan yang pernah diterbitkan')
 
 @section('content')
-<div class="p-8">
+{{-- Penyesuaian padding utama responsif --}}
+<div class="p-4 sm:p-6 md:p-8">
 
     {{-- PAGE HEADER --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5 sm:mb-6">
         <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Persuratan Peserta Didik</h1>
-            <p class="text-sm text-secondary">Kelola dan terbitkan surat keterangan peserta didik.</p>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">Persuratan Peserta Didik</h1>
+            <p class="text-xs sm:text-sm text-secondary">Kelola dan terbitkan surat keterangan peserta didik.</p>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button type="button"
-                hx-get="{{ route('admin.students.letters.create') }}"
-                hx-target="#modal-form-container"
-                hx-swap="innerHTML"
-                class="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-primary/30">
-                <i data-lucide="file-plus-2" class="size-4"></i>
-                <span>Buat Surat</span>
-            </button>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+
+            {{-- DROPDOWN BUAT SURAT --}}
+            {{-- Tambahkan w-full di layar kecil, md:w-auto di layar besar --}}
+            <div class="relative inline-block text-left w-full md:w-auto" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+
+                {{-- Tombol dibuat justify-center dan w-full pada layar mobile --}}
+                <button type="button"
+                    @click="open = !open"
+                    class="flex items-center justify-center w-full md:w-auto gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-primary/30">
+                    <i data-lucide="file-plus-2" class="size-4"></i>
+                    <span>Buat Surat</span>
+                    <i data-lucide="chevron-down" class="size-4 ml-1 transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+
+                {{-- Lebar dropdown diubah menjadi full di HP dan w-64 di desktop --}}
+                <div
+                    x-show="open"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="absolute right-0 left-0 md:left-auto mt-2 w-full md:w-64 rounded-2xl border border-border bg-white shadow-xl p-2 flex flex-col text-left origin-top md:origin-top-right z-50">
+
+                    <p class="px-3 pt-2 pb-2 text-[10px] font-bold uppercase tracking-wider text-secondary border-b border-border mb-1.5">
+                        Pilih Jenis Surat
+                    </p>
+
+                    <div class="max-h-[60vh] overflow-y-auto flex flex-col gap-1">
+                        @foreach ($letterTypes as $type)
+                        @php $isAvailable = array_key_exists($type->value, $createRoutes); @endphp
+
+                        {{-- Hanya tampilkan surat yang sudah tersedia (isAvailable) --}}
+                        @if ($isAvailable)
+                        <button type="button"
+                            @click="open = false"
+                            hx-get="{{ route($createRoutes[$type->value]) }}"
+                            hx-target="#modal-form-container"
+                            hx-swap="innerHTML"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary hover:bg-slate-100 hover:text-primary transition-all cursor-pointer text-left">
+                            <i data-lucide="file-text" class="size-4 text-secondary pointer-events-none"></i>
+                            <span>{{ $type->label() }}</span>
+                        </button>
+                        @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     {{-- KOTAK KONTEN UTAMA --}}
-    <div class="bg-white rounded-2xl border border-border p-5">
+    {{-- Penyesuaian padding card pada layar mobile --}}
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-border p-4 sm:p-5">
 
         {{-- Header Tabel & Search --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 sm:mb-5">
             <div>
-                <h2 class="text-lg font-bold text-foreground">Riwayat Surat</h2>
-                <p class="text-sm text-secondary mt-1">Menampilkan seluruh surat yang pernah diterbitkan.</p>
+                <h2 class="text-base sm:text-lg font-bold text-foreground">Riwayat Surat</h2>
+                <p class="text-xs sm:text-sm text-secondary mt-0.5 sm:mt-1">Menampilkan seluruh surat yang pernah diterbitkan.</p>
             </div>
 
-            <form id="filter-form" class="flex flex-col sm:flex-row items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }" @submit.prevent>
+            {{-- Form filter akan stretch (memenuhi layar) di mobile --}}
+            <form id="filter-form" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }" @submit.prevent>
 
-                {{-- Filter Jenis Surat (Menggunakan x-ui.select dengan HTMX Wrapper & Ikon) --}}
-                <div class="relative w-full sm:w-52"
+                {{-- Filter Jenis Surat --}}
+                <div class="relative w-full sm:w-48 lg:w-52"
                     hx-get="{{ route('admin.students.letters.index') }}"
                     hx-include="#filter-form"
                     hx-trigger="change"

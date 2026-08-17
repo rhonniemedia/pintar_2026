@@ -3,30 +3,29 @@
     hx-get="{{ route('admin.students.letters.index') }}{{ request('search') ? '?search=' . urlencode(request('search')) : '' }}{{ request('letter_type') ? '&letter_type=' . urlencode(request('letter_type')) : '' }}"
     hx-target="#letter-list-container"
     hx-swap="outerHTML">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse table-fixed">
-            <colgroup>
-                <col style="width:30%">
-                <col style="width:30%">
-                <col style="width:30%">
-                <col style="width:10%">
-            </colgroup>
+
+    <div class="overflow-x-auto pb-4 custom-scrollbar">
+        {{-- 1. BEST PRACTICE: Gunakan auto-layout (tanpa table-fixed) dengan min-w-[800px] --}}
+        <table class="w-full text-left min-w-[800px]">
             <thead>
-                <tr class="border-b border-border bg-gray-50/30">
-                    <th class="px-4 py-3 text-sm font-bold text-secondary">
+                <tr class="border-b border-border bg-slate-50/50">
+                    {{-- 2. Terapkan w-[%] langsung ke <th> --}}
+                    <th class="w-[30%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
                         Peserta Didik
-                        <div class="text-[11px] font-normal normal-case">Nama | NIS</div>
+                        <div class="text-[11px] font-normal normal-case mt-0.5 opacity-80">Nama | NIS</div>
                     </th>
-                    <th class="px-4 py-3 text-sm font-bold text-secondary">
+                    <th class="w-[30%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
                         Surat
-                        <div class="text-[11px] font-normal normal-case">Jenis | Nomor</div>
+                        <div class="text-[11px] font-normal normal-case mt-0.5 opacity-80">Jenis | Nomor</div>
                     </th>
-                    <th class="px-4 py-3 text-sm font-bold text-secondary">
+                    <th class="w-[30%] px-5 py-3 text-sm font-bold text-secondary tracking-wider">
                         Diterbitkan
-                        <div class="text-[11px] font-normal normal-case">Oleh | Tanggal</div>
+                        <div class="text-[11px] font-normal normal-case mt-0.5 opacity-80">Oleh | Tanggal</div>
                     </th>
-                    <th class="px-4 py-3 text-sm font-bold text-secondary">
+                    {{-- 3. Tambahkan whitespace-nowrap agar teks aksi utuh selamanya --}}
+                    <th class="w-[10%] px-5 py-3 text-sm font-bold text-secondary tracking-wider whitespace-nowrap">
                         Aksi
+                        <div class="text-[11px] font-normal normal-case mt-0.5 opacity-80">Detail | Delete</div>
                     </th>
                 </tr>
             </thead>
@@ -34,12 +33,18 @@
                 @forelse ($data as $letter)
                 @php
                 $student = $letter->student;
-                @endphp
-                <tr id="row-letter-{{ $letter->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
 
-                    {{-- Kolom Peserta Didik --}}
-                    <td class="px-4 py-4">
-                        <div class="flex items-center gap-3 group">
+                $typeValue = $letter->letter_type instanceof \UnitEnum ? $letter->letter_type->value : $letter->letter_type;
+                $isProtected = in_array($typeValue, [
+                \App\Enums\Student\LetterType::TRANSFER->value,
+                \App\Enums\Student\LetterType::DISMISSED->value,
+                \App\Enums\Student\LetterType::RESIGNED->value
+                ]);
+                @endphp
+                <tr id="row-letter-{{ $letter->id }}" class="border-b border-border hover:bg-slate-50/80 transition-colors group">
+
+                    <td class="px-5 py-4 min-w-[240px]">
+                        <div class="flex items-center gap-3">
                             <x-ui.avatar :name="$student->name ?? '-'" :gender="optional($student)->gender" :index="$loop->index" />
                             <div class="min-w-0">
                                 <div class="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">
@@ -52,63 +57,73 @@
                         </div>
                     </td>
 
-                    {{-- Kolom Jenis dan Nomor Surat --}}
-                    <td class="px-4 py-4 text-sm">
-                        <span class="inline-block px-2 py-0.5 text-[11px] font-semibold rounded-md bg-primary/10 text-primary">
+                    <td class="px-5 py-4 min-w-[200px]">
+                        <span title="{{ $letter->letter_type->label() }}" class="inline-block max-w-full truncate px-2 py-0.5 text-[11px] font-semibold rounded-md bg-primary/10 text-primary mb-1.5 align-middle">
                             {{ $letter->letter_type->label() }}
                         </span>
-                        <div class="text-xs text-secondary mt-1 truncate">
+                        <div class="text-xs text-secondary truncate" title="{{ $letter->letter_number }}">
                             {{ $letter->letter_number ?? '-' }}
                         </div>
                     </td>
 
-                    {{-- Diterbitkan --}}
-                    <td class="px-4 py-4 text-sm">
-
-                        <div class="text-foreground font-medium truncate">
+                    <td class="px-5 py-4 min-w-[160px]">
+                        <div class="text-sm font-semibold text-foreground truncate">
                             {{ $letter->author->staff->name ?? $letter->author->username ?? '-' }}
                         </div>
-                        <div class="flex text-xs items-center gap-1 text-secondary">
-                            <i data-lucide="calendar" class="w-3 h-3"></i>
-                            <span>{{ \Carbon\Carbon::parse($letter->letter_date)->translatedFormat('d F Y') }}</span>
+                        <div class="flex items-center gap-1.5 text-xs mt-0.5 text-secondary">
+                            <i data-lucide="calendar" class="size-3.5 shrink-0"></i>
+                            <span class="truncate">{{ \Carbon\Carbon::parse($letter->letter_date)->translatedFormat('d F Y') }}</span>
                         </div>
                     </td>
 
-                    {{-- Kolom Aksi --}}
-                    <td class="px-4 py-4">
+                    {{-- 4. min-w-[120px] memastikan tombol 2 baris tetap aman --}}
+                    <td class="px-5 py-4 min-w-[120px]">
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('admin.students.letters.download', $letter->id) }}" target="_blank" title="Unduh / Lihat PDF"
-                                class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
+                            <a href="{{ route('admin.students.letters.download', $letter->id) }}" target="_blank" title="Lihat PDF"
+                                class="flex items-center justify-center size-8 shrink-0 rounded-lg border border-border bg-white text-secondary hover:bg-slate-100 hover:text-primary transition-all cursor-pointer shadow-sm">
                                 <i data-lucide="file-text" class="size-4 pointer-events-none"></i>
                             </a>
-                            <button type="button" title="Hapus"
+
+                            @if($isProtected)
+                            <button type="button" title="Surat mutasi tidak dapat dihapus melalui menu ini" disabled
+                                class="flex items-center justify-center size-8 shrink-0 rounded-lg border border-border bg-slate-50 text-slate-300 cursor-not-allowed opacity-60">
+                                <i data-lucide="trash-2" class="size-4 pointer-events-none"></i>
+                            </button>
+                            @else
+                            <button type="button" title="Hapus Surat"
                                 hx-delete="{{ route('admin.students.letters.destroy', $letter->id) }}"
                                 hx-trigger="confirmed"
                                 hx-target="#letter-list-container"
                                 hx-swap="none"
                                 @click="
-                                    ShowConfirm({
-                                        title: 'Hapus Surat?',
-                                        message: 'Hapus riwayat surat ini? File PDF yang sudah diunduh sebelumnya tidak terpengaruh.',
-                                        confirmText: 'Ya, Hapus',
-                                        cancelText: 'Batal',
-                                    }, () => {
-                                        $dispatch('confirmed');
-                                    })
-                                "
-                                class="flex items-center justify-center size-8 rounded-lg border border-border bg-white text-error hover:bg-error/10 hover:border-error/30 transition-all cursor-pointer">
+                                            ShowConfirm({
+                                                title: 'Hapus Surat?',
+                                                message: 'Hapus riwayat surat ini? File PDF yang sudah diunduh sebelumnya tidak terpengaruh.',
+                                                confirmText: 'Ya, Hapus',
+                                                cancelText: 'Batal',
+                                            }, () => {
+                                                $dispatch('confirmed');
+                                            })
+                                        "
+                                class="flex items-center justify-center size-8 shrink-0 rounded-lg border border-border bg-white text-error hover:bg-error/10 hover:border-error/30 transition-all cursor-pointer shadow-sm">
                                 <i data-lucide="trash-2" class="size-4 pointer-events-none"></i>
                             </button>
+                            @endif
                         </div>
                     </td>
 
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-4 py-16 text-center text-secondary">
-                        <div class="flex flex-col items-center gap-3">
-                            <i data-lucide="file-text" class="size-10 text-border"></i>
-                            <p class="font-medium text-sm">Belum ada surat yang diterbitkan</p>
+                    <td colspan="4" class="px-4 py-16 text-center">
+                        <div class="flex flex-col items-center justify-center gap-3 text-secondary">
+                            <div class="size-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                <i data-lucide="file-text" class="size-8 text-slate-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-foreground text-base">Belum Ada Surat</p>
+                                <p class="text-sm mt-0.5">Surat keterangan yang diterbitkan akan muncul di sini.</p>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -117,7 +132,9 @@
         </table>
     </div>
 
-    <x-ui.pagination :paginator="$data" hxTarget="#letter-list-container" />
+    <div class="mt-4">
+        <x-ui.pagination :paginator="$data" hxTarget="#letter-list-container" />
+    </div>
 
     <script>
         if (typeof lucide !== 'undefined') {

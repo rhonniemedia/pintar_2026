@@ -31,43 +31,49 @@ default => 'bg-secondary/10 text-secondary',
 };
 @endphp
 
-<tr id="row-student-history-{{ $r->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
-    <td class="px-4 py-4">
+<tr id="row-student-history-{{ $r->id }}" class="border-b border-border hover:bg-slate-50/80 transition-colors group">
+
+    {{-- Peserta Didik --}}
+    <td class="px-5 py-4 min-w-[240px]">
         <div class="flex items-center gap-3">
-            {{-- Memanggil komponen Avatar --}}
             <x-ui.avatar :name="$student->name ?? '-'" :gender="optional($student)->gender" :index="$loop->index" />
 
-            <div>
-                <div class="font-semibold text-foreground text-sm uppercase">{{ $student->name ?? '-' }}</div>
-
-                {{-- Menampilkan NIK dengan font standar bawaan --}}
-                <div class="text-xs text-secondary mt-0.5">
+            <div class="min-w-0">
+                <div class="font-semibold text-foreground text-sm uppercase group-hover:text-primary transition-colors truncate">
+                    {{ $student->name ?? '-' }}
+                </div>
+                <div class="text-xs text-secondary mt-0.5 truncate">
                     {{ optional(optional($student)->vault)->nik_encrypted ?? '-' }}
                 </div>
             </div>
         </div>
     </td>
 
-    <td class="px-4 py-4">
+    {{-- Nomor Induk --}}
+    <td class="px-5 py-4 min-w-[190px]">
         <div class="flex items-center gap-2">
-            <span class="inline-block w-20 text-center px-2 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold">{{ $student->nis ?? '-' }}</span>
-            <span class="px-2 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold">{{ $nisn }}</span>
+            @if(!empty($student->nis))
+            <span class="inline-block w-20 text-center px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-700 text-xs font-bold whitespace-nowrap">{{ $student->nis }}</span>
+            @endif
+            <span class="px-2.5 py-1 rounded-md bg-warning/10 text-warning-dark text-xs font-bold whitespace-nowrap">{{ $nisn }}</span>
         </div>
     </td>
 
-    <td class="px-4 py-4">
-        <div class="text-sm font-semibold text-foreground">{{ $rombel }}</div>
-        <div class="text-xs text-secondary">{{ $jurusan }}</div>
+    {{-- Rombel & Jurusan --}}
+    <td class="px-5 py-4 min-w-[160px]">
+        <div class="text-sm font-semibold text-foreground whitespace-nowrap truncate">{{ $rombel }}</div>
+        <div class="text-xs text-secondary whitespace-nowrap truncate">{{ $jurusan }}</div>
     </td>
 
-    <td class="px-4 py-4">
-        <span class="inline-block px-2 py-1 rounded-md text-xs font-bold {{ $exitBadgeClass }}">
+    {{-- Keluar (Status & Tanggal) --}}
+    <td class="px-5 py-4 min-w-[160px]">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-1.5 whitespace-nowrap {{ $exitBadgeClass }}">
             {{ $exitLabel }}
         </span>
 
-        <div class="mt-1 flex items-center gap-1 text-[11px] text-secondary">
-            <i data-lucide="calendar" class="w-3 h-3"></i>
-            <span>
+        <div class="flex items-center gap-1.5 text-xs text-secondary">
+            <i data-lucide="calendar" class="size-3.5 shrink-0"></i>
+            <span class="whitespace-nowrap">
                 {{ $exitDate ? \Illuminate\Support\Carbon::parse($exitDate)->translatedFormat('d M Y') : '-' }}
             </span>
         </div>

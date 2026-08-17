@@ -129,6 +129,27 @@ class StudentLetterController extends Controller
 
     public function destroy(StudentLetter $letter): Response
     {
+        // 0. TAMBAHAN: Cegah hapus untuk jenis surat mutasi keluar
+        $type = $letter->letter_type instanceof \UnitEnum
+            ? $letter->letter_type->value
+            : $letter->letter_type;
+
+        $protectedTypes = [
+            LetterType::TRANSFER->value,
+            LetterType::DISMISSED->value,
+            LetterType::RESIGNED->value
+        ];
+
+        if (in_array($type, $protectedTypes)) {
+            return $this->htmxTrigger([
+                'showAlert' => [
+                    'icon'  => 'error',
+                    'title' => 'Gagal Dihapus!',
+                    'text'  => 'Surat mutasi keluar terkait dengan catatan historis siswa tidak boleh dihapus melalui menu ini.',
+                ],
+            ]);
+        }
+
         // 1. Hapus file fisik PDF terlebih dahulu agar tidak menjadi sampah (orphan file).
         if ($letter->file_path && $this->disk()->exists($letter->file_path)) {
             $this->disk()->delete($letter->file_path);
@@ -222,13 +243,17 @@ class StudentLetterController extends Controller
         Carbon $letterDate,
         LetterType $type,
     ): string {
+
+        // Ukuran kertas F4 (215mm x 330mm) dalam satuan points
+        $f4PaperSize = [0, 0, 609.448, 935.433];
+
         $pdf = Pdf::loadView($pdfView, [
             'school'       => $school,
             'student'      => $student,
             'classGroup'   => $classGroup,
             'letterNumber' => $letterNumber,
             'letterDate'   => $letterDate->translatedFormat('d F Y'),
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper($f4PaperSize, 'portrait');
 
         $fileName = sprintf('%s-%s-%s.pdf', $type->value, now()->format('YmdHis'), Str::random(8));
         $path     = "surat/{$fileName}";

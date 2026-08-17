@@ -5,7 +5,8 @@
 @section('page_subtitle', 'Rekam jejak siswa yang sudah lulus, keluar, atau pindah')
 
 @section('content')
-<div class="p-8"
+{{-- Penyesuaian padding utama responsif --}}
+<div class="p-4 sm:p-6 md:p-8"
     x-data="{
         filterModalOpen: false,
         isFilterActive: {{ ($filterExitStatus || $filterConcentration || $filterExitSemester) ? 'true' : 'false' }},
@@ -19,22 +20,23 @@
     }"
     @htmx:after-request.document="checkFilterStatus()">
 
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5 sm:mb-6">
         <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Riwayat Peserta Didik</h1>
-            <p class="text-sm text-secondary">Data siswa yang sudah tidak aktif: lulus, keluar, atau pindah sekolah.</p>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">Riwayat Peserta Didik</h1>
+            <p class="text-xs sm:text-sm text-secondary">Data siswa yang sudah tidak aktif: lulus, keluar, atau pindah sekolah.</p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button type="button" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30">
-                <i data-lucide="download" class="size-4"></i>
+        {{-- Tombol aksi dibuat grid agar berdampingan rapi (50:50) di layar mobile --}}
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3 w-full md:w-auto">
+            <button type="button" class="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-emerald-600/30 whitespace-nowrap">
+                <i data-lucide="download" class="size-4 shrink-0"></i>
                 <span>Download</span>
             </button>
 
             <a href="{{ route('admin.students.history.index') }}"
                 onclick="document.getElementById('refresh-icon-riwayat').classList.add('animate-spin');"
-                class="flex items-center gap-2 px-4 py-2.5 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer">
-                <i id="refresh-icon-riwayat" data-lucide="refresh-cw" class="size-4"></i>
+                class="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-sm transition-all bg-white cursor-pointer whitespace-nowrap">
+                <i id="refresh-icon-riwayat" data-lucide="refresh-cw" class="size-4 shrink-0"></i>
                 <span>Segarkan</span>
             </a>
         </div>
@@ -48,18 +50,21 @@
     'deceasedStats' => $deceasedStats,
     ])
 
-    <div class="bg-white rounded-2xl border border-border p-5">
+    {{-- Penyesuaian padding card pada layar mobile --}}
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-border p-4 sm:p-5">
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 sm:mb-5">
             <div>
-                <h2 class="text-lg font-bold text-foreground">Daftar Riwayat</h2>
-                <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
+                <h2 class="text-base sm:text-lg font-bold text-foreground">Daftar Riwayat</h2>
+                <p class="text-xs sm:text-sm text-secondary mt-0.5 sm:mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
-            <div class="flex items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
-                {{-- Search Box dengan Tombol X Interaktif --}}
-                <div class="relative w-56 md:w-64 flex items-center">
-                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors"
+            {{-- Pastikan container form memenuhi lebar pada layar kecil --}}
+            <div class="flex items-center gap-2 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+
+                {{-- Search Box dengan flex-1 agar mengisi ruang dengan baik di HP --}}
+                <div class="relative flex-1 sm:w-56 md:w-64 flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
                     <input
