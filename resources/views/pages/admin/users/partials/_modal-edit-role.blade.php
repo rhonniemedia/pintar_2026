@@ -1,4 +1,6 @@
-<div x-data="{ open: false }" x-init="setTimeout(() => open = true, 10)">
+<div x-data="{ open: false }"
+    x-init="setTimeout(() => open = true, 10)"
+    @close-modal.window="open = false; setTimeout(() => $el.closest('#modal-form-container').innerHTML = '', 150)">
     <x-ui.modal show="open" maxWidth="md">
 
         {{-- Modal Header --}}

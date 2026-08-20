@@ -26,7 +26,7 @@ $roleOptionsList[] = [
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Daftar Pengguna</h1>
-            <p class="text-sm text-secondary">Kelola akun, hak akses (role), dan kata sandi pengguna aplikasi[cite: 14].</p>
+            <p class="text-sm text-secondary">Kelola akun, hak akses (role), dan kata sandi pengguna aplikasi.</p>
         </div>
     </div>
 
@@ -37,10 +37,10 @@ $roleOptionsList[] = [
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-lg font-bold text-foreground">Akun Pengguna</h2>
-                <p class="text-sm text-secondary mt-1">Menampilkan seluruh akun pengguna yang terdaftar[cite: 14].</p>
+                <p class="text-sm text-secondary mt-1">Menampilkan seluruh akun pengguna yang terdaftar.</p>
             </div>
 
-            {{-- Form Filter & Search (Terhubung dengan HTMX)[cite: 14] --}}
+            {{-- Form Filter & Search (Terhubung dengan HTMX) --}}
             <form id="filter-form" class="flex flex-col sm:flex-row items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }" @submit.prevent>
 
                 {{-- Filter Role (Menggunakan x-ui.select dengan HTMX Wrapper & Ikon) --}}
@@ -63,7 +63,7 @@ $roleOptionsList[] = [
                     </div>
                 </div>
 
-                {{-- Search Input[cite: 14] --}}
+                {{-- Search Input --}}
                 <div class="relative w-full sm:w-auto flex items-center">
                     <i data-lucide="search" class="absolute left-3 size-4 transition-colors"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
@@ -99,7 +99,7 @@ $roleOptionsList[] = [
 
     </div>
 
-    {{-- MODAL EDIT ROLE / EDIT PASSWORD[cite: 14] --}}
+    {{-- MODAL EDIT ROLE / EDIT PASSWORD --}}
     <div id="modal-form-container"></div>
 
 </div>

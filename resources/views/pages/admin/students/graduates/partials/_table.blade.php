@@ -3,11 +3,13 @@
     hx-get="{{ route('admin.students.graduates.index') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
     hx-target="#graduates-container"
     hx-swap="outerHTML">
-    <div class="overflow-x-auto">
+
+    {{-- ============ DESKTOP TABLE (lg ke atas) — struktur & kelas asli tidak diubah ============ --}}
+    <div class="hidden lg:block overflow-x-auto">
         <table class="w-full text-left border-collapse table-fixed">
             <colgroup>
-                <col style="width:35%">
-                <col style="width:25%">
+                <col style="width:30%">
+                <col style="width:30%">
                 <col style="width:30%">
                 <col style="width:10%">
             </colgroup>
@@ -111,6 +113,71 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    {{-- ============ MOBILE CARDS (di bawah lg) ============ --}}
+    {{-- Negative margin membatalkan padding box card (p-5) supaya list mepet ke garis tepi card,
+         tanpa menembus keluar dari card (otomatis nonaktif di lg via lg:hidden) --}}
+    <div class="lg:hidden divide-y divide-border bg-white -mx-5">
+        @forelse ($graduates as $student)
+        @php
+        $pob = optional($student->vault)->pob_encrypted ?? '-';
+        $dob = optional($student->vault)->dob_encrypted;
+        $dobLabel = $dob ? \Carbon\Carbon::parse($dob)->translatedFormat('d M Y') : '-';
+        @endphp
+
+        <a href="#" title="Detail Profil Alumni"
+            class="flex items-start gap-3 p-4 hover:bg-muted/40 active:bg-muted/60 transition-colors">
+
+            <x-ui.avatar :name="$student->name" :gender="$student->gender" :index="$loop->index" />
+
+            <div class="min-w-0 flex-1">
+                {{-- Nama + NIK + badge tahun lulus --}}
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-foreground text-sm truncate">
+                            {{ $student->name ?? '-' }}
+                        </p>
+                        <p class="text-xs text-secondary mt-0.5 truncate" title="NIK">
+                            {{ optional($student->vault)->nik_encrypted ?? '-' }}
+                        </p>
+                    </div>
+                    <span class="shrink-0 inline-flex px-2 py-1 rounded-md text-[10px] font-bold bg-success/10 text-success">
+                        {{ $student->graduation_year ?? '-' }}
+                    </span>
+                </div>
+
+                {{-- Identitas & data kelulusan, satu baris per item supaya tidak mepet --}}
+                <div class="mt-3 border-t border-border divide-y divide-border text-xs">
+                    <div class="flex items-center justify-between gap-3 py-2.5">
+                        <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                            <i data-lucide="calendar" class="size-3 text-slate-400"></i>
+                            Tempat, Tgl Lahir
+                        </p>
+                        <p class="text-foreground text-right truncate">{{ $pob }}, {{ $dobLabel }}</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 py-2.5">
+                        <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                            <i data-lucide="file-badge" class="size-3 text-slate-400"></i>
+                            No. Ijazah
+                        </p>
+                        <p class="text-foreground text-right truncate font-mono" title="No. Ijazah">
+                            {{ $student->graduation_certificate_number ?? 'Belum diinput' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <i data-lucide="chevron-right" class="size-4 text-slate-300 shrink-0 mt-1"></i>
+        </a>
+        @empty
+        <div class="px-4 py-16 text-center text-secondary">
+            <div class="flex flex-col items-center gap-3">
+                <i data-lucide="graduation-cap" class="size-10 text-border"></i>
+                <p class="font-medium text-sm">Belum ada data alumni yang terdaftar.</p>
+            </div>
+        </div>
+        @endforelse
     </div>
 
     {{-- Memanggil komponen pagination --}}
