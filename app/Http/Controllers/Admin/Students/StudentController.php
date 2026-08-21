@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Services\StudentStatsService;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -80,6 +81,108 @@ class StudentController extends Controller
             $stats,
             ['religionOptions' => Religion::cases()]
         ));
+    }
+
+    /**
+     * Menampilkan Modal Tambah Siswa Baru
+     */
+    public function create()
+    {
+        // Ambil data konsentrasi untuk dropdown
+        $concentrations = CoreConcentration::orderBy('name')->get();
+
+        return view('pages.admin.students.data.partials._create-modal', compact('concentrations'));
+    }
+
+    /**
+     * Memproses Penyimpanan Data Siswa Baru
+     */
+    public function store(Request $request)
+    {
+        // 1. Buat Validator secara manual
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name'              => 'required|string|max:255',
+            'nisn'              => 'required|numeric|digits:10',
+            'nik'               => 'nullable|numeric|digits:16',
+            'gender'            => 'required|in:L,P',
+            'religion'          => 'nullable|string',
+            'concentration_id'  => 'required|exists:core_concentrations,id',
+            'entry_date'        => 'required|date',
+            'entry_grade_level' => 'required|in:10,11,12',
+            'registration_type' => 'required|in:new,transfer',
+        ], [
+            'nisn.digits' => 'NISN harus berjumlah tepat 10 digit angka.',
+            'nik.digits'  => 'NIK harus berjumlah tepat 16 digit angka.',
+        ]);
+
+        $nisnHash = null;
+        $nikHash = null;
+
+        // 2. Tambahkan hook pengecekan hash kustom setelah validasi dasar selesai
+        $validator->after(function ($validator) use ($request, &$nisnHash, &$nikHash) {
+            // Pengecekan NISN
+            if ($request->filled('nisn') && !$validator->errors()->has('nisn')) {
+                $nisnHash = $this->blindIndexHash($request->nisn);
+                if (DB::table('acd_students_vault')->where('nisn_hash', $nisnHash)->exists()) {
+                    $validator->errors()->add('nisn', 'NISN ini sudah terdaftar pada siswa lain.');
+                }
+            }
+
+            // Pengecekan NIK
+            if ($request->filled('nik') && !$validator->errors()->has('nik')) {
+                $nikHash = $this->blindIndexHash($request->nik);
+                if (DB::table('acd_students_vault')->where('nik_hash', $nikHash)->exists()) {
+                    $validator->errors()->add('nik', 'NIK ini sudah terdaftar pada siswa lain.');
+                }
+            }
+        });
+
+        // 3. TANGKAP ERROR: Jika gagal, JANGAN redirect. 
+        // Kembalikan view modal secara langsung agar HTMX bisa menampilkan pesan errornya.
+        if ($validator->fails()) {
+            $request->flash(); // Simpan input lama agar fungsi old() di view tetap berjalan
+
+            // Ambil ulang data konsentrasi yang dibutuhkan dropdown modal
+            $concentrations = CoreConcentration::orderBy('name')->get();
+
+            return view('pages.admin.students.data.partials._create-modal', compact('concentrations'))
+                ->withErrors($validator);
+        }
+
+        // 4. Lanjutkan proses simpan jika lolos validasi
+        $validated = $validator->validated();
+
+        DB::transaction(function () use ($validated, $nisnHash, $nikHash) {
+            $student = Student::create([
+                'name'              => $validated['name'],
+                'gender'            => $validated['gender'],
+                'concentration_id'  => $validated['concentration_id'],
+                'entry_date'        => $validated['entry_date'],
+                'entry_grade_level' => $validated['entry_grade_level'],
+                'registration_type' => $validated['registration_type'],
+            ]);
+
+            $religionVal = !empty($validated['religion']) ? Religion::tryFrom($validated['religion'])?->value : null;
+
+            $student->vault()->create([
+                'nisn_encrypted'     => $validated['nisn'],
+                'nisn_hash'          => $nisnHash,
+
+                'nik_encrypted'      => $validated['nik'] ?? null,
+                'nik_hash'           => $nikHash,
+
+                'religion_encrypted' => $religionVal,
+                'religion_hash'      => $religionVal ? $this->blindIndexHash($religionVal) : null,
+            ]);
+        });
+
+        return response()->noContent()->header('HX-Trigger', json_encode([
+            'showAlert' => [
+                'icon' => 'success',
+                'title' => 'Berhasil!',
+                'text' => 'Data peserta didik baru berhasil ditambahkan.'
+            ]
+        ]));
     }
 
     /**

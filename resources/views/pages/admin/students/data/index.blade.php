@@ -69,7 +69,7 @@
             @if(auth()->user()->roles->contains('name', 'superadmin'))
             {{-- Tombol Tambah (Khusus Superadmin) --}}
             <button type="button"
-                hx-get="#" {{-- Ganti dengan route penambahan siswa Anda --}}
+                hx-get="{{ route('admin.students.data.create') }}" {{-- UBAH BAGIAN INI --}}
                 hx-target="#modal-container"
                 title="Tambah Peserta Didik"
                 class="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold text-xs sm:text-sm transition-all cursor-pointer shadow-sm shadow-indigo-600/30 whitespace-nowrap">
@@ -113,8 +113,51 @@
             {{-- Bagian Kanan: Grup Dropdown, Pencarian, & Filter (Mobile Optimized) --}}
             <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
 
-                {{-- 1. INPUT PENCARIAN (Full width & di atas pada mobile, di tengah pada desktop) --}}
-                <div class="relative w-full sm:w-56 md:w-64 flex items-center order-1 sm:order-2">
+                {{-- 1. DROPDOWN SISWA AKTIF / MENGAMBANG --}}
+                <div x-data="{ dropdownOpen: false }" class="relative w-full sm:w-auto shrink-0">
+                    <button
+                        @click="dropdownOpen = !dropdownOpen"
+                        @click.away="dropdownOpen = false"
+                        type="button"
+                        class="relative flex w-full sm:w-auto h-11 items-center justify-between sm:justify-start gap-2 rounded-xl border border-border bg-white px-3 hover:bg-muted transition-colors focus:outline-none cursor-pointer">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="users" class="size-4 text-secondary shrink-0"></i>
+                            <span class="text-sm font-medium text-foreground">Siswa Aktif</span>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="size-4 text-secondary transition-transform duration-200 shrink-0"
+                            :class="{ 'rotate-180': dropdownOpen }">
+                        </i>
+                    </button>
+
+                    {{-- Isi Dropdown --}}
+                    <div
+                        x-show="dropdownOpen"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-2"
+                        class="absolute left-0 sm:left-auto right-0 sm:right-auto top-full mt-2 w-full sm:w-48 rounded-xl border border-border bg-white shadow-lg z-50 p-1.5 flex flex-col gap-1">
+
+                        <a href="{{ route('admin.students.data.index') }}" class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-primary/10 text-primary">
+                            <i data-lucide="user-check" class="size-4"></i>
+                            Siswa Aktif
+                        </a>
+                        <div class="h-px bg-border mx-1"></div>
+                        <a href="{{ route('admin.students.floating.index') }}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg text-secondary hover:bg-muted hover:text-foreground transition-colors">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-x" class="size-4"></i>
+                                Mengambang
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- 2. INPUT PENCARIAN --}}
+                <div class="relative w-full sm:w-56 md:w-64 flex items-center">
                     <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
@@ -145,69 +188,22 @@
                     </button>
                 </div>
 
-                {{-- 2. GRUP DROPDOWN & FILTER (Sejajar pada mobile) --}}
-                <div class="flex items-center gap-2 w-full sm:w-auto order-2 sm:order-1 sm:order-none">
+                {{-- 3. TOMBOL FILTER --}}
+                <button
+                    type="button"
+                    @click="filterModalOpen = true"
+                    title="Filter"
+                    class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
+                    <i data-lucide="filter" class="size-4 text-secondary"></i>
+                    <span
+                        x-show="isFilterActive"
+                        x-cloak
+                        class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-white"></span>
+                    </span>
+                </button>
 
-                    {{-- Dropdown Siswa Aktif / Mengambang --}}
-                    <div x-data="{ dropdownOpen: false }" class="relative flex-1 sm:flex-none shrink-0">
-                        <button
-                            @click="dropdownOpen = !dropdownOpen"
-                            @click.away="dropdownOpen = false"
-                            type="button"
-                            class="relative flex w-full sm:w-auto h-11 items-center justify-between sm:justify-start gap-2 rounded-xl border border-border bg-white px-3 hover:bg-muted transition-colors focus:outline-none cursor-pointer">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="users" class="size-4 text-secondary shrink-0"></i>
-                                <span class="text-sm font-medium text-foreground">Siswa Aktif</span>
-                            </div>
-                            <i data-lucide="chevron-down"
-                                class="size-4 text-secondary transition-transform duration-200 shrink-0"
-                                :class="{ 'rotate-180': dropdownOpen }">
-                            </i>
-                        </button>
-
-                        {{-- Isi Dropdown --}}
-                        <div
-                            x-show="dropdownOpen"
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-2"
-                            class="absolute left-0 sm:left-auto right-0 sm:right-auto top-full mt-2 w-full sm:w-48 rounded-xl border border-border bg-white shadow-lg z-50 p-1.5 flex flex-col gap-1">
-
-                            <a href="{{ route('admin.students.data.index') }}" class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-primary/10 text-primary">
-                                <i data-lucide="user-check" class="size-4"></i>
-                                Siswa Aktif
-                            </a>
-                            <div class="h-px bg-border mx-1"></div>
-                            <a href="{{ route('admin.students.floating.index') }}" class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg text-secondary hover:bg-muted hover:text-foreground transition-colors">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="user-x" class="size-4"></i>
-                                    Mengambang
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    {{-- Tombol Filter --}}
-                    <button
-                        type="button"
-                        @click="filterModalOpen = true"
-                        title="Filter"
-                        class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none order-3 sm:order-none">
-                        <i data-lucide="filter" class="size-4 text-secondary"></i>
-                        <span
-                            x-show="isFilterActive"
-                            x-cloak
-                            class="absolute -top-1 -right-1 flex h-3 w-3">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-white"></span>
-                        </span>
-                    </button>
-
-                </div>
             </div>
         </div>
 

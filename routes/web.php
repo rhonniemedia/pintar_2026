@@ -63,6 +63,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
 
         // Data Peserta Didik
         Route::get('/data', [StudentController::class, 'index'])->name('data.index');
+
+        // TAMBAHKAN 2 BARIS INI:
+        Route::get('/data/create', [StudentController::class, 'create'])->name('data.create');
+        Route::post('/data', [StudentController::class, 'store'])->name('data.store');
+
         Route::get('/floating', [StudentController::class, 'floating'])->name('floating.index');
         Route::get('/floating/export', [StudentController::class, 'exportFloating'])->name('floating.export');
         Route::get('/data/export', [StudentController::class, 'export'])->name('data.export');
