@@ -4,13 +4,12 @@
     hx-target="#user-list-container"
     hx-swap="outerHTML">
 
-    {{-- Wrapper dengan padding bottom kecil agar scrollbar tidak menutupi konten bawah --}}
-    <div class="overflow-x-auto w-full pb-2">
-        {{-- Hapus table-fixed dan tambahkan min-w-[800px] agar bisa di-scroll horizontal di HP --}}
+    {{-- ============ 1. DESKTOP TABLE ============ --}}
+    {{-- Tambahkan "hidden lg:block" untuk menyembunyikan tabel di HP --}}
+    <div class="hidden lg:block overflow-x-auto w-full pb-2">
         <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
                 <tr class="border-b border-border bg-gray-50/30">
-                    {{-- Pindahkan pengaturan lebar kolom langsung ke dalam class TH --}}
                     <th class="w-[30%] px-4 py-3 text-sm font-bold text-secondary">
                         Pengguna
                         <div class="text-[11px] font-normal normal-case">Nama | Username</div>
@@ -36,8 +35,6 @@
                 $displayName = $staff->name ?? $user->username;
                 $email = optional(optional($staff)->vault)->email;
                 $phone = optional(optional($staff)->vault)->phone_number;
-
-                // Memanggil relasi roles
                 $roles = $user->roles ?? collect();
                 @endphp
                 <tr id="row-user-{{ $user->id }}" class="border-b border-border hover:bg-muted/50 transition-colors">
@@ -135,8 +132,124 @@
         </table>
     </div>
 
+    {{-- ============ 2. MOBILE CARDS ============ --}}
+    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+        @forelse ($data as $user)
+        @php
+        $staff = $user->staff;
+        $displayName = $staff->name ?? $user->username;
+        $email = optional(optional($staff)->vault)->email;
+        $phone = optional(optional($staff)->vault)->phone_number;
+        $roles = $user->roles ?? collect();
+        @endphp
+
+        <div id="card-user-{{ $user->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+            <div class="flex items-start gap-3">
+                <x-ui.avatar :name="$displayName" :gender="optional($staff)->gender" :index="$loop->index" />
+
+                <div class="min-w-0 flex-1">
+                    {{-- Bagian Atas: Nama, Username & Status --}}
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-foreground text-sm uppercase truncate">
+                                {{ $displayName }}
+                            </p>
+                            <p class="text-xs text-secondary mt-0.5 truncate">
+                                {{ $user->username }}
+                            </p>
+                        </div>
+
+                        {{-- Badge Status --}}
+                        @if ($user->status === 'active')
+                        <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-700">
+                            <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                            AKTIF
+                        </span>
+                        @else
+                        <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-md bg-gray-100 text-gray-500">
+                            <span class="size-1.5 rounded-full bg-gray-400"></span>
+                            NONAKTIF
+                        </span>
+                        @endif
+                    </div>
+
+                    {{-- Bagian Tengah: Detail Role & Kontak --}}
+                    <div class="mt-3 border-t border-b border-border divide-y divide-border text-xs">
+
+                        {{-- Role Section --}}
+                        <div class="flex items-center justify-between gap-3 py-2.5">
+                            <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                                <i data-lucide="shield" class="size-3 text-slate-400"></i>
+                                Akses Role
+                            </p>
+                            <div class="flex flex-wrap items-center justify-end gap-1">
+                                @forelse ($roles as $role)
+                                <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-primary/10 text-primary capitalize">
+                                    {{ $role->name }}
+                                </span>
+                                @empty
+                                <span class="text-[10px] text-secondary">Belum ada role</span>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- Telepon Section --}}
+                        <div class="flex items-center justify-between gap-3 py-2.5">
+                            <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                                <i data-lucide="phone" class="size-3 text-slate-400"></i>
+                                Telepon
+                            </p>
+                            <p class="text-foreground text-right font-medium truncate">{{ $phone ?? '-' }}</p>
+                        </div>
+
+                        {{-- Email Section --}}
+                        <div class="flex items-center justify-between gap-3 py-2.5">
+                            <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                                <i data-lucide="mail" class="size-3 text-slate-400"></i>
+                                Email
+                            </p>
+                            <p class="text-foreground text-right truncate">{{ $email ?? '-' }}</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bagian Bawah: Aksi --}}
+            <div class="mt-3 flex justify-end gap-2">
+                <button type="button" title="Ubah Hak Akses"
+                    hx-get="{{ route('admin.users.edit-role', $user->id) }}"
+                    hx-target="#modal-form-container"
+                    hx-swap="innerHTML"
+                    class="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
+                    <i data-lucide="shield-check" class="size-3.5 pointer-events-none"></i>
+                    <span class="text-xs font-medium">Role</span>
+                </button>
+                <button type="button" title="Reset Kata Sandi"
+                    hx-get="{{ route('admin.users.edit-password', $user->id) }}"
+                    hx-target="#modal-form-container"
+                    hx-swap="innerHTML"
+                    class="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-white text-secondary hover:bg-muted hover:text-foreground transition-all cursor-pointer">
+                    <i data-lucide="key-round" class="size-3.5 pointer-events-none"></i>
+                    <span class="text-xs font-medium">Sandi</span>
+                </button>
+            </div>
+
+        </div>
+        @empty
+        <div class="px-4 py-16 text-center text-secondary">
+            <div class="flex flex-col items-center gap-3">
+                <i data-lucide="users-round" class="size-10 text-border"></i>
+                <p class="font-medium text-sm">Belum ada pengguna yang terdaftar</p>
+            </div>
+        </div>
+        @endforelse
+    </div>
+
     {{-- Memanggil komponen pagination --}}
-    <x-ui.pagination :paginator="$data" hxTarget="#user-list-container" />
+    <div class="mt-4">
+        <x-ui.pagination :paginator="$data" hxTarget="#user-list-container" />
+    </div>
 
     <script>
         if (typeof lucide !== 'undefined') {

@@ -3,8 +3,10 @@
     hx-get="{{ route('admin.master-data.academic') }}?tab=academic-year{{ request('search') ? '&search=' . urlencode(request('search')) : '' }}"
     hx-target="#master-data-container"
     hx-swap="outerHTML">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
+
+    {{-- ============ 1. DESKTOP TABLE ============ --}}
+    <div class="hidden lg:block overflow-x-auto pb-2 custom-scrollbar">
+        <table class="w-full text-left min-w-[800px]">
             <thead>
                 <tr class="border-b border-border bg-gray-50/30">
                     <th class="w-[32%] px-4 py-3 text-sm font-bold text-secondary tracking-wider">Tahun Ajaran</th>
@@ -39,7 +41,6 @@
 
                     <td class="px-4 py-4">
                         <div class="flex items-center gap-2" x-data="{}">
-                            {{-- Tombol Edit --}}
                             <button type="button" title="Edit"
                                 hx-get="{{ route('admin.master-data.academic-year.edit', $r->id) }}"
                                 hx-target="#modal-form-container"
@@ -48,7 +49,6 @@
                                 <i data-lucide="pencil" class="size-4 pointer-events-none"></i>
                             </button>
 
-                            {{-- Tombol Hapus --}}
                             <button type="button" title="Hapus"
                                 @click="
                                     ShowConfirm({
@@ -78,6 +78,89 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    {{-- ============ 2. MOBILE CARDS ============ --}}
+    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+        @forelse ($data as $r)
+        @php
+        $startDate = \Carbon\Carbon::parse($r->start_date)->translatedFormat('M Y');
+        $endDate = \Carbon\Carbon::parse($r->end_date)->translatedFormat('M Y');
+        @endphp
+
+        <div id="card-ay-{{ $r->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="font-semibold text-foreground text-sm uppercase truncate">
+                        {{ $r->name }}
+                    </p>
+                    <p class="text-[10px] font-mono text-secondary mt-0.5 truncate">
+                        ID: {{ substr($r->id, 0, 8) }}
+                    </p>
+                </div>
+
+                {{-- Badge Status --}}
+                @if($r->status === 'active')
+                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-700">
+                    <span class="size-1.5 rounded-full bg-emerald-500"></span>AKTIF
+                </span>
+                @else
+                <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-md bg-gray-100 text-gray-500">
+                    <span class="size-1.5 rounded-full bg-gray-400"></span>TIDAK AKTIF
+                </span>
+                @endif
+            </div>
+
+            {{-- Detail Durasi --}}
+            <div class="mt-3 border-t border-border pt-2.5">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-secondary flex items-center gap-1.5 shrink-0 text-xs">
+                        <i data-lucide="calendar-clock" class="size-3 text-slate-400"></i>
+                        Durasi
+                    </p>
+                    <div class="flex items-center gap-1.5 text-xs text-foreground font-medium">
+                        <span class="px-2 py-0.5 bg-muted rounded">{{ $startDate }}</span>
+                        <i data-lucide="arrow-right" class="size-3 text-secondary"></i>
+                        <span class="px-2 py-0.5 bg-muted rounded">{{ $endDate }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Aksi --}}
+            <div class="mt-4 flex justify-end gap-2" x-data="{}">
+                <button type="button" title="Edit"
+                    hx-get="{{ route('admin.master-data.academic-year.edit', $r->id) }}"
+                    hx-target="#modal-form-container"
+                    hx-swap="innerHTML"
+                    class="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-white text-secondary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer">
+                    <i data-lucide="pencil" class="size-3.5 pointer-events-none"></i>
+                    <span class="text-xs font-medium">Edit</span>
+                </button>
+                <button type="button" title="Hapus"
+                    @click="
+                        ShowConfirm({
+                            title: 'Hapus Tahun Ajaran?',
+                            message: 'Data \'{{ addslashes($r->name) }}\' akan dihapus permanen dan tidak dapat dikembalikan.',
+                            confirmText: 'Ya, Hapus',
+                            cancelText: 'Batal',
+                        }, () => {
+                            htmx.ajax('DELETE', '{{ route('admin.master-data.academic-year.destroy', $r->id) }}', { target: '#master-data-container', swap: 'none' });
+                        })
+                    "
+                    class="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-error/20 bg-error/5 text-error hover:bg-error/10 transition-all cursor-pointer">
+                    <i data-lucide="trash-2" class="size-3.5 pointer-events-none"></i>
+                    <span class="text-xs font-medium">Hapus</span>
+                </button>
+            </div>
+        </div>
+        @empty
+        <div class="px-4 py-16 text-center text-secondary">
+            <div class="flex flex-col items-center gap-3">
+                <i data-lucide="inbox" class="size-10 text-border"></i>
+                <p class="font-medium text-sm">Tidak ada data tahun ajaran</p>
+            </div>
+        </div>
+        @endforelse
     </div>
 
     <div class="mt-4">

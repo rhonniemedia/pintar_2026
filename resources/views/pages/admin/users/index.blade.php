@@ -20,7 +20,7 @@ $roleOptionsList[] = [
 @section('page_subtitle', 'Kelola akun pengguna, hak akses, dan kata sandi')
 
 @section('content')
-<div class="p-8">
+<div class="px-5 py-8 md:p-8">
 
     {{-- PAGE HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">

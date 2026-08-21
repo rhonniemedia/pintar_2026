@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Kelola data rombel dan penempatan siswa')
 
 @section('content')
-<div class="p-8"
+<div class="px-5 py-8 md:p-8"
     x-data="{ 
         filterModalOpen: false,
         formModalOpen: false,
@@ -32,7 +32,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Rombongan Belajar</h1>
-            <p class="text-sm text-secondary">Kelola data rombel dan penempatan siswa secara menyeluruh[cite: 19].</p>
+            <p class="text-sm text-secondary">Kelola data rombel dan penempatan siswa secara menyeluruh.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
@@ -77,7 +77,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-lg font-bold text-foreground">Daftar Rombel</h2>
-                <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data[cite: 19].</p>
+                <p class="text-sm text-secondary mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>
             </div>
 
             <div class="flex items-center gap-2 w-full sm:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">

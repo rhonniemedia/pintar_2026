@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Data siswa pindahan dari sekolah lain')
 
 @section('content')
-<div class="p-8">
+<div class="px-5 py-8 md:p-8">
 
     {{-- PAGE HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">

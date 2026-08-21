@@ -33,10 +33,26 @@
         <div>
             <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->grade_12->total) }}</p>
             <p class="text-sm text-secondary mt-0.5">Peserta Didik Kelas XII</p>
-            <div class="flex items-center gap-2 mt-1.5">
-                <span class="text-[11px] text-secondary"><span class="font-medium text-blue-600">Laki-laki:</span> {{ $data->stats->grade_12->male }}</span>
+            <div class="flex items-center gap-2 sm:gap-3 mt-1.5">
+                <span class="inline-flex items-center gap-1 text-[11px] text-secondary">
+                    <svg class="size-3.5 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="14" r="5"></circle>
+                        <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                        <polyline points="15 4 20 4 20 9"></polyline>
+                    </svg>
+                    <span class="font-medium text-blue-600 hidden sm:inline">Laki-laki:</span>
+                    {{ $data->stats->grade_12->male }}
+                </span>
                 <span class="text-border text-[10px]">|</span>
-                <span class="text-[11px] text-secondary"><span class="font-medium text-pink-600">Perempuan:</span> {{ $data->stats->grade_12->female }}</span>
+                <span class="inline-flex items-center gap-1 text-[11px] text-secondary">
+                    <svg class="size-3.5 text-pink-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="10" r="5"></circle>
+                        <line x1="12" y1="15" x2="12" y2="22"></line>
+                        <line x1="9" y1="19" x2="15" y2="19"></line>
+                    </svg>
+                    <span class="font-medium text-pink-600 hidden sm:inline">Perempuan:</span>
+                    {{ $data->stats->grade_12->female }}
+                </span>
             </div>
         </div>
     </div>
@@ -54,10 +70,26 @@
         <div>
             <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->grade_11->total) }}</p>
             <p class="text-sm text-secondary mt-0.5">Peserta Didik Kelas XI</p>
-            <div class="flex items-center gap-2 mt-1.5">
-                <span class="text-[11px] text-secondary"><span class="font-medium text-blue-600">Laki-laki:</span> {{ $data->stats->grade_11->male }}</span>
+            <div class="flex items-center gap-2 sm:gap-3 mt-1.5">
+                <span class="inline-flex items-center gap-1 text-[11px] text-secondary">
+                    <svg class="size-3.5 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="14" r="5"></circle>
+                        <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                        <polyline points="15 4 20 4 20 9"></polyline>
+                    </svg>
+                    <span class="font-medium text-blue-600 hidden sm:inline">Laki-laki:</span>
+                    {{ $data->stats->grade_11->male }}
+                </span>
                 <span class="text-border text-[10px]">|</span>
-                <span class="text-[11px] text-secondary"><span class="font-medium text-pink-600">Perempuan:</span> {{ $data->stats->grade_11->female }}</span>
+                <span class="inline-flex items-center gap-1 text-[11px] text-secondary">
+                    <svg class="size-3.5 text-pink-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="10" r="5"></circle>
+                        <line x1="12" y1="15" x2="12" y2="22"></line>
+                        <line x1="9" y1="19" x2="15" y2="19"></line>
+                    </svg>
+                    <span class="font-medium text-pink-600 hidden sm:inline">Perempuan:</span>
+                    {{ $data->stats->grade_11->female }}
+                </span>
             </div>
         </div>
     </div>
@@ -75,10 +107,26 @@
         <div>
             <p class="font-bold text-3xl text-foreground">{{ number_format($data->stats->grade_10->total) }}</p>
             <p class="text-sm text-secondary mt-0.5">Peserta Didik Kelas X</p>
-            <div class="flex items-center gap-2 mt-1.5">
-                <span class="text-[11px] text-secondary"><span class="font-medium text-blue-600">Laki-laki:</span> {{ $data->stats->grade_10->male }}</span>
+            <div class="flex items-center gap-2 sm:gap-3 mt-1.5">
+                <span class="inline-flex items-center gap-1 text-[11px] text-secondary">
+                    <svg class="size-3.5 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="14" r="5"></circle>
+                        <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                        <polyline points="15 4 20 4 20 9"></polyline>
+                    </svg>
+                    <span class="font-medium text-blue-600 hidden sm:inline">Laki-laki:</span>
+                    {{ $data->stats->grade_10->male }}
+                </span>
                 <span class="text-border text-[10px]">|</span>
-                <span class="text-[11px] text-secondary"><span class="font-medium text-pink-600">Perempuan:</span> {{ $data->stats->grade_10->female }}</span>
+                <span class="inline-flex items-center gap-1 text-[11px] text-secondary">
+                    <svg class="size-3.5 text-pink-500 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="10" r="5"></circle>
+                        <line x1="12" y1="15" x2="12" y2="22"></line>
+                        <line x1="9" y1="19" x2="15" y2="19"></line>
+                    </svg>
+                    <span class="font-medium text-pink-600 hidden sm:inline">Perempuan:</span>
+                    {{ $data->stats->grade_10->female }}
+                </span>
             </div>
         </div>
     </div>

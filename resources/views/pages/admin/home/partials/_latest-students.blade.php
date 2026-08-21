@@ -29,7 +29,9 @@
 
     {{-- Tabel --}}
     <div id="latest-students-container">
-        <div class="overflow-x-auto">
+
+        {{-- ============ 1. DESKTOP TABLE ============ --}}
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
                     <tr class="border-b border-border">
@@ -91,26 +93,105 @@
                             <div class="flex items-center gap-1.5 text-xs text-secondary mt-0.5 whitespace-nowrap">
                                 <span class="inline-block size-1.5 rounded-full shrink-0"
                                     @style(['background-color: ' . $s->concentration_color])></span>
-                                    {{ $s->concentration_alias }}
-                                </div>
-                            </td>
+                                {{ $s->concentration_alias }}
+                            </div>
+                        </td>
 
-                            {{-- Status --}}
-                            <td class="px-5 py-4 min-w-[110px]">
-                                <div class="size-8 rounded-full {{ $s->icon_class }} flex items-center justify-center" title="{{ $s->status_label }}">
-                                    <i data-lucide="{{ $s->icon_name }}" class="size-4"></i>
-                                </div>
-                            </td>
-                        </tr>
+                        {{-- Status --}}
+                        <td class="px-5 py-4 min-w-[110px]">
+                            <div class="size-8 rounded-full {{ $s->icon_class }} flex items-center justify-center" title="{{ $s->status_label }}">
+                                <i data-lucide="{{ $s->icon_name }}" class="size-4"></i>
+                            </div>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="4" class="px-4 py-10 text-center text-secondary">
-                                <p class="font-medium">Tidak ada data siswa terbaru</p>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="4" class="px-4 py-10 text-center text-secondary">
+                            <p class="font-medium">Tidak ada data siswa terbaru</p>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        {{-- ============ 2. MOBILE CARDS ============ --}}
+        {{-- Karena parent menggunakan p-6, kita gunakan -mx-6 agar garis penuh ke tepi --}}
+        <div class="lg:hidden divide-y divide-border bg-white -mx-6 border-t border-border mt-1">
+            @forelse ($data->students as $s)
+            <div class="px-6 py-4 hover:bg-muted/40 active:bg-muted/60 transition-colors">
+                
+                <div class="flex items-start gap-3">
+                    {{-- Avatar (Bisa diklik) --}}
+                    <a href="#" class="relative size-10 shrink-0 rounded-full overflow-hidden block">
+                        <x-ui.avatar :name="$s->name" :index="$loop->index" class="size-10 absolute inset-0" />
+                    </a>
+
+                    <div class="min-w-0 flex-1">
+                        {{-- Bagian Atas: Nama, NISN & Ikon Status --}}
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0 flex-1">
+                                <a href="#" class="font-semibold text-foreground text-sm uppercase truncate block hover:text-primary transition-colors">
+                                    {{ $s->name }}
+                                </a>
+                                <p class="text-xs text-secondary mt-0.5 truncate">
+                                    {{ $s->nisn }}
+                                </p>
+                            </div>
+                            
+                            {{-- Ikon Status diletakkan di kanan --}}
+                            <div class="shrink-0 size-8 rounded-full {{ $s->icon_class }} flex items-center justify-center" title="{{ $s->status_label }}">
+                                <i data-lucide="{{ $s->icon_name }}" class="size-4"></i>
+                            </div>
+                        </div>
+
+                        {{-- Bagian Bawah: Detail TTL & Rombel --}}
+                        <div class="mt-3 border-t border-border divide-y divide-border text-xs">
+                            
+                            {{-- TTL Section --}}
+                            <div class="flex items-center justify-between gap-3 py-2.5">
+                                <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                                    <i data-lucide="calendar-heart" class="size-3 text-slate-400"></i>
+                                    Kelahiran
+                                </p>
+                                <div class="text-right truncate">
+                                    <p class="text-foreground font-medium truncate">{{ $s->birth_place }}</p>
+                                    <p class="text-secondary/80 truncate text-[10px]">{{ $s->birth_date }}</p>
+                                </div>
+                            </div>
+                            
+                            {{-- Rombel Section --}}
+                            <div class="flex items-center justify-between gap-3 py-2.5">
+                                <p class="text-secondary flex items-center gap-1.5 shrink-0">
+                                    <i data-lucide="book-open" class="size-3 text-slate-400"></i>
+                                    Rombel
+                                </p>
+                                <div class="text-right truncate">
+                                    <p class="text-foreground font-medium truncate">{{ $s->class_group_name }}</p>
+                                    <div class="flex items-center justify-end gap-1.5 text-[10px] text-secondary mt-0.5">
+                                        <span class="inline-block size-1.5 rounded-full shrink-0" @style([' background-color: ' . $s->concentration_color])></span>
+                                        {{ $s->concentration_alias }}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            @empty
+            <div class="px-6 py-10 text-center text-secondary">
+                <p class="font-medium text-sm">Tidak ada data siswa terbaru</p>
+            </div>
+            @endforelse
+        </div>
     </div>
 </div>
+
+
+                                    <script>
+                                        if (typeof lucide !== ' undefined') {
+                                    lucide.createIcons();
+                                    }
+                                    </script>

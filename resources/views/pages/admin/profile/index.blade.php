@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Kelola informasi akun dan keamanan Anda')
 
 @section('content')
-<div class="p-8 space-y-5"
+<div class="px-5 py-8 md:p-8"
     x-data="profileApp(@js($userData))"
     @profile-updated.window="
         user.telephone = $event.detail.telephone; 
@@ -24,7 +24,7 @@
     </div>
 
     {{-- ── CARD 1: Profile Header ── --}}
-    <div class="bg-white rounded-2xl border border-border px-6 py-5">
+    <div class="bg-white rounded-2xl border border-border px-6 py-5 mb-4">
         <div class="flex items-center gap-5">
             {{-- Avatar --}}
             <div class="relative shrink-0">
@@ -56,7 +56,7 @@
     </div>
 
     {{-- ── CARD 2: Upload Foto ── --}}
-    <div class="bg-white rounded-2xl border border-border px-6 py-5">
+    <div class="bg-white rounded-2xl border border-border px-6 py-5 mb-4">
         <h5 class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Upload Foto</h5>
         <p class="text-xs text-secondary mb-4">Maksimal 2MB · JPG atau PNG</p>
 
@@ -81,7 +81,7 @@
     </div>
 
     {{-- ── CARD 3: Informasi Pribadi ── --}}
-    <div class="bg-white rounded-2xl border border-border">
+    <div class="bg-white rounded-2xl border border-border mb-4">
 
         {{-- Card Header & Dropdown --}}
         <div class="flex items-start justify-between px-6 py-5 border-b border-border">

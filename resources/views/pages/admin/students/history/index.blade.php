@@ -6,7 +6,7 @@
 
 @section('content')
 {{-- Penyesuaian padding utama responsif --}}
-<div class="p-4 sm:p-6 md:p-8"
+<div class="px-5 py-8 md:p-8"
     x-data="{
         filterModalOpen: false,
         isFilterActive: {{ ($filterExitStatus || $filterConcentration || $filterExitSemester) ? 'true' : 'false' }},

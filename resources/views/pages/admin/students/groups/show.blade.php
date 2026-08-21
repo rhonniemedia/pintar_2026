@@ -13,7 +13,7 @@ $genderOptionsList = [
 @section('page_title', 'Detail Rombongan Belajar')
 
 @section('content')
-<div class="p-8">
+<div class="px-5 py-8 md:p-8">
     {{-- 1. HEADER & TOMBOL KEMBALI --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>

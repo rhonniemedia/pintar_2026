@@ -28,7 +28,7 @@ $createRoutes = [
 
 @section('content')
 {{-- Penyesuaian padding utama responsif --}}
-<div class="p-4 sm:p-6 md:p-8">
+<div class="px-5 py-8 md:p-8">
 
     {{-- PAGE HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5 sm:mb-6">
