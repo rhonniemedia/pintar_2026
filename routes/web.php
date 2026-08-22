@@ -101,6 +101,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
         Route::post('/group/{classGroup}/add-student', [ClassGroupController::class, 'storeStudent'])->name('group.add-student.store');
         Route::delete('/group/{id}', [ClassGroupController::class, 'destroy'])->name('group.destroy');
 
+        // 1. Surat Pernyataan
+        Route::get('/data/{id}/print/statement-modal', [StudentLetterController::class, 'printStatementModal'])->name('data.print.statement-modal');
+        Route::get('/data/{id}/print/statement', [StudentLetterController::class, 'printStatementPdf'])->name('data.print.statement');
+
+        // 2. Biodata Peserta Didik
+        Route::get('/data/{id}/print/biodata-modal', [StudentLetterController::class, 'printBiodataModal'])->name('data.print.biodata-modal');
+        Route::get('/data/{id}/print/biodata', [StudentLetterController::class, 'printBiodataPdf'])->name('data.print.biodata');
+
         // Rute Cetak Daftar Hadir
         Route::controller(ClassGroupAttendanceController::class)->group(function () {
             Route::get('/group/attendance/modal', 'showModal')->name('attendance.modal');

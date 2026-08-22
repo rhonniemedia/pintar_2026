@@ -36,7 +36,7 @@
         </div>
 
         {{-- Body Modal --}}
-        <div class="p-4 sm:p-6 overflow-y-auto max-h-[60vh] bg-slate-50/30 flex-1 custom-scrollbar">
+        <div class="p-4 sm:p-6 overflow-y-auto bg-slate-50/30 flex-1 custom-scrollbar">
 
             @if($eligibleStudents->isEmpty())
             <div class="text-center p-8 text-sm font-medium text-secondary bg-white rounded-xl border border-dashed border-border flex flex-col items-center gap-3">
@@ -103,7 +103,7 @@
         </div>
 
         {{-- Footer Modal --}}
-        <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-end gap-3 shrink-0">
+        <div class="mt-auto px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-end gap-3 shrink-0">
             <button type="button" @click="closeModal()"
                 class="px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:border-gray-300 transition-all cursor-pointer"
                 :disabled="isSubmitting">

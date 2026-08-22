@@ -14,30 +14,38 @@ $genderOptionsList = [
 
 @section('content')
 <div class="px-5 py-8 md:p-8">
-    {{-- 1. HEADER & TOMBOL KEMBALI --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div>
-            @php
-            $grades = ['10' => 'X', '11' => 'XI', '12' => 'XII', '13' => 'XIII'];
-            $gradeLabel = $grades[$classGroup->grade_level] ?? $classGroup->grade_level;
-            $displayName = $classGroup->name ?: "{$gradeLabel} {$classGroup->concentration->name} {$classGroup->group_number}";
+    {{-- 1. HEADER & TOMBOL AKSI --}}
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
 
-            // Kenaikan: tingkat 10 & 11, semester genap. Kelulusan: tingkat 12, semester genap.
-            $activeSemester = $classGroup->semester;
-            $isEvenSemester = $activeSemester?->isEven() ?? false;
+        {{-- Bagian Kiri: Judul dan Tombol Kembali (Rata Kiri-Kanan khusus di Mobile) --}}
+        <div class="flex items-start justify-between w-full md:w-auto md:flex-1 gap-4">
+            <div class="min-w-0 pr-2">
+                @php
+                $grades = ['10' => 'X', '11' => 'XI', '12' => 'XII', '13' => 'XIII'];
+                $gradeLabel = $grades[$classGroup->grade_level] ?? $classGroup->grade_level;
+                $displayName = $classGroup->name ?: "{$gradeLabel} {$classGroup->concentration->name} {$classGroup->group_number}";
 
-            // PERBAIKAN: Mengecek ketersediaan semester berikutnya
-            $hasNextSemester = $activeSemester?->next !== null;
+                // Kenaikan: tingkat 10 & 11, semester genap. Kelulusan: tingkat 12, semester genap.
+                $activeSemester = $classGroup->semester;
+                $isEvenSemester = $activeSemester?->isEven() ?? false;
+                $hasNextSemester = $activeSemester?->next !== null;
 
-            // PERBAIKAN: Tombol hanya tampil jika semester genap DAN semester berikutnya sudah ada
-            $canPromote = in_array($classGroup->grade_level, ['10', '11'], true) && $isEvenSemester && $hasNextSemester;
-            $canGraduate = $classGroup->grade_level === '12' && $isEvenSemester && $hasNextSemester;
-            @endphp
-            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">{{ $displayName }}</h1>
-            <p class="text-sm text-secondary">{{ $classGroup->concentration->name ?? '-' }}</p>
+                $canPromote = in_array($classGroup->grade_level, ['10', '11'], true) && $isEvenSemester && $hasNextSemester;
+                $canGraduate = $classGroup->grade_level === '12' && $isEvenSemester && $hasNextSemester;
+                @endphp
+                <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1 truncate">{{ $displayName }}</h1>
+                <p class="text-sm text-secondary truncate">{{ $classGroup->concentration->name ?? '-' }}</p>
+            </div>
+
+            {{-- TOMBOL KEMBALI (Tampil di sebelah kanan judul pada perangkat Mobile) --}}
+            <button type="button" onclick="history.back()" title="Kembali"
+                class="md:hidden flex items-center justify-center size-9 shrink-0 ring-1 ring-border hover:ring-emerald-500 rounded-full text-foreground hover:text-emerald-500 transition-all bg-white cursor-pointer shadow-sm">
+                <i data-lucide="arrow-left" class="size-4 pointer-events-none"></i>
+            </button>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+        {{-- Bagian Kanan: Grup Tombol Aksi (Tersusun ke bawah di Mobile, ke samping di Desktop) --}}
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto shrink-0 mt-2 md:mt-0">
 
             {{-- TOMBOL TAMBAH --}}
             <button type="button"
@@ -70,14 +78,12 @@ $genderOptionsList = [
 
                         <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Aksi</p>
 
-                        <!-- Proses Kenaikan -->
                         <button type="button" @click="open = false"
                             hx-get="{{ route('admin.students.group.promotion.form', $classGroup->id) }}" hx-target="#modal-container" hx-swap="innerHTML"
                             class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                             <i data-lucide="copy-check" class="size-4 text-secondary pointer-events-none"></i> Proses Kenaikan
                         </button>
 
-                        <!-- Pembatalan Kenaikan -->
                         <button type="button" @click="open = false"
                             hx-get="{{ route('admin.students.group.promotion.cancel-form', $classGroup->id) }}" hx-target="#modal-container" hx-swap="innerHTML"
                             class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors cursor-pointer text-left">
@@ -107,14 +113,12 @@ $genderOptionsList = [
 
                         <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Aksi</p>
 
-                        <!-- Proses Kelulusan -->
                         <button type="button" @click="open = false"
                             hx-get="{{ route('admin.students.group.graduation.form', $classGroup->id) }}" hx-target="#modal-container" hx-swap="innerHTML"
                             class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                             <i data-lucide="graduation-cap" class="size-4 text-secondary pointer-events-none"></i> Proses Kelulusan
                         </button>
 
-                        <!-- Pembatalan Kelulusan -->
                         <button type="button" @click="open = false"
                             hx-get="{{ route('admin.students.group.graduation.cancel-form', $classGroup->id) }}" hx-target="#modal-container" hx-swap="innerHTML"
                             class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors cursor-pointer text-left">
@@ -125,9 +129,9 @@ $genderOptionsList = [
             </div>
             @endif
 
-            {{-- TOMBOL KEMBALI --}}
+            {{-- TOMBOL KEMBALI (Tampil berdampingan di Desktop) --}}
             <button type="button" onclick="history.back()" title="Kembali"
-                class="flex items-center justify-center h-10 w-10 shrink-0 ring-1 ring-border hover:ring-emerald-500 rounded-full text-foreground hover:text-emerald-500 transition-all bg-white cursor-pointer shadow-sm">
+                class="hidden md:flex items-center justify-center size-10 shrink-0 ring-1 ring-border hover:ring-emerald-500 rounded-full text-foreground hover:text-emerald-500 transition-all bg-white cursor-pointer shadow-sm">
                 <i data-lucide="arrow-left" class="size-4 pointer-events-none"></i>
             </button>
         </div>
@@ -185,10 +189,13 @@ $genderOptionsList = [
                 {{-- Dropdown Filter Gender menggunakan x-ui.select dengan Ikon --}}
                 <div class="relative w-full sm:w-44"
                     hx-get="{{ route('admin.students.group.show', $classGroup->id) }}"
-                    hx-trigger="change"
+                    {{-- PERBAIKAN 1: Menargetkan trigger secara eksplisit ke input name='filter_gender' --}}
+                    hx-trigger="change from:[name='filter_gender'], input from:[name='filter_gender']"
                     hx-target="#students-container"
                     hx-select="#students-container"
-                    hx-include="[name='search']"
+                    {{-- PERBAIKAN 2: Menambahkan hx-swap="outerHTML" agar tabel tidak bersarang --}}
+                    hx-swap="outerHTML"
+                    hx-include="[name='search'], [name='filter_gender']"
                     hx-push-url="true">
 
                     <i data-lucide="users" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-secondary z-10 pointer-events-none"></i>
@@ -218,7 +225,9 @@ $genderOptionsList = [
                         hx-trigger="keyup changed delay:400ms, search, refreshClassData from:body"
                         hx-target="#students-container"
                         hx-select="#students-container"
-                        hx-include="[name='filter_gender']"
+                        {{-- PERBAIKAN 2: Menambahkan hx-swap="outerHTML" --}}
+                        hx-swap="outerHTML"
+                        hx-include="[name='search'], [name='filter_gender']"
                         hx-push-url="true"
                         class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
                         :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">

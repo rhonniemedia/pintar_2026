@@ -49,7 +49,7 @@
 
     {{-- ============ 2. MOBILE CARDS (di bawah lg) ============ --}}
     {{-- Margin negatif (-mx-5) menembus padding kotak putih pembungkus di index --}}
-    <div class="lg:hidden divide-y divide-border bg-white -mx-5">
+    <div class="lg:hidden divide-y divide-border border-y border-border bg-white -mx-5 mb-5 mt-2">
         @forelse ($students as $r)
         @php
         $nisn = $r->vault->nisn_encrypted ?? '-';
@@ -58,7 +58,7 @@
         $alias = $r->concentration->alias ?? '-';
         @endphp
 
-        <div id="card-student-{{ $r->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div id="card-student-{{ $r->id }}" class="px-5 py-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
 
             <div class="flex items-start gap-3">
                 <x-ui.avatar :name="$r->name" :gender="$r->gender" :index="$loop->index" />

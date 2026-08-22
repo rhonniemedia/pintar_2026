@@ -12,7 +12,7 @@
     <x-ui.modal show="open" maxWidth="3xl">
 
         {{-- WADAH BARU: HTMX hanya akan mengganti elemen div ini beserta isinya, modal luarnya tidak tersentuh --}}
-        <div id="edit-modal-content" class="flex flex-col flex-1 min-h-0"
+        <div id="edit-modal-content" class="flex flex-col flex-1 min-h-0 h-full w-full"
             x-data="{ 
                 isSpecial: '{{ old('is_special_condition', $student->is_special_condition ?? 'no') }}',
                 isLoading: false
@@ -88,7 +88,7 @@
             $errorClass = 'border-error ring-1 ring-error/30';
             @endphp
 
-            <div id="edit-modal-scroll-area" class="block p-4 sm:p-6 overflow-y-auto max-h-[55vh] sm:max-h-[60vh] bg-slate-50/30 flex-1 [scrollbar-gutter:stable]">
+            <div id="edit-modal-scroll-area" class="block p-4 sm:p-6 overflow-y-auto sm:max-h-[60vh] bg-slate-50/30 flex-1 [scrollbar-gutter:stable]">
 
                 @if($activeStep === 1)
                 {{-- STEP 1: IDENTITAS DIRI --}}
@@ -786,7 +786,7 @@
             </div>
 
             {{-- Footer Modal --}}
-            <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-between gap-2 shrink-0">
+            <div class="mt-auto px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-between gap-2 shrink-0">
                 <div>
                     @if($activeStep === 1)
                     <button type="button" @click="closeModal()"

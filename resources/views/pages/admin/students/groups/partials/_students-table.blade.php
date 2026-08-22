@@ -128,6 +128,30 @@
                                     <button type="button" @click="open = false" hx-get="{{ route('admin.students.group.student.move-form', ['classGroup' => $classGroup->id, 'student' => $r->id]) }}" hx-target="#modal-container" hx-swap="innerHTML" class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                                         <i data-lucide="arrow-right-left" class="size-4 text-secondary pointer-events-none"></i> Pindah Kelas
                                     </button>
+
+                                    {{-- TAMBAHAN MENU CETAK --}}
+                                    <div class="my-2 border-t border-border"></div>
+                                    <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Cetak Dokumen</p>
+
+                                    {{-- Tombol Cetak Surat Pernyataan --}}
+                                    <button type="button" @click="open = false"
+                                        hx-get="{{ route('admin.students.data.print.statement-modal', $r->id) }}"
+                                        hx-target="#modal-container"
+                                        hx-swap="innerHTML"
+                                        class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left w-[calc(100%-1rem)]">
+                                        <i data-lucide="file-signature" class="size-4 text-secondary pointer-events-none shrink-0"></i> Surat Pernyataan
+                                    </button>
+
+                                    {{-- Tombol Cetak Biodata (Siapkan rutenya nanti) --}}
+                                    <button type="button" @click="open = false"
+                                        hx-get="{{ route('admin.students.data.print.biodata-modal', $r->id) }}"
+                                        hx-target="#modal-container"
+                                        hx-swap="innerHTML"
+                                        class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left w-[calc(100%-1rem)]">
+                                        <i data-lucide="printer" class="size-4 text-secondary pointer-events-none shrink-0"></i> Biodata Peserta Didik
+                                    </button>
+                                    {{-- AKHIR TAMBAHAN --}}
+
                                     <button type="button" disabled hx-delete="{{ route('admin.students.data.destroy', $r->id) }}" hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML" hx-confirm="Yakin ingin menghapus data {{ $r->name }}? Tindakan ini tidak dapat dibatalkan." class="flex items-center gap-2 mx-2 px-3 py-2 mt-1 rounded-lg text-sm text-error opacity-50 cursor-not-allowed text-left border-t border-border pt-2 rounded-t-none">
                                         <i data-lucide="trash-2" class="size-4 pointer-events-none"></i> Hapus Data
                                     </button>
@@ -146,7 +170,7 @@
     </div>
 
     {{-- ============ 2. MOBILE CARDS ============ --}}
-    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+    <div class="lg:hidden divide-y divide-border border-y border-border bg-white -mx-5 mb-5 mt-2">
         @forelse ($students as $r)
         @php
         $nik = $r->vault->nik_encrypted ?? '-';
@@ -165,7 +189,7 @@
         }
         @endphp
 
-        <div id="card-student-{{ $r->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div id="card-student-{{ $r->id }}" class="px-5 py-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
 
             <div class="flex items-start gap-3">
                 <x-ui.avatar :name="$r->name" :gender="$r->gender" :index="$loop->index" />
@@ -268,6 +292,29 @@
                         <button type="button" @click="open = false" hx-get="{{ route('admin.students.group.student.move-form', ['classGroup' => $classGroup->id, 'student' => $r->id]) }}" hx-target="#modal-container" hx-swap="innerHTML" class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left">
                             <i data-lucide="arrow-right-left" class="size-4 text-secondary pointer-events-none"></i> Pindah Kelas
                         </button>
+
+                        {{-- TAMBAHAN MENU CETAK (MOBILE) --}}
+                        <div class="my-2 border-t border-border"></div>
+                        <p class="px-4 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary">Cetak Dokumen</p>
+
+                        {{-- Tombol Cetak Surat Pernyataan --}}
+                        <button type="button" @click="open = false"
+                            hx-get="{{ route('admin.students.data.print.statement-modal', $r->id) }}"
+                            hx-target="#modal-container"
+                            hx-swap="innerHTML"
+                            class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left w-[calc(100%-1rem)]">
+                            <i data-lucide="file-signature" class="size-4 text-secondary pointer-events-none shrink-0"></i> Surat Pernyataan
+                        </button>
+
+                        {{-- Tombol Cetak Biodata (Siapkan rutenya nanti) --}}
+                        <button type="button" @click="open = false"
+                            hx-get="{{ route('admin.students.data.print.biodata-modal', $r->id) }}"
+                            hx-target="#modal-container"
+                            hx-swap="innerHTML"
+                            class="flex items-center gap-2 mx-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors cursor-pointer text-left w-[calc(100%-1rem)]">
+                            <i data-lucide="printer" class="size-4 text-secondary pointer-events-none shrink-0"></i> Biodata Peserta Didik
+                        </button>
+                        {{-- AKHIR TAMBAHAN --}}
 
                         <button type="button" disabled hx-delete="{{ route('admin.students.data.destroy', $r->id) }}" hx-target="#students-container" hx-select="#students-container" hx-swap="outerHTML" hx-confirm="Yakin ingin menghapus data {{ $r->name }}? Tindakan ini tidak dapat dibatalkan." class="flex items-center gap-2 mx-2 px-3 py-2 mt-1 rounded-lg text-sm text-error opacity-50 cursor-not-allowed text-left border-t border-border pt-2 rounded-t-none">
                             <i data-lucide="trash-2" class="size-4 pointer-events-none"></i> Hapus Data

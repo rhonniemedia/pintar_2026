@@ -99,7 +99,7 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Buat Validator secara manual
+        // 1. Validasi Dasar
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name'              => 'required|string|max:255',
             'nisn'              => 'required|numeric|digits:10',
@@ -116,40 +116,25 @@ class StudentController extends Controller
         ]);
 
         $nisnHash = null;
-        $nikHash = null;
+        $nikHash  = null;
 
-        // 2. Tambahkan hook pengecekan hash kustom setelah validasi dasar selesai
+        // 2. Validasi Kustom (Cek Hash NISN & NIK)
         $validator->after(function ($validator) use ($request, &$nisnHash, &$nikHash) {
-            // Pengecekan NISN
-            if ($request->filled('nisn') && !$validator->errors()->has('nisn')) {
-                $nisnHash = $this->blindIndexHash($request->nisn);
-                if (DB::table('acd_students_vault')->where('nisn_hash', $nisnHash)->exists()) {
-                    $validator->errors()->add('nisn', 'NISN ini sudah terdaftar pada siswa lain.');
-                }
-            }
-
-            // Pengecekan NIK
-            if ($request->filled('nik') && !$validator->errors()->has('nik')) {
-                $nikHash = $this->blindIndexHash($request->nik);
-                if (DB::table('acd_students_vault')->where('nik_hash', $nikHash)->exists()) {
-                    $validator->errors()->add('nik', 'NIK ini sudah terdaftar pada siswa lain.');
-                }
-            }
+            $this->validateUniqueHash($request, $validator, 'nisn', $nisnHash);
+            $this->validateUniqueHash($request, $validator, 'nik', $nikHash);
         });
 
-        // 3. TANGKAP ERROR: Jika gagal, JANGAN redirect. 
-        // Kembalikan view modal secara langsung agar HTMX bisa menampilkan pesan errornya.
+        // 3. Jika Validasi Gagal, Kembalikan View Modal (Untuk HTMX)
         if ($validator->fails()) {
             $request->flash(); // Simpan input lama agar fungsi old() di view tetap berjalan
-
-            // Ambil ulang data konsentrasi yang dibutuhkan dropdown modal
             $concentrations = CoreConcentration::orderBy('name')->get();
 
+            // PERBAIKAN: Gunakan with('errors', ...) karena View tidak memiliki method withErrors()
             return view('pages.admin.students.data.partials._create-modal', compact('concentrations'))
-                ->withErrors($validator);
+                ->with('errors', $validator->errors());
         }
 
-        // 4. Lanjutkan proses simpan jika lolos validasi
+        // 4. Simpan Data
         $validated = $validator->validated();
 
         DB::transaction(function () use ($validated, $nisnHash, $nikHash) {
@@ -162,26 +147,27 @@ class StudentController extends Controller
                 'registration_type' => $validated['registration_type'],
             ]);
 
-            $religionVal = !empty($validated['religion']) ? Religion::tryFrom($validated['religion'])?->value : null;
+            $religionVal = !empty($validated['religion'])
+                ? Religion::tryFrom($validated['religion'])?->value
+                : null;
 
             $student->vault()->create([
                 'nisn_encrypted'     => $validated['nisn'],
                 'nisn_hash'          => $nisnHash,
-
                 'nik_encrypted'      => $validated['nik'] ?? null,
                 'nik_hash'           => $nikHash,
-
                 'religion_encrypted' => $religionVal,
                 'religion_hash'      => $religionVal ? $this->blindIndexHash($religionVal) : null,
             ]);
         });
 
+        // 5. Respon Sukses HTMX
         return response()->noContent()->header('HX-Trigger', json_encode([
             'showAlert' => [
-                'icon' => 'success',
+                'icon'  => 'success',
                 'title' => 'Berhasil!',
-                'text' => 'Data peserta didik baru berhasil ditambahkan.'
-            ]
+                'text'  => 'Data peserta didik baru berhasil ditambahkan.',
+            ],
         ]));
     }
 
@@ -835,5 +821,23 @@ class StudentController extends Controller
         $statsHtml = view('pages.admin.students.data.partials._stats-cards', $stats)->render();
 
         return $tableHtml . $statsHtml;
+    }
+
+    /**
+     * Helper untuk validasi unique hash (NISN/NIK)
+     */
+    private function validateUniqueHash(Request $request, $validator, string $field, ?string &$hash)
+    {
+        // Abaikan jika field kosong atau sudah ada error dari validasi dasar
+        if (!$request->filled($field) || $validator->errors()->has($field)) {
+            return;
+        }
+
+        $hash = $this->blindIndexHash($request->$field);
+
+        if (DB::table('acd_students_vault')->where("{$field}_hash", $hash)->exists()) {
+            $label = strtoupper($field);
+            $validator->errors()->add($field, "{$label} ini sudah terdaftar pada siswa lain.");
+        }
     }
 }

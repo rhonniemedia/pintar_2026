@@ -51,9 +51,9 @@
     ])
 
     {{-- Penyesuaian padding card pada layar mobile --}}
-    <div class="bg-white rounded-xl sm:rounded-2xl border border-border p-4 sm:p-5">
+    <div class="bg-white rounded-2xl border border-border p-5">
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 sm:mb-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
                 <h2 class="text-base sm:text-lg font-bold text-foreground">Daftar Riwayat</h2>
                 <p class="text-xs sm:text-sm text-secondary mt-0.5 sm:mt-1">Gunakan fitur pencarian dan filter untuk merampingkan data.</p>

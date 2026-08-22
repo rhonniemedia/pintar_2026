@@ -81,14 +81,14 @@
     </div>
 
     {{-- ============ 2. MOBILE CARDS ============ --}}
-    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+    <div class="lg:hidden divide-y divide-border border-y border-border bg-white -mx-5 mb-5 mt-2">
         @forelse ($data as $r)
         @php
         $startDate = \Carbon\Carbon::parse($r->start_date)->translatedFormat('M Y');
         $endDate = \Carbon\Carbon::parse($r->end_date)->translatedFormat('M Y');
         @endphp
 
-        <div id="card-ay-{{ $r->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div id="card-ay-{{ $r->id }}" class="px-5 py-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
             <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <p class="font-semibold text-foreground text-sm uppercase truncate">

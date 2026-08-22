@@ -24,7 +24,7 @@
     </div>
 
     {{-- Modal Body --}}
-    <div class="p-4 sm:p-6 overflow-y-auto max-h-[55vh] sm:max-h-[60vh] bg-slate-50/30 flex-1 [scrollbar-gutter:stable]">
+    <div class="p-4 sm:p-6 overflow-y-auto sm:max-h-[60vh] bg-slate-50/30 flex-1 [scrollbar-gutter:stable]">
 
         {{-- Info Box --}}
         <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex gap-3 mb-4">
@@ -53,7 +53,7 @@
     {{-- Footer Modal --}}
     <div x-data="{ isSyncingBtn: false, isDoneBtn: false }"
         @all-sync-finished.window="isSyncingBtn = false; isDoneBtn = true"
-        class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-3 shrink-0">
+        class="mt-auto px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-3 shrink-0">
 
         <button type="button" x-show="!isDoneBtn" @click="syncModalOpen = false"
             class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted transition-all cursor-pointer">

@@ -10,7 +10,8 @@
     @close-modal.window="closeModal()">
 
     <x-ui.modal show="open" maxWidth="xl">
-        <div id="photo-modal-content" class="flex flex-col flex-1 bg-white overflow-hidden"
+        {{-- Pembungkus Utama --}}
+        <div id="photo-modal-content" class="flex flex-col flex-1 h-full w-full min-h-0 bg-white overflow-hidden"
             x-data="{
                 fotoFile: null,
                 fotoPreview: null,
@@ -60,23 +61,24 @@
                 @endif
             ">
 
-            {{-- Header --}}
-            <div class="px-6 pt-6 flex items-center justify-between gap-4 shrink-0">
-                <div class="flex items-center gap-4">
-                    <div class="size-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="camera" class="text-primary size-6"></i>
+            {{-- HEADER BARU: Disamakan dengan gaya modal lain --}}
+            <div class="flex items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-slate-50/50 shrink-0">
+                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <div class="size-11 sm:size-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 shadow-sm">
+                        <i data-lucide="camera" class="size-5 sm:size-6"></i>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-black text-foreground">Upload Pas Foto</h2>
-                        <p class="text-sm text-secondary truncate">{{ $student->name }}</p>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-foreground text-base sm:text-lg leading-tight truncate">Upload Pas Foto</h3>
+                        <p class="text-xs sm:text-sm text-secondary mt-0.5 truncate uppercase">{{ $student->name }}</p>
                     </div>
                 </div>
-                <button type="button" @click="closeModal()" class="size-8 flex items-center justify-center rounded-lg bg-white text-secondary hover:bg-error/10 hover:text-error transition-colors cursor-pointer shrink-0">
-                    <i data-lucide="x" class="size-5 pointer-events-none"></i>
+                <button type="button" @click="closeModal()"
+                    class="size-8 sm:size-9 flex items-center justify-center rounded-lg border border-border bg-white text-secondary hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors cursor-pointer shrink-0">
+                    <i data-lucide="x" class="size-4 pointer-events-none"></i>
                 </button>
             </div>
 
-            <form id="edit-photo-form"
+            <form id="edit-photo-form" class="flex flex-col flex-1 min-h-0"
                 hx-post="{{ route('admin.students.edit.photo.update', $student->id) }}"
                 hx-encoding="multipart/form-data"
                 hx-target="#photo-modal-content" hx-select="#photo-modal-content" hx-swap="outerHTML"
@@ -86,13 +88,13 @@
                         setErrorsPhoto(xhr);
                         if (typeof lucide !== 'undefined') lucide.createIcons();
                     } else if (xhr.status === 200) {
-                        // Tutup modal jika sukses (bisa memicu event global reload data)
                         window.dispatchEvent(new CustomEvent('close-modal'));
                     }
                 ">
                 @csrf @method('PUT')
 
-                <div class="px-6 py-6 space-y-5 overflow-y-auto max-h-[60vh] [scrollbar-gutter:stable]">
+                {{-- AREA KONTEN: Padding disesuaikan menjadi p-4 sm:p-6 --}}
+                <div class="flex-1 min-h-0 p-4 sm:p-6 space-y-5 overflow-y-auto [scrollbar-gutter:stable]">
 
                     {{-- Info box --}}
                     <div class="flex gap-3 items-start bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3.5">
@@ -102,7 +104,7 @@
                         </p>
                     </div>
 
-                    {{-- Muncul saat server tolak file (ukuran, format, dll) --}}
+                    {{-- Muncul saat server tolak file --}}
                     <div x-show="hasErrorPhoto" x-transition x-cloak
                         class="flex gap-3 items-start bg-red-50 border border-red-200 rounded-2xl px-4 py-3.5">
                         <i data-lucide="alert-triangle" class="text-error size-5 mt-0.5 flex-shrink-0"></i>
@@ -175,19 +177,15 @@
 
                                 <div class="flex-1 text-center sm:text-left">
 
-                                    {{-- Status: Foto Tersimpan --}}
+                                    {{-- Status --}}
                                     <div x-show="existingPhoto && !errPhoto('photo')" x-cloak class="flex items-center justify-center sm:justify-start gap-1.5 mb-2">
                                         <i data-lucide="circle-check-big" class="text-blue-500 size-4"></i>
                                         <span class="text-xs font-black text-blue-700">Foto tersimpan saat ini</span>
                                     </div>
-
-                                    {{-- Status: Foto Baru Dipilih --}}
                                     <div x-show="!existingPhoto && !errPhoto('photo')" x-cloak class="flex items-center justify-center sm:justify-start gap-1.5 mb-2">
                                         <i data-lucide="circle-check-big" class="text-emerald-500 size-4"></i>
                                         <span class="text-xs font-black text-emerald-700">Foto berhasil dipilih</span>
                                     </div>
-
-                                    {{-- Status: Error Upload --}}
                                     <div x-show="errPhoto('photo')" x-cloak class="flex items-center justify-center sm:justify-start gap-1.5 mb-2">
                                         <i data-lucide="x-circle" class="text-red-500 size-4"></i>
                                         <span class="text-xs font-black text-red-700" x-text="errPhoto('photo')"></span>
@@ -210,8 +208,8 @@
                     </div>
                 </div>
 
-                {{-- Footer Modal --}}
-                <div class="px-6 py-4 border-t border-border bg-slate-50/50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+                {{-- AREA FOOTER: Padding disesuaikan menjadi px-4 sm:px-6 py-3.5 sm:py-4 --}}
+                <div class="mt-auto px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-slate-50/50 flex items-center justify-end gap-3 shrink-0 sm:rounded-b-2xl">
                     <button type="button" @click="closeModal()"
                         class="px-5 py-2.5 rounded-xl border border-border bg-white text-secondary text-sm font-semibold hover:bg-muted hover:text-foreground transition-all cursor-pointer">
                         Batal

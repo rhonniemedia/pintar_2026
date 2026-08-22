@@ -79,14 +79,14 @@
     </div>
 
     {{-- ============ 2. MOBILE CARDS ============ --}}
-    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+    <div class="lg:hidden divide-y divide-border border-y border-border bg-white -mx-5 mb-5 mt-2">
         @forelse ($data as $r)
         @php
         $semesterTypeLabel = $r->type === 'odd' ? 'Semester Ganjil' : 'Semester Genap';
         $academicYearLabel = $r->academicYear->name ?? '-';
         @endphp
 
-        <div id="card-sem-{{ $r->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div id="card-sem-{{ $r->id }}" class="px-5 py-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
 
             <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">

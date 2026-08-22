@@ -39,7 +39,7 @@
     </div>
 
     {{-- ============ 2. MOBILE CARDS ============ --}}
-    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+    <div class="lg:hidden divide-y divide-border border-y border-border bg-white -mx-5 mb-5 mt-2">
         @forelse ($classGroups as $g)
         @php
         $grades = ['10' => 'X', '11' => 'XI', '12' => 'XII'];
@@ -52,7 +52,7 @@
         $femaleStudents = $g->female_students_count ?? 0;
         @endphp
 
-        <div id="card-class-group-{{ $g->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div id="card-class-group-{{ $g->id }}" class="px-5 py-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
             <div class="flex items-start gap-3">
                 {{-- Avatar Rombel --}}
                 <div class="relative size-10 shrink-0 rounded-full overflow-hidden">

@@ -23,15 +23,16 @@ $yearOptionsList[] = [
 <div class="px-5 py-8 md:p-8">
 
     {{-- PAGE HEADER --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Data Alumni</h1>
-            <p class="text-sm text-secondary">Menampilkan riwayat kelulusan dan nomor ijazah peserta didik.</p>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">Data Alumni</h1>
+            <p class="text-xs sm:text-sm text-secondary">Menampilkan riwayat kelulusan dan nomor ijazah peserta didik.</p>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button type="button" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all shadow-sm">
-                <i data-lucide="printer" class="size-4"></i>
+        {{-- Tombol aksi dibuat membentang penuh (w-full) di layar mobile --}}
+        <div class="flex items-center gap-2 w-full md:w-auto">
+            <button type="button" class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap">
+                <i data-lucide="printer" class="size-3.5 sm:size-4 shrink-0"></i>
                 <span>Cetak Rekap Alumni</span>
             </button>
         </div>
@@ -43,13 +44,15 @@ $yearOptionsList[] = [
         {{-- Header Tabel, Filter & Search --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
-                <h2 class="text-lg font-bold text-foreground">Daftar Lulusan</h2>
-                <p class="text-sm text-secondary mt-1">Total <span class="font-bold text-foreground">{{ $graduates->total() }}</span> alumni terdaftar.</p>
+                <h2 class="text-base sm:text-lg font-bold text-foreground">Daftar Lulusan</h2>
+                <p class="text-xs sm:text-sm text-secondary mt-0.5 sm:mt-1">Total <span class="font-bold text-foreground">{{ $graduates->total() }}</span> alumni terdaftar.</p>
             </div>
 
-            <div class="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+            {{-- Form dibungkus dengan flex-col di HP dan flex-row di layar lebih besar --}}
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+
                 {{-- Dropdown Filter Tahun dengan Ikon Kalender --}}
-                <div class="relative w-full md:w-44"
+                <div class="relative w-full sm:w-44"
                     hx-get="{{ route('admin.students.graduates.index') }}"
                     hx-include="[name='search']"
                     hx-target="#graduates-container"
@@ -68,8 +71,8 @@ $yearOptionsList[] = [
                     </div>
                 </div>
 
-                {{-- Search Box dengan Tombol X Interaktif --}}
-                <div class="relative w-full md:w-auto flex items-center">
+                {{-- Search Box ditarik agar mengisi sisa ruang (flex-1) di mobile --}}
+                <div class="relative flex-1 sm:flex-none sm:w-56 md:w-64 flex items-center">
                     <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
@@ -86,7 +89,7 @@ $yearOptionsList[] = [
                         hx-target="#graduates-container"
                         hx-swap="outerHTML"
                         hx-push-url="true"
-                        class="h-11 w-full md:w-64 bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                        class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
                         :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
 
                     <button

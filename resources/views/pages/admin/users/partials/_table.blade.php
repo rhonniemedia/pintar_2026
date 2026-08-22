@@ -133,7 +133,7 @@
     </div>
 
     {{-- ============ 2. MOBILE CARDS ============ --}}
-    <div class="lg:hidden divide-y divide-border bg-white -mx-4 sm:-mx-5">
+    <div class="lg:hidden divide-y divide-border border-y border-border bg-white -mx-5 mb-5 mt-2">
         @forelse ($data as $user)
         @php
         $staff = $user->staff;
@@ -143,7 +143,7 @@
         $roles = $user->roles ?? collect();
         @endphp
 
-        <div id="card-user-{{ $user->id }}" class="p-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div id="card-user-{{ $user->id }}" class="px-5 py-4 border-border hover:bg-muted/40 active:bg-muted/60 transition-colors">
             <div class="flex items-start gap-3">
                 <x-ui.avatar :name="$displayName" :gender="optional($staff)->gender" :index="$loop->index" />
 

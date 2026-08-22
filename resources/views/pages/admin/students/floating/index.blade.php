@@ -37,13 +37,26 @@
                 <span>Download</span>
             </a>
 
-            <a href="{{ route('admin.students.floating.index') }}"
+            @if(auth()->user()->roles->contains('name', 'superadmin'))
+            {{-- Tombol Tambah (Khusus Superadmin) --}}
+            <button type="button"
+                hx-get="{{ route('admin.students.data.create') }}" {{-- UBAH BAGIAN INI --}}
+                hx-target="#modal-container"
+                title="Tambah Peserta Didik"
+                class="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold text-xs sm:text-sm transition-all cursor-pointer shadow-sm shadow-indigo-600/30 whitespace-nowrap">
+                <i data-lucide="file-plus-corner" class="size-3.5 sm:size-4 shrink-0"></i>
+                <span>Tambah</span>
+            </button>
+            @else
+            {{-- Tombol Segarkan (Untuk Non-Superadmin) --}}
+            <a href="{{ route('admin.students.data.index') }}"
                 title="Segarkan halaman"
                 onclick="document.getElementById('refresh-icon').classList.add('animate-spin');"
                 class="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 ring-1 ring-border hover:ring-primary rounded-full text-foreground font-semibold text-xs sm:text-sm transition-all bg-white cursor-pointer whitespace-nowrap">
                 <i id="refresh-icon" data-lucide="refresh-cw" class="size-3.5 sm:size-4 shrink-0"></i>
                 <span>Segarkan</span>
             </a>
+            @endif
         </div>
     </div>
 
@@ -115,54 +128,60 @@
                     </div>
                 </div>
 
-                {{-- 2. INPUT PENCARIAN --}}
-                <div class="relative w-full sm:w-56 md:w-64 flex items-center">
-                    <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
-                        :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
+                {{-- 2 & 3. GRUP PENCARIAN & FILTER (Sebaris di Mobile) --}}
+                <div class="flex items-center gap-2 w-full sm:w-auto">
 
-                    <input
-                        x-ref="searchInput"
-                        type="text"
-                        name="search"
-                        x-model="searchQuery"
-                        placeholder="Cari peserta..."
-                        autocomplete="off"
-                        hx-get="{{ route('admin.students.floating.index') }}"
-                        hx-trigger="keyup changed delay:400ms, search"
-                        hx-target="#students-container"
-                        hx-select="#students-container"
-                        hx-swap="outerHTML"
-                        hx-include="#student-filter-form"
-                        hx-push-url="true"
-                        class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
-                        :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+                    {{-- 2. INPUT PENCARIAN --}}
+                    <div class="relative flex-1 sm:w-56 md:w-64 flex items-center">
+                        <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
+                            :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
+                        <input
+                            x-ref="searchInput"
+                            type="text"
+                            name="search"
+                            x-model="searchQuery"
+                            placeholder="Cari peserta..."
+                            autocomplete="off"
+                            hx-get="{{ route('admin.students.floating.index') }}"
+                            hx-trigger="keyup changed delay:400ms, search"
+                            hx-target="#students-container"
+                            hx-select="#students-container"
+                            hx-swap="outerHTML"
+                            hx-include="#student-filter-form"
+                            hx-push-url="true"
+                            class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
+                            :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
+
+                        <button
+                            type="button"
+                            x-show="searchQuery.length > 0"
+                            x-cloak
+                            @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
+                            class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
+                            <i data-lucide="x" class="size-3"></i>
+                        </button>
+                    </div>
+
+                    {{-- 3. TOMBOL FILTER --}}
                     <button
                         type="button"
-                        x-show="searchQuery.length > 0"
-                        x-cloak
-                        @click="searchQuery = ''; $nextTick(() => $refs.searchInput.dispatchEvent(new Event('search')))"
-                        class="absolute right-3 flex items-center justify-center size-5 rounded-full bg-slate-100 hover:bg-error/10 text-secondary hover:text-error transition-all cursor-pointer focus:outline-none">
-                        <i data-lucide="x" class="size-3"></i>
+                        @click="filterModalOpen = true"
+                        title="Filter"
+                        class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
+                        <i data-lucide="filter" class="size-4 text-secondary"></i>
+
+                        <span
+                            x-show="isFilterActive"
+                            x-cloak
+                            class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-white"></span>
+                        </span>
                     </button>
+
                 </div>
 
-                {{-- 3. TOMBOL FILTER --}}
-                <button
-                    type="button"
-                    @click="filterModalOpen = true"
-                    title="Filter"
-                    class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none">
-                    <i data-lucide="filter" class="size-4 text-secondary"></i>
-
-                    <span
-                        x-show="isFilterActive"
-                        x-cloak
-                        class="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-white"></span>
-                    </span>
-                </button>
             </div>
         </div>
 

@@ -8,10 +8,10 @@
 <div class="px-5 py-8 md:p-8">
 
     {{-- PAGE HEADER --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-1">Mutasi Masuk</h1>
-            <p class="text-sm text-secondary">
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1">Mutasi Masuk</h1>
+            <p class="text-xs sm:text-sm text-secondary">
                 Kelola data peserta didik pindahan dari sekolah lain.
                 @if($semesterAktif)
                 Semester aktif: <span class="font-semibold text-foreground">{{ $semesterAktif->code }}</span>
@@ -21,27 +21,30 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
+        {{-- Tombol aksi dibuat w-full di mobile --}}
+        <div class="flex items-center gap-2 w-full md:w-auto">
             <button type="button"
                 hx-get="{{ route('admin.students.transfer.in.create') }}"
                 hx-target="#modal-form-container"
                 hx-swap="innerHTML"
-                class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-green-500/30">
-                <i data-lucide="plus" class="size-4"></i>
+                class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 cursor-pointer shadow-sm shadow-green-500/30 whitespace-nowrap">
+                <i data-lucide="plus" class="size-3.5 sm:size-4 shrink-0"></i>
                 <span>Mutasi Masuk</span>
             </button>
         </div>
     </div>
 
     {{-- TABS NAVIGATION --}}
-    <div class="flex items-center gap-6 border-b border-border mb-6">
+    <div class="flex items-center gap-5 sm:gap-6 border-b border-border mb-6 overflow-x-auto scrollbar-hide">
         <a href="{{ route('admin.students.transfer.in.index') }}"
-            class="pb-3 text-sm font-bold border-b-2 transition-colors border-primary text-primary">
-            Mutasi Masuk
+            class="flex items-center gap-2 pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors border-primary text-primary">
+            <i data-lucide="user-plus" class="size-4"></i>
+            <span>Mutasi Masuk</span>
         </a>
         <a href="{{ route('admin.students.transfer.out.index') }}"
-            class="pb-3 text-sm font-bold border-b-2 transition-colors border-transparent text-secondary hover:text-foreground hover:border-border">
-            Mutasi Keluar
+            class="flex items-center gap-2 pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors border-transparent text-secondary hover:text-foreground hover:border-border">
+            <i data-lucide="user-minus" class="size-4"></i>
+            <span>Mutasi Keluar</span>
         </a>
     </div>
 
@@ -51,13 +54,14 @@
         {{-- Header Tabel & Search --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
             <div>
-                <h2 class="text-lg font-bold text-foreground">Daftar Peserta Didik Pindahan</h2>
-                <p class="text-sm text-secondary mt-1">Menampilkan data mutasi masuk pada semester aktif.</p>
+                <h2 class="text-base sm:text-lg font-bold text-foreground">Daftar Peserta Didik Pindahan</h2>
+                <p class="text-xs sm:text-sm text-secondary mt-0.5 sm:mt-1">Menampilkan data mutasi masuk pada semester aktif.</p>
             </div>
 
-            <div class="flex items-center gap-2" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
-                {{-- Search Box dengan Tombol X Interaktif --}}
-                <div class="relative w-56 md:w-64 flex items-center">
+            {{-- Form search dibungkus agar w-full di mobile --}}
+            <div class="flex items-center gap-2 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+                {{-- Input Pencarian menggunakan flex-1 di layar kecil --}}
+                <div class="relative flex-1 sm:flex-none sm:w-56 md:w-64 flex items-center">
                     <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
