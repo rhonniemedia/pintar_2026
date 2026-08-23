@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Students;
 
 use App\Enums\Student\Religion;
+use App\Enums\Student\StudentStatus;
 use App\Exports\StudentsExport;
 use App\Filters\StudentFilter;
 use App\Http\Controllers\Controller;
@@ -11,6 +12,7 @@ use App\Http\Requests\Admin\Students\UpdateStudentRequest;
 use App\Models\CoreConcentration;
 use App\Models\CoreSemester;
 use App\Models\Student;
+use App\Services\AcademicPeriod;
 use App\Services\StudentStatsService;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ class StudentController extends Controller
 
     public function __construct(
         private readonly StudentStatsService $statsService,
+        private readonly AcademicPeriod $academicPeriod,
     ) {}
 
     public function index(Request $request)
@@ -42,7 +45,9 @@ class StudentController extends Controller
             'filter_food_allergy',
         ]);
 
-        $semesterId = CoreSemester::where('status', 'active')->value('id');
+        // Semester "yang sedang dilihat" (pilihan admin di topbar, atau
+        // fallback ke semester aktif Data Master kalau belum pernah pilih).
+        $semesterId = $this->academicPeriod->currentId();
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
 
         // 1. Kueri untuk tabel (Terpengaruh oleh filter dan pencarian)
@@ -193,7 +198,7 @@ class StudentController extends Controller
             'filter_food_allergy',
         ]);
 
-        $semesterId = CoreSemester::where('status', 'active')->value('id');
+        $semesterId = $this->academicPeriod->currentId();
 
         // Pakai query builder yang SAMA dengan yang dipakai tabel (buildBaseQuery),
         // tapi tanpa paginate -> ambil semua baris yang lolos filter.
@@ -220,10 +225,10 @@ class StudentController extends Controller
             'filter_food_allergy',
         ]);
 
-        $semesterId = CoreSemester::where('status', 'active')->value('id');
+        $semesterId = $this->academicPeriod->currentId();
         $concentrationOptions = CoreConcentration::orderBy('name')->pluck('name', 'id');
 
-        // Query khusus mencari siswa yang TIDAK terdaftar di rombel manapun pada semester aktif
+        // Query khusus mencari siswa yang TIDAK terdaftar di rombel manapun pada semester yang sedang dilihat
         $query = Student::with(['vault', 'concentration'])
             ->where('status', '!=', 'graduated')
             ->whereDoesntHave('activeClassGroup', function ($q) use ($semesterId) {
@@ -320,7 +325,7 @@ class StudentController extends Controller
             'filter_food_allergy',
         ]);
 
-        $semesterId = CoreSemester::where('status', 'active')->value('id');
+        $semesterId = $this->academicPeriod->currentId();
 
         $query = Student::with(['vault', 'concentration', 'guardians.vault'])
             ->where('status', '!=', 'graduated')
@@ -635,6 +640,10 @@ class StudentController extends Controller
      */
     public function generateNisModal()
     {
+        // SENGAJA tetap pakai semester aktif Data Master (bukan
+        // $this->academicPeriod), karena NIS yang di-generate harus selalu
+        // mengikuti semester berjalan sesungguhnya, terlepas dari semester
+        // apa yang sedang dilihat/dipilih admin di topbar.
         $activeSemester = CoreSemester::where('status', 'active')->first();
         $semesterId = $activeSemester ? $activeSemester->id : null;
 
@@ -692,6 +701,8 @@ class StudentController extends Controller
         $yearCode = substr($startYear, 2, 2);
 
         // 4. Proses pencarian siswa tanpa NIS di rombel aktif
+        // SENGAJA tetap pakai semester aktif Data Master, lihat catatan
+        // di generateNisModal() di atas.
         $activeSemester = \App\Models\CoreSemester::where('status', 'active')->first();
         $semesterId = $activeSemester ? $activeSemester->id : null;
 
@@ -786,6 +797,132 @@ class StudentController extends Controller
             ],
             'refreshStudentData' => true
         ]));
+    }
+
+    /**
+     * Pencarian global untuk modal di topbar (nama, NIS, NIK, atau NISN).
+     *
+     * - name & nis: kolom plain di acd_students, dicari dengan LIKE (partial match).
+     * - nik & nisn: kolom terenkripsi + blind-index hash di acd_students_vault,
+     *   jadi HANYA bisa dicocokkan exact-match. Karena itu, hash baru dihitung &
+     *   dicoba saat input berupa digit murni (biasanya user mengetik NIK/NISN utuh).
+     *
+     * Setiap hasil diarahkan (redirect target) sesuai status keanggotaan rombelnya
+     * di semester aktif: kalau siswa sudah tercatat di rombel -> ke halaman rombel,
+     * kalau belum/floating -> ke halaman detail siswa.
+     */
+    public function globalSearch(Request $request)
+    {
+        $term = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($term) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $semesterId = $this->academicPeriod->currentId();
+
+        $query = Student::query()
+            ->with([
+                'concentration',
+                'activeClassGroup' => function ($q) use ($semesterId) {
+                    $q->where('semester_id', $semesterId);
+                },
+            ])
+            ->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhere('nis', 'like', "%{$term}%");
+            });
+
+        // NIK/NISN hanya angka murni -> coba cocokkan lewat blind-index hash (exact)
+        if (preg_match('/^\d{5,20}$/', $term)) {
+            $hash = $this->blindIndexHash($term);
+
+            $query->orWhereHas('vault', function ($q) use ($hash) {
+                $q->where('nisn_hash', $hash)->orWhere('nik_hash', $hash);
+            });
+        }
+
+        $students = $query->orderBy('name')->limit(15)->get();
+
+        $results = $students->map(fn(Student $student) => $this->buildGlobalSearchResult($student));
+
+        return response()->json(['results' => $results]);
+    }
+
+    /**
+     * Menentukan tujuan (target & url) satu hasil pencarian global, berdasarkan
+     * status TERKINI siswa (acd_students.status) - bukan cuma relasi activeClassGroup.
+     *
+     * PENTING: activeClassGroup() di model Student HANYA mengecek exit_reason &
+     * mutation_id di pivot rombel, TIDAK mengecek status siswa sama sekali. Jadi
+     * siswa yang sudah dimutasi keluar/putus sekolah/dsb bisa saja masih "kebaca"
+     * aktif di rombel lamanya kalau baris pivotnya belum tertutup rapi. Makanya
+     * status siswa dijadikan pemeriksaan pertama & utama di sini, baru rombel
+     * dicek belakangan (khusus untuk siswa yang statusnya memang masih aktif).
+     */
+    private function buildGlobalSearchResult(Student $student): array
+    {
+        $base = [
+            'id'            => $student->id,
+            'name'          => $student->name,
+            'nis'           => $student->nis,
+            'concentration' => $student->concentration?->name,
+            'photo_url'     => $student->photo ? asset('storage/' . $student->photo) : null,
+        ];
+
+        // 1. Sudah lulus -> halaman Kelulusan / Alumni
+        if ($student->status === StudentStatus::GRADUATED) {
+            return array_merge($base, [
+                'rombel' => null,
+                'target' => 'lulus',
+                'url'    => route('admin.students.graduates.index', ['search' => $student->name]),
+            ]);
+        }
+
+        // 2. Status keluar yang TERCATAT di halaman Riwayat (pindah, putus sekolah,
+        //    meninggal) -> arahkan ke sana. StudentHistoryController hanya
+        //    menampilkan mutasi dengan status transfer_in/transfer_out/dropped_out/
+        //    deceased, jadi HANYA status itu yang boleh diarahkan ke Riwayat.
+        if (in_array($student->status, [
+            StudentStatus::TRANSFERRED_OUT,
+            StudentStatus::DROPPED_OUT,
+            StudentStatus::DECEASED,
+        ], true)) {
+            return array_merge($base, [
+                'rombel' => null,
+                'target' => 'riwayat',
+                'url'    => route('admin.students.history.index', ['search' => $student->name]),
+            ]);
+        }
+
+        // 3. Status keluar lain yang TIDAK tercakup halaman Riwayat (dikeluarkan,
+        //    mengundurkan diri, menikah) -> halaman Mutasi Keluar, satu-satunya
+        //    halaman yang datanya benar-benar memuat status ini.
+        if (! $student->status->isActive()) {
+            return array_merge($base, [
+                'rombel' => null,
+                'target' => 'mutasi',
+                'url'    => route('admin.students.transfer.out.index', ['search' => $student->name]),
+            ]);
+        }
+
+        // 4. Masih aktif -> Rombel (jika sudah punya kelas) atau Siswa Mengambang (floating)
+        $rombel = $student->activeClassGroup->first();
+
+        return array_merge($base, [
+            'rombel' => $rombel?->name,
+            'target' => $rombel ? 'rombel' : 'data',
+            'url'    => $rombel
+                ? route('admin.students.group.show', [
+                    'id'        => $rombel->id,
+                    'search'    => $student->name,
+                    'highlight' => $student->id,
+                ])
+                : route('admin.students.floating.index', [
+                    'search'    => $student->name,
+                    'highlight' => $student->id,
+                ]),
+        ]);
     }
 
     private function buildBaseQuery(array $filters, ?string $semesterId)

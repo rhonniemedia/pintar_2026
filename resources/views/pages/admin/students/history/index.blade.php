@@ -9,13 +9,14 @@
 <div class="px-5 py-8 md:p-8"
     x-data="{
         filterModalOpen: false,
-        isFilterActive: {{ ($filterExitStatus || $filterConcentration || $filterExitSemester) ? 'true' : 'false' }},
+        isFilterActive: {{ ($filterExitStatus || $filterConcentration || $filterExitSemester || $filterYear) ? 'true' : 'false' }},
         checkFilterStatus() {
             const exitStatus = document.querySelector('[name=filter_exit_status]')?.value || '';
             const concentration = document.querySelector('[name=filter_concentration]')?.value || '';
             const exitSemester = document.querySelector('[name=filter_exit_semester]')?.value || '';
+            const year = document.querySelector('[name=filter_year]')?.value || '';
 
-            this.isFilterActive = (exitStatus !== '' || concentration !== '' || exitSemester !== '');
+            this.isFilterActive = (exitStatus !== '' || concentration !== '' || exitSemester !== '' || year !== '');
         }
     }"
     @htmx:after-request.document="checkFilterStatus()">
@@ -60,10 +61,96 @@
             </div>
 
             {{-- Pastikan container form memenuhi lebar pada layar kecil --}}
-            <div class="flex items-center gap-2 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto" x-data="{ searchQuery: '{{ $search ?? '' }}' }">
 
-                {{-- Search Box dengan flex-1 agar mengisi ruang dengan baik di HP --}}
-                <div class="relative flex-1 sm:w-56 md:w-64 flex items-center">
+                {{-- 1. Filter Tahun (Custom Select bergaya x-ui.select) --}}
+                <div class="relative w-full sm:w-44 shrink-0"
+                    x-data="{
+                        openYear: false,
+                        yearValue: '{{ $filterYear ?? '' }}',
+                        yearLabel: '{{ $filterYear ? $filterYear : 'Semua Tahun' }}',
+                        selectYear(val, label) {
+                            this.yearValue = val;
+                            this.yearLabel = label;
+                            this.openYear = false;
+                            // Memicu HTMX setelah value berubah
+                            this.$nextTick(() => {
+                                this.$refs.yearInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            });
+                        }
+                    }"
+                    @click.outside="openYear = false"
+                    @keydown.escape.window="openYear = false">
+
+                    {{-- Input tersembunyi sebagai penggerak HTMX --}}
+                    <input
+                        type="hidden"
+                        name="filter_year"
+                        x-ref="yearInput"
+                        x-model="yearValue"
+                        hx-get="{{ route('admin.students.history.index') }}"
+                        hx-trigger="change"
+                        hx-target="#students-history-container"
+                        hx-select="#students-history-container"
+                        hx-swap="outerHTML"
+                        hx-include="#student-history-filter-form, [name='search']"
+                        hx-push-url="true">
+
+                    {{-- Tombol Dropdown (Tampilan Select) --}}
+                    <button
+                        type="button"
+                        @click="openYear = !openYear"
+                        class="flex items-center justify-between w-full h-11 bg-white border rounded-xl px-3.5 text-sm focus:outline-none transition-all cursor-pointer ring-offset-1 focus:ring-2 focus:ring-primary/20"
+                        :class="yearValue !== '' ? 'border-primary/50 text-primary font-medium' : 'border-border text-foreground hover:border-gray-300'">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <i data-lucide="calendar-days" class="size-4 shrink-0" :class="yearValue !== '' ? 'text-primary' : 'text-secondary'"></i>
+                            <span x-text="yearLabel" class="truncate"></span>
+                        </div>
+
+                        {{-- Chevron bolak-balik --}}
+                        <i data-lucide="chevron-down"
+                            class="size-4 shrink-0 transition-transform duration-300 ml-2"
+                            :class="[
+                               yearValue !== '' ? 'text-primary' : 'text-secondary',
+                               openYear ? 'rotate-180' : ''
+                           ]"></i>
+                    </button>
+
+                    {{-- Isi Dropdown (Options) --}}
+                    <div
+                        x-show="openYear"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        class="absolute left-0 top-full mt-2 w-full bg-white rounded-xl shadow-lg border border-border py-1.5 z-[100] max-h-60 overflow-y-auto"
+                        style="display: none;">
+
+                        <button
+                            type="button"
+                            @click="selectYear('', 'Semua Tahun')"
+                            class="flex items-center w-full px-3.5 py-2.5 text-sm transition-colors text-left"
+                            :class="yearValue === '' ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted'">
+                            Semua Tahun
+                        </button>
+
+                        @foreach ($yearOptions as $year)
+                        <button
+                            type="button"
+                            @click="selectYear('{{ $year }}', '{{ $year }}')"
+                            class="flex items-center w-full px-3.5 py-2.5 text-sm transition-colors text-left"
+                            :class="yearValue === '{{ $year }}' ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-muted'">
+                            {{ $year }}
+                        </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- 2. Search Box (Sekarang berada di tengah/kanan) --}}
+                <div class="relative flex-1 w-full sm:w-56 md:w-64 flex items-center">
                     <i data-lucide="search" class="absolute left-3.5 size-4 transition-colors pointer-events-none"
                         :class="searchQuery.length > 0 ? 'text-primary' : 'text-secondary'"></i>
 
@@ -79,7 +166,7 @@
                         hx-target="#students-history-container"
                         hx-select="#students-history-container"
                         hx-swap="outerHTML"
-                        hx-include="#student-history-filter-form"
+                        hx-include="#student-history-filter-form, [name='filter_year']"
                         hx-push-url="true"
                         class="h-11 w-full bg-white border rounded-xl pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-all"
                         :class="searchQuery.length > 0 ? 'border-primary/50 text-foreground font-medium' : 'border-border text-foreground'">
@@ -94,10 +181,11 @@
                     </button>
                 </div>
 
+                {{-- 3. Filter Modal Button --}}
                 <button
                     type="button"
                     @click="filterModalOpen = true"
-                    title="Filter"
+                    title="Filter Lengkap"
                     class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white hover:bg-muted transition-colors cursor-pointer focus:outline-none shrink-0">
                     <i data-lucide="filter" class="size-4 text-secondary"></i>
 

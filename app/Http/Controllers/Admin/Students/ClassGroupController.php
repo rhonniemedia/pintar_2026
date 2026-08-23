@@ -9,9 +9,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\ClassGroupStudent;
 use App\Models\CoreConcentration;
-use App\Models\CoreSemester;
 use App\Models\Data;
 use App\Models\Student;
+use App\Services\AcademicPeriod;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +19,10 @@ use Illuminate\Validation\Rule;
 
 class ClassGroupController extends Controller
 {
+    public function __construct(
+        private readonly AcademicPeriod $academicPeriod,
+    ) {}
+
     /**
      * Definisi tunggal "anggota rombel" (dipakai di index, show stats, dan
      * show roster) - satu-satunya tempat logika ini ditulis, supaya kalau
@@ -67,8 +71,9 @@ class ClassGroupController extends Controller
         $filterSpecialNeeds = (string) $request->query('filter_special_needs', '');
         $religionOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
 
-        $activeSemester = CoreSemester::where('status', 'active')->first();
-        $semesterId = $activeSemester ? $activeSemester->id : null;
+        // Semester "yang sedang dilihat" (pilihan admin di topbar, atau
+        // fallback ke semester aktif Data Master kalau belum pernah pilih).
+        $semesterId = $this->academicPeriod->currentId();
 
         // Nama tabel pivot diambil dinamis dari model ClassGroupStudent (bukan
         // di-hardcode), supaya tidak tergantung penamaan tabel yang sebenarnya.
@@ -414,8 +419,11 @@ class ClassGroupController extends Controller
      */
     private function validateData(Request $request, $id = null)
     {
-        $activeSemester = CoreSemester::where('status', 'active')->first();
-        $semesterId = $activeSemester ? $activeSemester->id : null;
+        // Cek keunikan wali kelas mengacu ke semester yang sedang dilihat/
+        // dikerjakan admin, bukan selalu semester aktif Data Master - supaya
+        // admin bisa menyiapkan/mengedit rombel semester lain tanpa bentrok
+        // aturan unik dengan semester yang sedang aktif.
+        $semesterId = $this->academicPeriod->currentId();
 
         return $request->validate([
             'name' => 'nullable|string|max:255',
@@ -447,8 +455,9 @@ class ClassGroupController extends Controller
     {
         $data = $this->validateData($request);
 
-        $activeSemester = CoreSemester::where('status', 'active')->first();
-        $data['semester_id'] = $activeSemester ? $activeSemester->id : null;
+        // Rombel baru dibuat untuk semester yang sedang dilihat admin -
+        // konsisten dengan pengecekan unik wali kelas di validateData().
+        $data['semester_id'] = $this->academicPeriod->currentId();
 
         ClassGroup::create($data);
 

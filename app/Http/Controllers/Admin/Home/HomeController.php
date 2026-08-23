@@ -9,19 +9,23 @@ use App\Models\ClassGroup;
 use App\Models\CoreSemester;
 use App\Models\Student;
 use App\Models\StudentMutation;
+use App\Services\AcademicPeriod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
+    public function __construct(
+        private readonly AcademicPeriod $academicPeriod,
+    ) {}
+
     public function index(Request $request)
     {
-        // 1. Ambil Semester & Tahun Ajaran Aktif
-        $activeSemester = CoreSemester::with('academicYear')
-            ->where('status', 'active')
-            ->first();
+        // 1. Ambil Semester ID mengikuti pilihan user di topbar atau default aktif
+        $semesterId = $this->academicPeriod->currentId();
 
-        $semesterId = $activeSemester?->id;
+        // Ambil objek semester berdasarkan ID yang sedang dilihat untuk kebutuhan label di view
+        $currentSemester = CoreSemester::with('academicYear')->find($semesterId);
 
         // 2. Fungsi Helper yang DISINKRONKAN DENGAN STUDENT CONTROLLER
         $countStudents = function ($grade = null, $gender = null) use ($semesterId) {
@@ -159,11 +163,11 @@ class HomeController extends Controller
         // 3. Susun Object Data
         $data = (object) [
             'academic_year' => (object) [
-                'name'   => $activeSemester?->academicYear?->name ?? '-',
-                'status' => 'active'
+                'name'   => $currentSemester?->academicYear?->name ?? '-',
+                'status' => $currentSemester?->status ?? '-'
             ],
             'semester' => (object) [
-                'label' => $activeSemester?->isEven() ? 'Genap' : 'Ganjil'
+                'label' => $currentSemester?->isEven() ? 'Genap' : 'Ganjil'
             ],
             'stats' => (object) [
                 'total_active_students' => $totalActive,

@@ -7,11 +7,41 @@
     <style>
         /* Margin kertas standar */
         @page {
-            margin: 50px 50px;
+            margin: 50px 60px;
         }
 
+        /*
+         * CATATAN PENTING UNTUK DOMPDF:
+         * dompdf hanya mengenal font bawaannya sendiri (Helvetica, Times, Courier,
+         * dan bundel DejaVu). "Verdana" TIDAK ada di daftar itu, sehingga dompdf
+         * diam-diam fallback ke Times-Roman meski CSS menulis Verdana.
+         *
+         * Solusi yang dipakai di sini: 'DejaVu Sans' didahulukan di font stack.
+         * DejaVu Sans sudah dibundel dompdf dan secara desain sangat mirip Verdana
+         * (sama-sama humanist sans-serif lebar), jadi hasilnya jauh lebih dekat ke
+         * Verdana dibanding Times, tanpa perlu embed font tambahan.
+         *
+         * Kalau nanti ingin Verdana ASLI (pastikan sudah punya lisensi/hak embed):
+         * 1. Taruh file Verdana.ttf & Verdana-Bold.ttf di resources/fonts/
+         * 2. Uncomment blok @font-face di bawah ini
+         * 3. Set 'enable_remote' => true di config/dompdf.php
+         * 4. Hapus cache font di storage/fonts/ lalu generate ulang PDF
+         */
+        /*
+        @font-face {
+            font-family: 'Verdana';
+            src: url('{{ storage_path("fonts/Verdana.ttf") }}') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Verdana';
+            src: url('{{ storage_path("fonts/Verdana-Bold.ttf") }}') format('truetype');
+            font-weight: bold;
+        }
+        */
+
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', Verdana, Geneva, Tahoma, sans-serif;
             font-size: 12px;
             color: #333;
             line-height: 1.35;
@@ -29,7 +59,7 @@
         /* Judul Dokumen */
         .document-title {
             font-size: 22px;
-            font-weight: 900;
+            font-weight: bold;
             text-align: center;
             margin-bottom: 30px;
             letter-spacing: 1.5px;
@@ -49,7 +79,7 @@
         /* Styling Judul Section */
         .section-title {
             color: #2563eb;
-            font-weight: 900;
+            font-weight: bold;
             font-size: 13px;
             text-transform: uppercase;
             border-bottom: 2px solid #bfdbfe;
@@ -109,7 +139,7 @@
 
         .header-info .name {
             font-size: 20px;
-            font-weight: 900;
+            font-weight: bold;
             color: #1e3a8a;
             margin-bottom: 2px;
         }
@@ -183,60 +213,10 @@
             display: block;
         }
 
-        /* Styling Tabel Rapor & TKA - Horizontal */
-        .rapor-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
-            font-size: 12px;
-        }
-
-        .rapor-table th {
-            background-color: #2563eb !important;
-            color: #ffffff !important;
-            font-weight: bold;
-            text-align: center;
-            padding: 6px 10px;
-            border: 1px solid #1e4fa8;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        .rapor-table td {
-            text-align: center;
-            padding: 6px 10px;
-            border: 1px solid #d1d5db;
-        }
-
-        .rapor-table tbody tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-
-        .rapor-table .total-row {
-            background-color: #eff6ff !important;
-            font-weight: bold;
-            color: #2563eb;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        /* Judul Tabel Rapor & TKA */
-        .table-title {
-            font-weight: 700;
-            font-size: 12px;
-            color: #1e3a8a;
-            margin-top: 10px;
-            margin-bottom: 3px;
-            padding-left: 2px;
-        }
-
-        .table-title:first-of-type {
-            margin-top: 5px;
-        }
-
-        /* TANDA TANGAN - Rata Tengah dan Tanggal di Atas */
+        /* TANDA TANGAN - Rata Kiri (konsisten dengan surat pernyataan) */
         .ttd-table {
-            width: 100%;
+            width: 85%;
+            margin-left: 15%;
             margin-top: 20px;
             border-top: 1px solid #f3f4f6;
             padding-top: 15px;
@@ -250,15 +230,15 @@
             /* Menjaga agar garis nama tetap sejajar */
             border: none;
             padding: 0;
-            text-align: center;
-            /* Membuat teks rata tengah */
+            text-align: left;
         }
 
-        .ttd-date {
-            color: #4b5563;
-            font-size: 12px;
-            margin-bottom: 5px;
-            /* Jarak antara tanggal dan peran/jabatan */
+        .ttd-table .ttd-col-wali {
+            padding-left: 0;
+        }
+
+        .ttd-table .ttd-col-siswa {
+            padding-left: 30px;
         }
 
         .ttd-title {
@@ -462,60 +442,9 @@
         </table>
     </div>
 
-    {{-- D. DATA AKADEMIK (NILAI RAPOR & TKA) --}}
+    {{-- D. KESEHATAN, MINAT & BAKAT --}}
     <div class="section-block">
-        <div class="section-title" style="color: #065f46; border-bottom-color: #a7f3d0;">D. DATA AKADEMIK (NILAI RAPOR &amp; TKA)</div>
-
-        @if($registration)
-        <div class="table-title">Nilai Rapor</div>
-        <table class="rapor-table">
-            <thead>
-                <tr>
-                    <th>Smt 1</th>
-                    <th>Smt 2</th>
-                    <th>Smt 3</th>
-                    <th>Smt 4</th>
-                    <th>Smt 5</th>
-                    <th>Rata-rata</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ $registration->report_sem_1 !== null ? number_format($registration->report_sem_1, 2) : '-' }}</td>
-                    <td>{{ $registration->report_sem_2 !== null ? number_format($registration->report_sem_2, 2) : '-' }}</td>
-                    <td>{{ $registration->report_sem_3 !== null ? number_format($registration->report_sem_3, 2) : '-' }}</td>
-                    <td>{{ $registration->report_sem_4 !== null ? number_format($registration->report_sem_4, 2) : '-' }}</td>
-                    <td>{{ $registration->report_sem_5 !== null ? number_format($registration->report_sem_5, 2) : '-' }}</td>
-                    <td class="total-row">{{ $registration->report_average !== null ? number_format($registration->report_average, 2) : '-' }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="table-title">Tes Kemampuan Akademik (TKA)</div>
-        <table class="rapor-table" style="margin-top: 5px;">
-            <thead>
-                <tr>
-                    <th>Matematika</th>
-                    <th>Bahasa Indonesia</th>
-                    <th>Rata-rata</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ $registration->tka_math !== null ? number_format($registration->tka_math, 2) : '-' }}</td>
-                    <td>{{ $registration->tka_indonesian !== null ? number_format($registration->tka_indonesian, 2) : '-' }}</td>
-                    <td class="total-row">{{ $registration->tka_average !== null ? number_format($registration->tka_average, 2) : '-' }}</td>
-                </tr>
-            </tbody>
-        </table>
-        @else
-        <p style="color:#6b7280; font-style: italic;">Data pendaftaran (nilai rapor & TKA) belum diisi.</p>
-        @endif
-    </div>
-
-    {{-- E. KESEHATAN, MINAT & BAKAT --}}
-    <div class="section-block">
-        <div class="section-title">E. KESEHATAN, MINAT & BAKAT</div>
+        <div class="section-title">D. KESEHATAN, MINAT & BAKAT</div>
         <table class="data-table">
             <tr>
                 <td class="label">Tinggi / Berat Badan</td>
@@ -573,305 +502,82 @@
         </table>
     </div>
 
-    {{-- F. DATA AYAH KANDUNG --}}
-    <div class="section-block">
-        <div class="section-title" style="color: #1e3a8a; border-bottom-color: #bfdbfe;">F. DATA AYAH KANDUNG</div>
-        <table class="data-table">
-            @if($father)
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->name }}</td>
-            </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->isAlive() ? 'Masih Hidup' : 'Telah Meninggal' }}</td>
-            </tr>
-            <tr>
-                <td class="label">NIK</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->nik ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Tahun Lahir</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->birth_year ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pendidikan Terakhir</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->education ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pekerjaan</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->occupation ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Penghasilan per Bulan</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->income_range ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">No. HP</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->phone_number ? '0' . $father->phone_number : '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Alamat Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $father->address ?? '-' }}</td>
-            </tr>
-            @else
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">NIK</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Tahun Lahir</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Pendidikan Terakhir</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Pekerjaan</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Penghasilan per Bulan</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">No. HP</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Alamat Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            @endif
-        </table>
-    </div>
+    {{--
+        F, G, H. DATA ORANG TUA / WALI
+        Refaktor: ketiga section ini sebelumnya adalah 3 blok kode duplikat
+        (masing-masing ~50 baris @if/@else). Sekarang digabung jadi satu
+        @foreach agar field baru cukup ditambahkan sekali dan berlaku untuk
+        Ayah, Ibu, dan Wali sekaligus.
+    --}}
+    @php
+    $parentSections = [
+    ['title' => 'E. DATA AYAH KANDUNG', 'data' => $father, 'color' => '#1e3a8a', 'border' => '#bfdbfe'],
+    ['title' => 'F. DATA IBU KANDUNG', 'data' => $mother, 'color' => '#831843', 'border' => '#fbcfe8'],
+    ['title' => 'G. DATA WALI (JIKA ADA)', 'data' => $guardian, 'color' => '#4c1d95', 'border' => '#ddd6fe'],
+    ];
+    @endphp
 
-    {{-- G. DATA IBU KANDUNG --}}
-    <div class="section-block">
-        <div class="section-title" style="color: #831843; border-bottom-color: #fbcfe8;">G. DATA IBU KANDUNG</div>
-        <table class="data-table">
-            @if($mother)
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->name }}</td>
-            </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->isAlive() ? 'Masih Hidup' : 'Telah Meninggal' }}</td>
-            </tr>
-            <tr>
-                <td class="label">NIK</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->nik ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Tahun Lahir</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->birth_year ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pendidikan Terakhir</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->education ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pekerjaan</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->occupation ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Penghasilan per Bulan</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->income_range ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">No. HP</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->phone_number ? '0' . $mother->phone_number : '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Alamat Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $mother->address ?? '-' }}</td>
-            </tr>
-            @else
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">NIK</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Tahun Lahir</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Pendidikan Terakhir</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Pekerjaan</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Penghasilan per Bulan</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">No. HP</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Alamat Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            @endif
-        </table>
-    </div>
+    @foreach($parentSections as $section)
+    @php $p = $section['data']; @endphp
 
-    {{-- H. DATA WALI (JIKA ADA) --}}
     <div class="section-block">
-        <div class="section-title" style="color: #4c1d95; border-bottom-color: #ddd6fe;">H. DATA WALI (JIKA ADA)</div>
+        {{-- Menggunakan @style directive agar tidak terdeteksi error oleh CSS linter --}}
+        <div class="section-title" @style(['color'=> $section['color'], 'border-bottom-color' => $section['border']])>
+            {{ $section['title'] }}
+        </div>
+
         <table class="data-table">
-            @if($guardian)
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->name }}</td>
-            </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->isAlive() ? 'Masih Hidup' : 'Telah Meninggal' }}</td>
-            </tr>
-            <tr>
-                <td class="label">NIK</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->nik ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Tahun Lahir</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->birth_year ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pendidikan Terakhir</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->education ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pekerjaan</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->occupation ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Penghasilan per Bulan</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->income_range ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">No. HP</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->phone_number ? '0' . $guardian->phone_number : '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Alamat Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">{{ $guardian->address ?? '-' }}</td>
-            </tr>
-            @else
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">NIK</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Tahun Lahir</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Pendidikan Terakhir</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Pekerjaan</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Penghasilan per Bulan</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">No. HP</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            <tr>
-                <td class="label">Alamat Lengkap</td>
-                <td class="colon">:</td>
-                <td class="value">-</td>
-            </tr>
-            @endif
+            <tbody>
+                <tr>
+                    <td class="label">Nama Lengkap</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->name ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Status</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p ? ($p->isAlive() ? 'Masih Hidup' : 'Telah Meninggal') : '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">NIK</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->nik ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Tahun Lahir</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->birth_year ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Pendidikan Terakhir</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->education ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Pekerjaan</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->occupation ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Penghasilan per Bulan</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->income_range ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">No. HP</td>
+                    <td class="colon">:</td>
+                    {{-- Perbaikan typo: '& &' diubah menjadi '&&' --}}
+                    <td class="value">{{ ($p && $p->phone_number) ? '0' . $p->phone_number : '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Alamat Lengkap</td>
+                    <td class="colon">:</td>
+                    <td class="value">{{ $p->address ?? '-' }}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
+    @endforeach
 
     {{-- TANDA TANGAN --}}
     {{-- $penandaTangan dikirim langsung dari controller berdasarkan pilihan user di
@@ -883,15 +589,15 @@
 
     <table class="ttd-table">
         <tr>
-            <td>
+            <td class="ttd-col-wali">
                 <div class="ttd-title">Wali Murid</div>
                 <div class="ttd-name-box">
                     {{ optional($penandaTangan)->name ?? '......................................' }}
                 </div>
             </td>
-            <td>
+            <td class="ttd-col-siswa">
                 {{-- Tanggal dipindah ke atas --}}
-                <div class="ttd-date">{{ $tanggalCetak }}</div>
+                <div class="ttd-date">Rejang Lebong, {{ $tanggalCetak }}</div>
                 <div class="ttd-title">Calon Peserta Didik</div>
                 <div class="ttd-name-box">
                     {{ $personalData->full_name }}

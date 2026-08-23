@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Home\HomeController;
+use App\Http\Controllers\Admin\Master\AcademicPeriodController;
 use App\Http\Controllers\Admin\Master\MasterDataController;
 use App\Http\Controllers\Admin\Settings\SchoolController;
 use App\Http\Controllers\Admin\Students\ClassGroupAttendanceController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Integration\SpmbSyncController;
 use App\Http\Middleware\AuthorizeAppAccess;
 use App\Http\Middleware\EnsureUserIsSuperAdmin;
+use App\Http\Middleware\ShareAcademicPeriod;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,7 +35,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Menerapkan middleware auth dan AuthorizeAppAccess ke seluruh rute admin
-Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::class])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::class, ShareAcademicPeriod::class])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -42,6 +44,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
     */
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Konteks Akademik (Pemilih Semester Global - Topbar)
+    |--------------------------------------------------------------------------
+    | Menyimpan "semester yang sedang dilihat" ke session, dipakai lintas
+    | semua halaman admin. Tidak mengubah status semester aktif di Data
+    | Master, murni preferensi tampilan per sesi login.
+    */
+    Route::prefix('academic-period')->name('academic-period.')->group(function () {
+        Route::post('/', [AcademicPeriodController::class, 'update'])->name('update');
+        Route::post('/reset', [AcademicPeriodController::class, 'reset'])->name('reset');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -60,6 +75,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', AuthorizeAppAccess::
     */
 
     Route::prefix('students')->name('students.')->group(function () {
+
+        // Pencarian Global (Topbar Modal) - by nama, NIS, NIK, atau NISN
+        Route::get('/search', [StudentController::class, 'globalSearch'])->name('search');
 
         // Data Peserta Didik
         Route::get('/data', [StudentController::class, 'index'])->name('data.index');

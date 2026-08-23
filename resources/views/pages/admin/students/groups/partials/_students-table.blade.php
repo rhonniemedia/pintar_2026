@@ -337,6 +337,38 @@
     <x-ui.pagination :paginator="$students" hxTarget="#students-container" />
 
     <script>
+        (function() {
+            // Sorot & scroll otomatis ke siswa yang dituju dari hasil pencarian topbar (?highlight=ID)
+            const params = new URLSearchParams(window.location.search);
+            const highlightId = params.get('highlight');
+            if (!highlightId) return;
+
+            const row = document.getElementById('row-student-' + highlightId);
+            const card = document.getElementById('card-student-' + highlightId);
+            const target = row || card;
+            if (!target) return;
+
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
+            const highlightClasses = row ?
+                ['bg-primary/10'] :
+                ['ring-2', 'ring-primary', 'rounded-xl', 'bg-primary/5'];
+
+            target.classList.add(...highlightClasses, 'transition-colors', 'duration-700');
+
+            setTimeout(() => {
+                target.classList.remove(...highlightClasses);
+            }, 2500);
+
+            // Bersihkan param 'highlight' dari URL supaya tidak menyala lagi saat refresh/paging
+            params.delete('highlight');
+            const query = params.toString();
+            window.history.replaceState({}, '', window.location.pathname + (query ? '?' + query : ''));
+        })();
+
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }

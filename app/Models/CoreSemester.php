@@ -53,4 +53,16 @@ class CoreSemester extends Model
     {
         return $this->type === 'odd';
     }
+
+    /**
+     * Label ringkas untuk ditampilkan di dropdown pemilih semester (topbar),
+     * mis. "Semester Ganjil - 2026/2027".
+     */
+    public function getLabelAttribute(): string
+    {
+        $year = $this->academicYear?->name; // contoh: "2025/2026"
+        $semesterCode = $this->isOdd() ? 'Ganjil' : 'Genap';
+
+        return "{$year} • {$semesterCode}";
+    }
 }

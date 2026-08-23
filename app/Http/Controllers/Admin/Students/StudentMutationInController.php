@@ -12,6 +12,7 @@ use App\Models\ClassGroupStudent;
 use App\Models\CoreSemester;
 use App\Models\Student;
 use App\Models\StudentMutation;
+use App\Services\AcademicPeriod;
 use App\Traits\HasBlindIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -22,13 +23,21 @@ class StudentMutationInController extends Controller
 {
     use HasBlindIndex;
 
+    public function __construct(
+        private readonly AcademicPeriod $academicPeriod,
+    ) {}
+
     /**
-     * Daftar riwayat mutasi masuk (siswa pindahan) pada semester aktif.
+     * Daftar riwayat mutasi masuk (siswa pindahan) pada semester yang
+     * sedang dilihat admin.
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
+        // Nama variabel $semesterAktif dipertahankan (dipakai di view), tapi
+        // isinya sekarang semester yang SEDANG DILIHAT admin (topbar), bukan
+        // selalu semester aktif Data Master.
+        $semesterAktif = $this->academicPeriod->current();
 
         $data = StudentMutation::with(['student.vault', 'classGroup.concentration'])
             ->where('status', MutationStatus::TRANSFER_IN->value)
@@ -91,6 +100,12 @@ class StudentMutationInController extends Controller
 
         try {
             DB::transaction(function () use ($validated, $filterNulls) {
+                // SENGAJA tetap pakai semester aktif Data Master (bukan
+                // academicPeriod): NIS yang di-generate harus mengikuti
+                // semester intake berjalan sesungguhnya, dan class group
+                // yang dipilih di form (lihat activeClassGroups() di bawah)
+                // juga diambil dari semester aktif ini - keduanya harus
+                // konsisten satu sama lain.
                 $semesterAktif = CoreSemester::where('status', 'active')->firstOrFail();
                 $classGroup = ClassGroup::with('concentration')->findOrFail($validated['class_group_id']);
 
@@ -236,6 +251,10 @@ class StudentMutationInController extends Controller
 
     private function activeClassGroups()
     {
+        // SENGAJA tetap pakai semester aktif Data Master, harus konsisten
+        // dengan semester yang dipakai saat store() menyimpan data (lihat
+        // catatan di store()) - supaya rombel yang dipilih di form selalu
+        // cocok dengan semester_id yang benar-benar disimpan.
         $semesterAktif = CoreSemester::where('status', 'active')->first();
 
         return ClassGroup::with('concentration')

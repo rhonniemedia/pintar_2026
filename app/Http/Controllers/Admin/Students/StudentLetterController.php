@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CoreSchool;
 use App\Models\Student;
 use App\Models\StudentLetter;
+use App\Services\AcademicPeriod;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -19,12 +20,22 @@ use Illuminate\Support\Str;
 
 class StudentLetterController extends Controller
 {
+    public function __construct(
+        private readonly AcademicPeriod $academicPeriod,
+    ) {}
+
     public function index(Request $request): View
     {
         $search     = $request->input('search');
         $letterType = $request->input('letter_type');
+        // Semester "yang sedang dilihat" (pilihan admin di topbar, atau
+        // fallback ke semester aktif Data Master kalau belum pernah pilih).
+        // Sebelumnya daftar surat TIDAK difilter per semester sama sekali;
+        // sekarang mengikuti konteks semester seperti halaman lain.
+        $semesterAktif = $this->academicPeriod->current();
 
         $data = StudentLetter::with(['student.vault', 'classGroup.concentration', 'semester', 'author'])
+            ->when($semesterAktif, fn($q) => $q->where('semester_id', $semesterAktif->id))
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('student', function ($q2) use ($search) {
                     $q2->where('name', 'like', "%{$search}%")
@@ -42,11 +53,12 @@ class StudentLetterController extends Controller
         }
 
         return view('pages.admin.students.letters.index', [
-            'title'       => 'Persuratan Peserta Didik',
-            'data'        => $data,
-            'search'      => $search,
-            'letterType'  => $letterType,
-            'letterTypes' => LetterType::cases(),
+            'title'         => 'Persuratan Peserta Didik',
+            'data'          => $data,
+            'search'        => $search,
+            'letterType'    => $letterType,
+            'letterTypes'   => LetterType::cases(),
+            'semesterAktif' => $semesterAktif,
         ]);
     }
 

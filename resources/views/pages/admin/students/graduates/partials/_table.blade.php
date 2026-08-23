@@ -40,6 +40,12 @@
                 $pob = optional($student->vault)->pob_encrypted ?? '-';
                 $dob = optional($student->vault)->dob_encrypted;
 
+                // Tahun kelulusan diambil dari exit_date TERAKHIR di riwayat
+                // rombel siswa (acd_class_group_students), bukan kolom tersendiri.
+                $graduationYear = $student->latest_exit_date
+                ? \Carbon\Carbon::parse($student->latest_exit_date)->year
+                : null;
+
                 $initials = strtoupper(substr($student->name ?? 'U', 0, 2));
 
                 $colors = ['linear-gradient(135deg,#10B981,#6EE7B7)', 'linear-gradient(135deg,#3B82F6,#93C5FD)', 'linear-gradient(135deg,#F59E0B,#FCD34D)', 'linear-gradient(135deg,#8B5CF6,#A78BFA)'];
@@ -79,7 +85,7 @@
                     <td class="px-4 py-4 text-sm">
                         <div class="flex items-center gap-2 mb-1.5">
                             <span class="inline-block px-2 py-1 rounded-md text-[10px] font-bold bg-success/10 text-success">
-                                Lulusan Tahun {{ $student->graduation_year ?? '-' }}
+                                Lulusan Tahun {{ $graduationYear ?? '-' }}
                             </span>
                         </div>
                         <div class="flex items-center gap-1.5 text-xs text-secondary">
@@ -128,6 +134,12 @@
         $pob = optional($student->vault)->pob_encrypted ?? '-';
         $dob = optional($student->vault)->dob_encrypted;
         $dobLabel = $dob ? \Carbon\Carbon::parse($dob)->translatedFormat('d M Y') : '-';
+
+        // Tahun kelulusan diambil dari exit_date TERAKHIR di riwayat
+        // rombel siswa (acd_class_group_students), bukan kolom tersendiri.
+        $graduationYear = $student->latest_exit_date
+        ? \Carbon\Carbon::parse($student->latest_exit_date)->year
+        : null;
         @endphp
 
         <div title="Detail Profil Alumni"
@@ -148,7 +160,7 @@
                             </p>
                         </div>
                         <span class="shrink-0 inline-flex px-2 py-1 rounded-md text-[10px] font-bold bg-success/10 text-success">
-                            {{ $student->graduation_year ?? '-' }}
+                            {{ $graduationYear ?? '-' }}
                         </span>
                     </div>
 

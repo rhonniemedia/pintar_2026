@@ -26,6 +26,7 @@ class StudentHistoryController extends Controller
         $filterExitStatus     = $request->input('filter_exit_status');
         $filterConcentration  = $request->input('filter_concentration');
         $filterExitSemester   = $request->input('filter_exit_semester');
+        $filterYear           = $request->input('filter_year');
 
         // 1. Base Query langsung ke tabel Mutasi
         $baseQuery = StudentMutation::with(['student.vault', 'classGroup.concentration'])
@@ -53,6 +54,10 @@ class StudentHistoryController extends Controller
                     // Filter berdasarkan rentang tanggal resmi semester tersebut
                     $q->whereBetween('mutation_date', [$semester->start_date, $semester->end_date]);
                 }
+            })
+            ->when($filterYear, function ($q) use ($filterYear) {
+                // Filter berdasarkan tahun terjadinya mutasi (mutation_date)
+                $q->whereYear('mutation_date', $filterYear);
             });
 
         // 2. Terapkan Stats dari Base Query
@@ -61,6 +66,7 @@ class StudentHistoryController extends Controller
         // 3. Dropdown Options
         $concentrationOptions  = CoreConcentration::orderBy('name')->pluck('name', 'id');
         $exitSemesterOptions   = $this->getExitSemesterOptions();
+        $yearOptions           = $this->getYearOptions();
 
         // 4. Data Tabel
         $students = (clone $baseQuery)
@@ -79,8 +85,10 @@ class StudentHistoryController extends Controller
                 'filterExitStatus',
                 'filterConcentration',
                 'filterExitSemester',
+                'filterYear',
                 'concentrationOptions',
-                'exitSemesterOptions'
+                'exitSemesterOptions',
+                'yearOptions'
             ),
             $stats,
             ['exitStatusOptions' => self::MUTATION_STATUS_OPTIONS]
@@ -105,6 +113,16 @@ class StudentHistoryController extends Controller
         return CoreSemester::orderBy('start_date', 'desc')
             ->pluck('code')
             ->values();
+    }
+
+    private function getYearOptions()
+    {
+        // Mengambil daftar tahun unik dari tanggal mutasi, diurutkan dari yang terbaru
+        return StudentMutation::whereNotNull('mutation_date')
+            ->selectRaw('YEAR(mutation_date) as year')
+            ->distinct()
+            ->orderByDesc('year')
+            ->pluck('year');
     }
 
     private function renderPartials($students, $stats): string

@@ -12,6 +12,7 @@ use App\Models\CoreSemester;
 use App\Models\Student;
 use App\Models\StudentLetter;
 use App\Models\StudentMutation;
+use App\Services\AcademicPeriod;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -23,10 +24,17 @@ use Illuminate\Support\Str;
 
 class StudentMutationOutController extends Controller
 {
+    public function __construct(
+        private readonly AcademicPeriod $academicPeriod,
+    ) {}
+
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
+        // Nama variabel $semesterAktif dipertahankan (dipakai di view), tapi
+        // isinya sekarang semester yang SEDANG DILIHAT admin (topbar), bukan
+        // selalu semester aktif Data Master.
+        $semesterAktif = $this->academicPeriod->current();
 
         // TAMBAHAN: Load relasi 'student.studentLetters'
         $data = StudentMutation::with([
@@ -89,6 +97,11 @@ class StudentMutationOutController extends Controller
 
     public function create()
     {
+        // SENGAJA tetap pakai semester aktif Data Master (bukan
+        // academicPeriod): nilai ini harus konsisten dengan semester yang
+        // benar-benar dipakai saat store() menyimpan record mutasi (lihat
+        // catatan di store()), supaya modal tidak menampilkan konteks
+        // semester yang berbeda dari yang nanti disimpan.
         $semesterAktif = CoreSemester::where('status', 'active')->first();
 
         $students = Student::with('activeClassGroup')
@@ -119,6 +132,10 @@ class StudentMutationOutController extends Controller
         ]);
 
         $student = Student::with(['activeClassGroup', 'vault'])->findOrFail($validated['student_id']);
+        // SENGAJA tetap pakai semester aktif Data Master (bukan
+        // academicPeriod): semester_id di record mutasi keluar harus
+        // mengikuti semester berjalan sesungguhnya, terlepas dari semester
+        // apa yang sedang dilihat/dipilih admin di topbar.
         $semesterAktif = CoreSemester::where('status', 'active')->first();
         $activeGroup = $student->activeClassGroup->first();
 
