@@ -21,15 +21,23 @@ class AcademicPeriodController extends Controller
 
         $academicPeriod->setSelected($request->input('semester_id'));
 
+        if ($request->filled('redirect_to')) {
+            return redirect($request->input('redirect_to'));
+        }
+
         return back();
     }
 
     /**
      * Reset ke default (ikut semester aktif Data Master lagi).
      */
-    public function reset(AcademicPeriod $academicPeriod)
+    public function reset(Request $request, AcademicPeriod $academicPeriod)
     {
         $academicPeriod->clearSelected();
+
+        if ($request->filled('redirect_to')) {
+            return redirect($request->input('redirect_to'));
+        }
 
         return back();
     }

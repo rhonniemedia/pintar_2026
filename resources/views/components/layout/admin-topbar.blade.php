@@ -80,6 +80,11 @@
                         <form method="POST" action="{{ route('admin.academic-period.update') }}" class="w-full m-0 p-0" hx-boost="false">
                             @csrf
                             <input type="hidden" name="semester_id" value="{{ $option->id }}">
+
+                            @if(request()->routeIs('admin.students.group.show'))
+                            <input type="hidden" name="redirect_to" value="{{ route('admin.students.group.index') }}">
+                            @endif
+
                             <button
                                 type="submit"
                                 class="w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md text-sm transition-colors text-left cursor-pointer
@@ -101,6 +106,11 @@
                     <hr class="my-1 border-border" />
                     <form method="POST" action="{{ route('admin.academic-period.reset') }}" class="w-full m-0 p-0" hx-boost="false">
                         @csrf
+
+                        @if(request()->routeIs('admin.students.group.show'))
+                        <input type="hidden" name="redirect_to" value="{{ route('admin.students.group.index') }}">
+                        @endif
+
                         <button
                             type="submit"
                             class="w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-secondary hover:bg-muted hover:text-primary transition-colors text-left cursor-pointer">
