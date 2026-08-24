@@ -8,7 +8,6 @@ use App\Enums\Student\StudentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\CoreSchool;
-use App\Models\CoreSemester;
 use App\Models\Student;
 use App\Models\StudentLetter;
 use App\Models\StudentMutation;
@@ -97,15 +96,27 @@ class StudentMutationOutController extends Controller
 
     public function create()
     {
-        // SENGAJA tetap pakai semester aktif Data Master (bukan
-        // academicPeriod): nilai ini harus konsisten dengan semester yang
-        // benar-benar dipakai saat store() menyimpan record mutasi (lihat
-        // catatan di store()), supaya modal tidak menampilkan konteks
-        // semester yang berbeda dari yang nanti disimpan.
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
+        // Pakai semester yang SEDANG DILIHAT admin di topbar: nilai ini
+        // harus konsisten dengan semester yang benar-benar dipakai saat
+        // store() menyimpan record mutasi (lihat catatan di store()),
+        // supaya modal tidak menampilkan konteks semester yang berbeda
+        // dari yang nanti disimpan.
+        $semesterAktif = $this->academicPeriod->current();
 
-        $students = Student::with('activeClassGroup')
+        $students = Student::with(['activeClassGroup' => function ($q) use ($semesterAktif) {
+            $q->when($semesterAktif, fn($q2) => $q2->where('semester_id', $semesterAktif->id));
+        }])
             ->where('status', StudentStatus::ACTIVE->value)
+            // Hanya siswa yang rombel aktifnya ada di semester yang sedang
+            // dibuka admin di topbar - kalau tidak difilter, siswa dengan
+            // rombel aktif di semester lain akan tetap muncul di daftar
+            // padahal tidak relevan dengan konteks semester yang sedang
+            // dilihat (dan tidak akan lolos ulang saat store()).
+            ->when($semesterAktif, function ($q) use ($semesterAktif) {
+                $q->whereHas('activeClassGroup', function ($q2) use ($semesterAktif) {
+                    $q2->where('semester_id', $semesterAktif->id);
+                });
+            })
             ->orderBy('name')
             ->get();
 
@@ -131,13 +142,29 @@ class StudentMutationOutController extends Controller
             'notes_mundur'                 => 'nullable|required_if:status,resigned|string',
         ]);
 
-        $student = Student::with(['activeClassGroup', 'vault'])->findOrFail($validated['student_id']);
-        // SENGAJA tetap pakai semester aktif Data Master (bukan
-        // academicPeriod): semester_id di record mutasi keluar harus
-        // mengikuti semester berjalan sesungguhnya, terlepas dari semester
-        // apa yang sedang dilihat/dipilih admin di topbar.
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
-        $activeGroup = $student->activeClassGroup->first();
+        $student = Student::with('vault')->findOrFail($validated['student_id']);
+        // Pakai semester yang SEDANG DILIHAT admin di topbar, sama seperti
+        // yang dipakai create() untuk menampilkan modal - supaya record
+        // mutasi keluar tidak "nyelip" ke semester aktif Data Master saat
+        // admin sedang membuka semester lain di topbar.
+        $semesterAktif = $this->academicPeriod->current();
+
+        // Ambil rombel aktif siswa YANG BERADA DI SEMESTER TOPBAR saja
+        // (bukan sekadar rombel aktif siswa apa pun). Ini query ulang
+        // (bukan pakai relasi hasil eager-load create()) supaya tetap
+        // konsisten walau request store() dikirim terpisah/manual, dan
+        // supaya siswa yang rombel aktifnya ada di semester lain tidak
+        // ikut lolos meski student_id-nya valid.
+        $activeGroup = $student->activeClassGroup()
+            ->when($semesterAktif, fn($q) => $q->where('semester_id', $semesterAktif->id))
+            ->first();
+
+        if (! $activeGroup) {
+            return response(
+                '<div class="p-4 text-sm text-error font-bold">Peserta didik ini tidak memiliki penempatan rombel pada semester yang sedang dibuka di topbar. Pastikan semester yang dipilih sudah sesuai.</div>',
+                422
+            );
+        }
 
         // 2. Pemetaan Status menggunakan Enum tersentralisasi & Ekstraksi Data Form
         $statusEnum          = MutationStatus::from($validated['status']);
@@ -293,7 +320,13 @@ class StudentMutationOutController extends Controller
         StudentLetter::create([
             'student_id'     => $student->id,
             'class_group_id' => $classGroup?->id,
-            'semester_id'    => $classGroup?->semester_id,
+            // Pakai semester_id dari record mutasi (sudah mengikuti
+            // semester yang sedang dilihat admin di topbar - lihat
+            // store()), bukan semester_id bawaan rombel siswa. Keduanya
+            // bisa berbeda kalau rombel aktif siswa tidak sama dengan
+            // semester yang sedang dibuka admin, dan surat harus konsisten
+            // dengan record mutasi yang menyertainya.
+            'semester_id'    => $mutation->semester_id,
             'letter_type'    => $letterType,
             'letter_number'  => $letterNumber,
             'letter_date'    => $letterDate,

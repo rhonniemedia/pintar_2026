@@ -100,13 +100,20 @@ class StudentMutationInController extends Controller
 
         try {
             DB::transaction(function () use ($validated, $filterNulls) {
-                // SENGAJA tetap pakai semester aktif Data Master (bukan
-                // academicPeriod): NIS yang di-generate harus mengikuti
-                // semester intake berjalan sesungguhnya, dan class group
-                // yang dipilih di form (lihat activeClassGroups() di bawah)
-                // juga diambil dari semester aktif ini - keduanya harus
-                // konsisten satu sama lain.
-                $semesterAktif = CoreSemester::where('status', 'active')->firstOrFail();
+                // Pakai semester yang SEDANG DILIHAT admin di topbar (sama
+                // seperti yang dipakai activeClassGroups() untuk mengisi
+                // pilihan rombel di form). NIS yang di-generate dan
+                // semester_id yang disimpan harus konsisten dengan semester
+                // yang tadi ditampilkan ke admin saat mengisi form - bukan
+                // selalu semester aktif Data Master, supaya mutasi yang
+                // diinput saat admin membuka semester lain di topbar tidak
+                // "nyelip" ke semester aktif.
+                $semesterAktif = $this->academicPeriod->current();
+
+                if (! $semesterAktif) {
+                    throw new \RuntimeException('Semester tidak ditemukan. Pastikan semester sudah dipilih/diaktifkan di Data Master.');
+                }
+
                 $classGroup = ClassGroup::with('concentration')->findOrFail($validated['class_group_id']);
 
                 $nis = $this->generateNis($classGroup, $semesterAktif);
@@ -251,11 +258,11 @@ class StudentMutationInController extends Controller
 
     private function activeClassGroups()
     {
-        // SENGAJA tetap pakai semester aktif Data Master, harus konsisten
-        // dengan semester yang dipakai saat store() menyimpan data (lihat
-        // catatan di store()) - supaya rombel yang dipilih di form selalu
-        // cocok dengan semester_id yang benar-benar disimpan.
-        $semesterAktif = CoreSemester::where('status', 'active')->first();
+        // Pakai semester yang SEDANG DILIHAT admin di topbar, harus
+        // konsisten dengan semester yang dipakai saat store() menyimpan
+        // data (lihat catatan di store()) - supaya rombel yang dipilih di
+        // form selalu cocok dengan semester_id yang benar-benar disimpan.
+        $semesterAktif = $this->academicPeriod->current();
 
         return ClassGroup::with('concentration')
             ->when($semesterAktif, fn($q) => $q->where('semester_id', $semesterAktif->id))
