@@ -19,9 +19,9 @@
 <body class="font-sans min-h-screen overflow-x-hidden bg-white sm:bg-gray-900" x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 60)">
 
     {{-- ══════════════════════════════════════════════
-         VERSI MOBILE — hero lengkung + sheet, tanpa modal
+         VERSI MOBILE — mengikuti referensi (ilustrasi atas + kartu putih)
          ══════════════════════════════════════════════ --}}
-    <div class="sm:hidden min-h-screen bg-white" x-data="{ 
+    <div class="sm:hidden min-h-screen relative overflow-hidden bg-slate-50" x-data="{ 
         loading: false, 
         showPassword: false,
         loginId: '{{ old('login_id') }}',
@@ -40,132 +40,205 @@
         }
     }">
 
-        <!-- Hero atas -->
-        <div class="relative bg-gradient-to-br from-[#16293f] via-[#1e3a5f] to-[#2c4a6e] pt-16 pb-24 px-6 overflow-hidden">
-            <!-- Dekorasi -->
-            <div class="absolute -top-10 -right-10 size-44 rounded-full bg-white/10"></div>
-            <div class="absolute top-16 -left-14 size-32 rounded-full bg-white/10"></div>
-            <div class="absolute bottom-0 right-6 size-16 rounded-full bg-[#ff1443]/20"></div>
-
-            <div class="relative z-10 flex flex-col items-center"
-                x-show="ready" x-cloak
-                x-transition:enter="transition ease-out duration-500"
-                x-transition:enter-start="opacity-0 -translate-y-3"
-                x-transition:enter-end="opacity-100 translate-y-0">
-                <div class="size-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-4 shadow-lg">
-                    <i data-lucide="graduation-cap" class="size-8 text-white"></i>
-                </div>
-                <h1 class="text-white text-xl font-bold tracking-tight">PINTAR</h1>
-                <p class="text-white/75 text-xs mt-1 text-center">Platform Informasi Kesiswaan Terintegrasi</p>
-            </div>
+        <!-- ═══ BACKGROUND DECOR ═══ -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-[240px] -right-24 w-72 h-[560px] bg-[#1e3a5f] rounded-[2.5rem] rotate-[14deg]"></div>
+            <div class="absolute top-[270px] -right-16 w-64 h-[520px] bg-[#24466f] rounded-[2.5rem] rotate-[14deg] opacity-70"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-[#1e3a5f]/5"></div>
+            <div class="absolute top-1/2 -left-16 w-32 h-32 rounded-full bg-[#ff1443]/8 blur-2xl"></div>
         </div>
 
-        <!-- Sheet form (menimpa lengkungan hero) -->
-        <div class="relative -mt-10 rounded-t-[2rem] bg-white px-6 pt-8 pb-10 min-h-[60vh] shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.15)]"
+        <!-- ═══ CONTENT ═══ -->
+        <div class="relative z-10 flex flex-col px-6 pt-12 pb-8"
             x-show="ready" x-cloak
-            x-transition:enter="transition ease-out duration-500 delay-100"
-            x-transition:enter-start="opacity-0 translate-y-6"
+            x-transition:enter="transition ease-out duration-500"
+            x-transition:enter-start="opacity-0 translate-y-3"
             x-transition:enter-end="opacity-100 translate-y-0">
 
-            <div class="mx-auto mb-6 h-1.5 w-10 rounded-full bg-gray-200"></div>
+            <!-- ═══ TOP: ILUSTRASI + HEADING ═══ -->
+            <div class="text-center">
+                <div class="flex justify-center mb-5">
+                    <svg viewBox="0 0 220 130" class="w-40 h-auto" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <ellipse cx="110" cy="120" rx="82" ry="4.5" fill="#cbd5e1" opacity="0.55" />
 
-            <h2 class="text-lg font-semibold text-gray-800 mb-0.5">Masuk ke akun Anda</h2>
-            <p class="text-xs text-gray-400 mb-6">Silakan isi email dan kata sandi untuk melanjutkan</p>
+                        <!-- Person (right, behind lock slightly) -->
+                        <g>
+                            <circle cx="150" cy="70" r="18" fill="#ff1443" />
+                            <path d="M120 118 Q150 84 180 118 Z" fill="#ff1443" />
+                        </g>
 
-            <!-- Alert error umum (Sentralisasi di atas) -->
-            @if ($errors->any())
-            <div class="mb-5 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-100 px-3.5 py-2.5 text-red-700 text-xs">
-                <i data-lucide="alert-circle" class="size-4 shrink-0 mt-0.5"></i>
-                <span>{{ $errors->first() }}</span>
-            </div>
-            @endif
+                        <!-- Lock body -->
+                        <rect x="42" y="58" width="82" height="60" rx="12" fill="#1e3a5f" />
+                        <rect x="42" y="58" width="82" height="12" rx="12" fill="#ffffff" opacity="0.06" />
 
-            @if (session('status'))
-            <div class="mb-5 flex items-start gap-2.5 rounded-xl bg-green-50 border border-green-100 px-3.5 py-2.5 text-green-700 text-xs">
-                <i data-lucide="check-circle-2" class="size-4 shrink-0 mt-0.5"></i>
-                <span>{{ session('status') }}</span>
-            </div>
-            @endif
+                        <!-- Keyhole -->
+                        <circle cx="83" cy="86" r="8" fill="#ffffff" />
+                        <path d="M79 86 h8 v16 a1.5 1.5 0 0 1 -1.5 1.5 h-5 a1.5 1.5 0 0 1 -1.5 -1.5 z" fill="#ffffff" />
 
-            <form method="POST" action="{{ route('login') }}" @submit="validate($event)" class="space-y-4">
-                @csrf
-
-                <!-- Login ID (Username / NIP / Email) -->
-                <div>
-                    <label for="login_id-m" class="block text-xs font-medium text-gray-500 mb-1.5">Username / NIP / Email</label>
-                    <div class="relative">
-                        <i data-lucide="user" class="size-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
-                        <input
-                            x-model="loginId"
-                            @input="loginIdError = false"
-                            id="login_id-m"
-                            type="text"
-                            name="login_id"
-                            autofocus
-                            autocomplete="username"
-                            placeholder="Masukkan identitas..."
-                            class="w-full pl-11 pr-4 py-3 rounded-2xl bg-gray-50 border text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/25 focus:border-[#1e3a5f] transition"
-                            :class="loginIdError ? 'border-red-300' : 'border-transparent'" />
-                    </div>
-                    <p x-show="loginIdError" x-cloak class="text-xs text-red-600 pt-1.5">Username/email/nip harus diisi!</p>
+                        <!-- Shackle -->
+                        <path d="M58 58 V44 a25 25 0 0 1 50 0 V58" stroke="#1e3a5f" stroke-width="9" fill="none" stroke-linecap="round" />
+                    </svg>
                 </div>
 
-                <!-- Password -->
-                <div>
-                    <label for="password-m" class="block text-xs font-medium text-gray-500 mb-1.5">Kata Sandi</label>
-                    <div class="relative">
-                        <i data-lucide="lock" class="size-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
-                        <input
-                            x-model="password"
-                            @input="passwordError = false"
-                            :type="showPassword ? 'text' : 'password'"
-                            id="password-m"
-                            name="password"
-                            autocomplete="current-password"
-                            placeholder="••••••••"
-                            class="w-full pl-11 pr-11 py-3 rounded-2xl bg-gray-50 border text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/25 focus:border-[#1e3a5f] transition"
-                            :class="passwordError ? 'border-red-300' : 'border-transparent'" />
-                        <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 active:text-gray-600" tabindex="-1">
-                            <i :data-lucide="showPassword ? 'eye-off' : 'eye'" class="size-4"></i>
-                        </button>
-                    </div>
-                    <p x-show="passwordError" x-cloak class="text-xs text-red-600 pt-1.5">Password harus diisi!</p>
-                </div>
-
-                <!-- Ingat saya + lupa password -->
-                <div class="flex items-center justify-between text-xs pt-1">
-                    <label class="flex items-center gap-2 cursor-pointer select-none text-gray-500">
-                        <input type="checkbox" name="remember" class="size-3.5 rounded border-gray-300 text-[#1e3a5f] focus:ring-[#1e3a5f]/30" />
-                        Ingat saya
-                    </label>
-                    <a href="{{ Route::has('password.request') ? route('password.request') : '#' }}" class="font-medium text-[#ff1443]">
-                        Lupa kata sandi?
-                    </a>
-                </div>
-
-                <!-- Tombol login -->
-                <button
-                    type="submit"
-                    :disabled="loading"
-                    class="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#ff1443] via-[#f0103d] to-[#c70d33] text-white text-sm font-semibold py-3.5 shadow-lg shadow-[#c70d33]/40 transition-all duration-300 ease-out hover:shadow-xl hover:shadow-[#c70d33]/50 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:brightness-100">
-                    <i data-lucide="loader-2" class="size-4 animate-spin" x-show="loading" x-cloak></i>
-                    <span x-text="loading ? 'Memproses...' : 'Masuk'"></span>
-                </button>
-
-                <!-- Tombol register -->
-                @if (Route::has('register'))
-                <p class="text-center text-xs text-gray-500 pt-1">
-                    Belum punya akun?
-                    <a href="{{ route('register') }}" class="font-semibold text-[#1e3a5f]">Daftar di sini</a>
+                <h1 class="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight">
+                    Selamat Datang!
+                </h1>
+                <p class="text-[13px] text-slate-500 mt-2 mx-auto leading-relaxed max-w-[290px]">
+                    Masuk ke PINTAR — Platform Informasi Kesiswaan Terintegrasi
                 </p>
-                @endif
-            </form>
+            </div>
 
-            <div class="mt-8 pt-5 border-t border-gray-100 text-center">
-                <p class="text-[11px] text-gray-400">&copy; {{ date('Y') }} Pintar. Seluruh hak cipta dilindungi.</p>
-                <p class="text-[11px] text-gray-400 mt-1">
+            <!-- ═══ KARTU FORM ═══ -->
+            <div class="mt-9 bg-white rounded-2xl shadow-[0_10px_40px_-12px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/[0.04] px-7 py-9">
+
+                <h2 class="text-center text-lg font-bold text-slate-900 tracking-tight mb-8">
+                    Login Akun
+                </h2>
+
+                <!-- Alert error umum -->
+                @if ($errors->any())
+                <div class="mb-6 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-100 px-4 py-3.5 text-red-700 text-xs">
+                    <i data-lucide="alert-circle" class="size-4 shrink-0 mt-0.5"></i>
+                    <span class="leading-relaxed">{{ $errors->first() }}</span>
+                </div>
+                @endif
+
+                @if (session('status'))
+                <div class="mb-6 flex items-start gap-2.5 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3.5 text-emerald-700 text-xs">
+                    <i data-lucide="check-circle-2" class="size-4 shrink-0 mt-0.5"></i>
+                    <span class="leading-relaxed">{{ session('status') }}</span>
+                </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" @submit="validate($event)" class="space-y-6">
+                    @csrf
+
+                    <!-- Login ID -->
+                    <div>
+                        <label for="login_id-m" class="sr-only">Username / NIP / Email</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="size-[18px] text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            <input
+                                x-model="loginId"
+                                @input="loginIdError = false"
+                                id="login_id-m"
+                                type="text"
+                                name="login_id"
+                                autofocus
+                                autocomplete="username"
+                                placeholder="Email Address"
+                                class="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] transition-all"
+                                :class="loginIdError ? 'border-red-300 bg-red-50/40' : 'border-slate-200'" />
+                        </div>
+                        <p x-show="loginIdError" x-cloak class="text-xs text-red-600 pt-2 pl-1">
+                            Username/email/nip harus diisi!
+                        </p>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label for="password-m" class="sr-only">Password</label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="size-[18px] text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            <input
+                                x-model="password"
+                                @input="passwordError = false"
+                                :type="showPassword ? 'text' : 'password'"
+                                id="password-m"
+                                name="password"
+                                autocomplete="current-password"
+                                placeholder="Password"
+                                class="w-full pl-12 pr-12 py-4 rounded-xl bg-slate-50 border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] transition-all"
+                                :class="passwordError ? 'border-red-300 bg-red-50/40' : 'border-slate-200'" />
+                            <button
+                                type="button"
+                                @click="showPassword = !showPassword"
+                                :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 active:text-slate-700 transition-colors"
+                                tabindex="-1">
+                                <i :data-lucide="showPassword ? 'eye-off' : 'eye'" class="size-[18px]"></i>
+                            </button>
+                        </div>
+                        <p x-show="passwordError" x-cloak class="text-xs text-red-600 pt-2 pl-1">
+                            Password harus diisi!
+                        </p>
+                    </div>
+
+                    <!-- Save Password + Forgot Password -->
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <label class="flex items-center gap-2 cursor-pointer select-none text-slate-600">
+                            <input type="checkbox" name="remember" class="size-4 rounded border-slate-300 text-[#1e3a5f] focus:ring-[#1e3a5f]/30" />
+                            Simpan sandi
+                        </label>
+                        <a href="{{ Route::has('password.request') ? route('password.request') : '#' }}" class="font-semibold text-[#ff1443] hover:underline">
+                            Lupa sandi?
+                        </a>
+                    </div>
+
+                    <!-- CTA -->
+                    <button
+                        type="submit"
+                        :disabled="loading"
+                        class="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#ff2450] to-[#c70d33] text-white text-sm font-bold py-4 shadow-lg shadow-[#c70d33]/30 transition-all duration-300 ease-out hover:shadow-xl hover:shadow-[#c70d33]/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg">
+                        <i data-lucide="loader-2" class="size-4 animate-spin" x-show="loading" x-cloak></i>
+                        <span x-text="loading ? 'Memproses...' : 'Login Akun'"></span>
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3 mt-8 mb-6">
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                    <span class="text-[11px] text-slate-400 font-medium">Atau, masuk dengan</span>
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                </div>
+
+                <!-- Social login -->
+                <div class="flex justify-center gap-5">
+                    <!-- Google -->
+                    <button type="button" aria-label="Masuk dengan Google"
+                        class="size-12 rounded-full bg-white ring-1 ring-slate-200 shadow-sm flex items-center justify-center transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0">
+                        <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.56c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.77c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.28-1.93-6.15-4.52H2.18v2.84A11 11 0 0 0 12 23z" />
+                            <path fill="#FBBC05" d="M5.85 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.35-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.67-2.83z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 12 1 11 11 0 0 0 2.18 7.07l3.67 2.83C6.72 7.31 9.14 5.38 12 5.38z" />
+                        </svg>
+                    </button>
+
+                    <!-- Facebook -->
+                    <button type="button" aria-label="Masuk dengan Facebook"
+                        class="size-12 rounded-full bg-[#1877F2] shadow-sm flex items-center justify-center transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0">
+                        <svg viewBox="0 0 24 24" class="size-5 fill-white" aria-hidden="true">
+                            <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+                        </svg>
+                    </button>
+
+                    <!-- Apple -->
+                    <button type="button" aria-label="Masuk dengan Apple"
+                        class="size-12 rounded-full bg-slate-900 shadow-sm flex items-center justify-center transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0">
+                        <svg viewBox="0 0 24 24" class="size-5 fill-white" aria-hidden="true">
+                            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══ FOOTER ═══ -->
+            <div class="mt-9 text-center">
+                @if (Route::has('register'))
+                <p class="text-xs text-slate-500">
+                    Belum punya akun?
+                </p>
+                <a href="{{ route('register') }}" class="inline-block mt-2 text-sm font-extrabold text-[#1e3a5f] hover:text-[#ff1443] transition-colors tracking-tight">
+                    Daftar Sekarang
+                </a>
+                @else
+                <p class="text-[11px] text-slate-400">&copy; {{ date('Y') }} Pintar. Seluruh hak cipta dilindungi.</p>
+                @endif
+
+                <p class="text-[11px] text-slate-400 mt-5">
                     Butuh bantuan?
-                    <a href="mailto:admin@pintar.sch.id" class="text-[#1e3a5f] font-medium">Hubungi administrator</a>
+                    <a href="mailto:admin@pintar.sch.id" class="text-[#1e3a5f] font-semibold hover:underline">Hubungi administrator</a>
                 </p>
             </div>
         </div>
