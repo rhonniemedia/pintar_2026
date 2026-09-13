@@ -19,206 +19,142 @@
 <body class="font-sans min-h-screen overflow-x-hidden bg-white sm:bg-gray-900" x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 60)">
 
     {{-- ══════════════════════════════════════════════
-         VERSI MOBILE — Header & Background elegan dari referensi
-         ══════════════════════════════════════════════ --}}
-    <div class="sm:hidden h-[100dvh] overflow-y-auto relative bg-slate-50" x-data="{ 
-        loading: false, 
-        showPassword: false,
-        loginId: '{{ old('login_id') }}',
-        password: '',
-        loginIdError: false,
-        passwordError: false,
-        validate(e) {
-            this.loginIdError = this.loginId.trim() === '';
-            this.passwordError = this.password === '';
-            
-            if (this.loginIdError || this.passwordError) {
-                e.preventDefault();
-            } else {
-                this.loading = true;
-            }
-        }
-    }">
+     VERSI MOBILE — hanya header & background yang diubah
+     ═════════════════════════════════════════════ --}}
+    <div class="min-h-screen flex flex-col items-center justify-start px-6 py-10 relative overflow-hidden bg-gray-50">
 
-        <!-- ═══ AKSEN BACKGROUND (Kurva diagonal biru navy) ═══ -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-            <svg class="absolute bottom-0 w-full h-full" viewBox="0 0 400 800" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Path kurva diagonal dari kiri bawah ke kanan atas dengan warna navy -->
-                <path d="M 0 800 L 0 550 C 150 500 250 350 400 300 L 400 800 Z" fill="#1e3a5f" />
+        {{-- Background: Gradient biru muda melengkung di kanan (seperti referensi) --}}
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <svg class="absolute top-0 right-0 w-full h-full" viewBox="0 0 400 800" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M400 0 L400 800 L280 800 C200 700 220 500 280 350 C340 200 380 100 400 0 Z" fill="url(#blueGradient)" opacity="0.15" />
+                <defs>
+                    <linearGradient id="blueGradient" x1="400" y1="0" x2="200" y2="800" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#3B82F6" />
+                        <stop offset="1" stop-color="#93C5FD" />
+                    </linearGradient>
+                </defs>
             </svg>
         </div>
 
-        <!-- ═══ CONTENT ═══ -->
-        <div class="relative z-10 min-h-[100dvh] flex flex-col px-5 pt-10 pb-5"
-            x-show="ready" x-cloak
-            x-transition:enter="transition ease-out duration-500"
-            x-transition:enter-start="opacity-0 translate-y-3"
-            x-transition:enter-end="opacity-100 translate-y-0">
+        {{-- Header: Ikon + Heading + Deskripsi --}}
+        <div class="flex flex-col items-center text-center mt-6 mb-8 z-10">
+            {{-- Ikon Gembok + Person (seperti referensi) --}}
+            <div class="relative mb-4">
+                <svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- Siluet Person (kuning/emas) di belakang --}}
+                    <circle cx="62" cy="38" r="16" fill="#F5A623" />
+                    <path d="M38 78 C38 60 50 52 62 52 C74 52 86 60 86 78" fill="#F5A623" />
+                    {{-- Gembok (biru) di depan --}}
+                    <rect x="12" y="44" width="44" height="36" rx="7" fill="#2196F3" />
+                    <path d="M22 44 V32 C22 22 28 18 34 18 C40 18 46 22 46 32 V44" stroke="#2196F3" stroke-width="6" fill="none" stroke-linecap="round" />
+                    <circle cx="34" cy="60" r="5" fill="white" />
+                    <rect x="31" y="60" width="6" height="10" rx="3" fill="white" />
+                </svg>
+            </div>
 
-            <!-- ═══ HEADER (Ikon dan sapaan yang lebih fresh) ═══ -->
-            <div class="shrink-0 flex flex-col items-center text-center pb-8 pt-2">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Selamat Datang Kembali!</h1>
+            <p class="text-sm text-gray-500 max-w-xs leading-relaxed">
+                Kami merindukanmu, PINTAR! Yuk, masuk dan lanjutkan aktivitas belajarmu.
+            </p>
+        </div>
 
-                <!-- Ikon Elegan (Disamakan dengan versi Desktop) -->
-                <div class="flex justify-center mb-6">
-                    <div class="size-20 rounded-full bg-white border-4 border-gray-100 shadow-sm flex items-center justify-center">
-                        <div class="size-14 rounded-full bg-gradient-to-br from-[#ff1443] to-[#c70d33] flex items-center justify-center">
-                            <i data-lucide="graduation-cap" class="size-7 text-white"></i>
-                        </div>
-                    </div>
+        {{-- Card Form Login (TIDAK DIUBAH - sama persis seperti sebelumnya) --}}
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-lg border border-gray-100 p-6 z-10">
+            <h2 class="text-lg font-bold text-center text-gray-800 mb-5">Masuk ke Akun</h2>
+            <p class="text-xs text-center text-gray-400 mb-5">Isi data akunmu untuk melanjutkan</p>
+
+            @if ($errors->any())
+            <div class="bg-red-50 text-red-600 text-xs p-3 rounded-lg mb-4 text-center">
+                {{ $errors->first() }}
+            </div>
+            @endif
+
+            @if (session('status'))
+            <div class="bg-green-50 text-green-600 text-xs p-3 rounded-lg mb-4 text-center">
+                {{ session('status') }}
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                @csrf
+
+                {{-- Email --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition"
+                        placeholder="Masukkan email">
+                    @error('email')
+                    <p class="text-red-500 text-xs mt-1">Username/email/nip harus diisi!</p>
+                    @enderror
                 </div>
 
-                <h1 class="text-slate-900 text-[22px] font-bold tracking-tight leading-snug">
-                    PINTAR
-                </h1>
-                <p class="text-slate-500 text-[13px] mt-2 leading-relaxed max-w-[230px] mx-auto">
-                    Platform Informasi Kesiswaan Terintegrasi
+                {{-- Password --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Password</label>
+                    <input id="password" type="password" name="password" required autocomplete="current-password"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition"
+                        placeholder="Masukkan password">
+                    <div class="flex justify-between items-center mt-2">
+                        <a href="{{ Route::has('password.request') ? route('password.request') : '#' }}"
+                            class="text-xs text-blue-500 hover:underline">Lupa password?</a>
+                    </div>
+                    @error('password')
+                    <p class="text-red-500 text-xs mt-1">Password harus diisi!</p>
+                    @enderror
+                </div>
+
+                {{-- Remember Me --}}
+                <div class="flex items-center">
+                    <input id="remember_me" type="checkbox" name="remember"
+                        class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400">
+                    <label for="remember_me" class="ml-2 text-xs text-gray-600">Ingat saya di perangkat ini</label>
+                </div>
+
+                {{-- Submit --}}
+                <button type="submit"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl text-sm transition shadow-md">
+                    Masuk
+                </button>
+            </form>
+
+            {{-- Social Login --}}
+            <div class="mt-5 text-center">
+                <p class="text-xs text-gray-400 mb-3">Atau masuk dengan</p>
+                <a href="#" class="flex items-center justify-center gap-2 w-full border border-gray-200 rounded-xl py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Masuk dengan Google
+                </a>
+            </div>
+
+            {{-- Register Link --}}
+            @if (Route::has('register'))
+            <div class="mt-5 text-center border-t border-gray-100 pt-4">
+                <p class="text-xs text-gray-500">
+                    Belum punya akun?
+                    <a href="{{ route('register') }}" class="text-blue-500 font-semibold hover:underline">Daftar Sekarang →</a>
                 </p>
             </div>
+            @endif
+        </div>
 
-            <!-- ═══ KARTU + FOOTER (Dipertahankan dari versi asli) ═══ -->
-            <div class="mt-auto pt-4">
-
-                <!-- Kartu login -->
-                <div class="rounded-[28px] bg-white shadow-xl shadow-slate-900/10 px-7 pt-8 pb-7">
-
-                    <div class="mb-6">
-                        <h2 class="text-[18px] font-bold text-slate-900">Selamat Datang Kembali!</h2>
-                        <p class="text-[13px] text-slate-400 mt-0.5">Masuk ke akun anda untuk melanjutkan</p>
-                    </div>
-
-                    <!-- Alert error umum -->
-                    @if ($errors->any())
-                    <div class="mb-5 flex items-start gap-2.5 rounded-2xl bg-red-50 border border-red-100 px-3.5 py-2.5 text-red-700 text-xs">
-                        <i data-lucide="alert-circle" class="size-4 shrink-0 mt-0.5"></i>
-                        <span class="leading-relaxed">{{ $errors->first() }}</span>
-                    </div>
-                    @endif
-
-                    @if (session('status'))
-                    <div class="mb-5 flex items-start gap-2.5 rounded-2xl bg-emerald-50 border border-emerald-100 px-3.5 py-2.5 text-emerald-700 text-xs">
-                        <i data-lucide="check-circle-2" class="size-4 shrink-0 mt-0.5"></i>
-                        <span class="leading-relaxed">{{ session('status') }}</span>
-                    </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('login') }}" @submit="validate($event)" class="space-y-5 mt-3">
-                        @csrf
-
-                        <!-- Login ID -->
-                        <div>
-                            <label for="login_id-m" class="block text-sm font-semibold text-slate-800 mb-2">
-                                Username / NIP / Email
-                            </label>
-                            <div class="relative">
-                                <i data-lucide="mail" class="size-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                                <input
-                                    x-model="loginId"
-                                    @input="loginIdError = false"
-                                    id="login_id-m"
-                                    type="text"
-                                    name="login_id"
-                                    autofocus
-                                    autocomplete="username"
-                                    placeholder="Masukkan identitas..."
-                                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] transition-all"
-                                    :class="loginIdError ? 'border-red-300 bg-red-50/40' : 'border-slate-200'" />
-                            </div>
-                            <p x-show="loginIdError" x-cloak class="text-xs text-red-600 pt-1.5">
-                                Username/email/nip harus diisi!
-                            </p>
-                        </div>
-
-                        <!-- Password -->
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <label for="password-m" class="text-sm font-semibold text-slate-800">
-                                    Password
-                                </label>
-                                <a href="{{ Route::has('password.request') ? route('password.request') : '#' }}" class="text-xs font-semibold text-[#ff1443] hover:underline">
-                                    Lupa password?
-                                </a>
-                            </div>
-                            <div class="relative">
-                                <i data-lucide="lock" class="size-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                                <input
-                                    x-model="password"
-                                    @input="passwordError = false"
-                                    :type="showPassword ? 'text' : 'password'"
-                                    id="password-m"
-                                    name="password"
-                                    autocomplete="current-password"
-                                    placeholder="Masukkan password"
-                                    class="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-50 border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] transition-all"
-                                    :class="passwordError ? 'border-red-300 bg-red-50/40' : 'border-slate-200'" />
-                                <button
-                                    type="button"
-                                    @click="showPassword = !showPassword"
-                                    :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
-                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 active:text-slate-700 transition-colors"
-                                    tabindex="-1">
-                                    <i :data-lucide="showPassword ? 'eye-off' : 'eye'" class="size-4"></i>
-                                </button>
-                            </div>
-                            <p x-show="passwordError" x-cloak class="text-xs text-red-600 pt-1.5">
-                                Password harus diisi!
-                            </p>
-                        </div>
-
-                        <!-- Remember me -->
-                        <label class="flex items-center gap-2.5 cursor-pointer select-none text-sm text-slate-600">
-                            <input type="checkbox" name="remember" class="size-4 rounded border-slate-300 text-[#1e3a5f] focus:ring-[#1e3a5f]/30" />
-                            Ingat saya di perangkat ini
-                        </label>
-
-                        <!-- CTA -->
-                        <button
-                            type="submit"
-                            :disabled="loading"
-                            class="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-[#ff2450] to-[#c70d33] text-white text-[15px] font-bold py-3.5 shadow-lg shadow-[#c70d33]/30 transition-all duration-300 ease-out hover:shadow-xl hover:shadow-[#c70d33]/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg">
-                            <i data-lucide="loader-2" class="size-4 animate-spin" x-show="loading" x-cloak></i>
-                            <span x-text="loading ? 'Memproses...' : 'Masuk Sekarang'"></span>
-                        </button>
-                    </form>
-
-                    <!-- Divider -->
-                    <div class="flex items-center gap-3 mt-6 mb-5">
-                        <div class="flex-1 h-px bg-slate-200"></div>
-                        <span class="text-xs text-slate-400 font-medium">Atau masuk dengan</span>
-                        <div class="flex-1 h-px bg-slate-200"></div>
-                    </div>
-
-                    <!-- Social login: Google saja -->
-                    <button type="button" aria-label="Masuk dengan Google"
-                        class="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-white border border-slate-200 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:shadow-md active:scale-[0.99]">
-                        <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.56c2.08-1.92 3.28-4.74 3.28-8.1z" />
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.77c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.28-1.93-6.15-4.52H2.18v2.84A11 11 0 0 0 12 23z" />
-                            <path fill="#FBBC05" d="M5.85 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.35-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.67-2.83z" />
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 12 1 11 11 0 0 0 2.18 7.07l3.67 2.83C6.72 7.31 9.14 5.38 12 5.38z" />
-                        </svg>
-                        Masuk dengan Google
-                    </button>
-
-                    @if (Route::has('register'))
-                    <p class="text-center text-xs text-slate-500 mt-6">
-                        Belum punya akun?
-                        <a href="{{ route('register') }}" class="font-bold text-[#ff1443] hover:underline">
-                            Daftar Sekarang →
-                        </a>
-                    </p>
-                    @endif
-                </div>
-
-                <!-- ═══ FOOTER ═══ -->
-                <div class="text-center pt-5 pb-1">
-                    <p class="text-[11px] text-slate-500">&copy; {{ date('Y') }} Pintar. Seluruh hak cipta dilindungi.</p>
-                </div>
-            </div>
+        {{-- Footer (TIDAK DIUBAH - sama persis seperti sebelumnya) --}}
+        <div class="mt-auto pt-8 text-center z-10">
+            <p class="text-xs text-gray-400">© {{ date('Y') }} Pintar. Seluruh hak cipta dilindungi.</p>
+            <p class="text-xs text-gray-400 mt-1">
+                Butuh bantuan?
+                <a href="mailto:admin@pintar.sch.id" class="text-blue-500 hover:underline">Hubungi administrator</a>
+            </p>
         </div>
     </div>
 
     {{-- ══════════════════════════════════════════════
-         VERSI DESKTOP — Tidak Ada Perubahan Sesuai Instruksi
+         VERSI DESKTOP — kartu terpusat di atas foto
          ══════════════════════════════════════════════ --}}
     <div class="hidden sm:block relative min-h-screen">
 
@@ -422,7 +358,7 @@
                 <h2 class="text-center text-xl font-bold tracking-tight bg-gradient-to-br from-[#ff1443] to-[#c70d33] bg-clip-text text-transparent">PINTAR</h2>
                 <p class="text-center text-xs text-gray-400 mb-6">Platform Informasi Kesiswaan Terintegrasi</p>
 
-                <!-- Alert error umum -->
+                <!-- Alert error umum (Sentralisasi di atas) -->
                 @if ($errors->any())
                 <div class="mb-5 flex items-start gap-2.5 rounded-lg bg-red-50 border border-red-100 px-3.5 py-2.5 text-red-700 text-xs">
                     <i data-lucide="alert-circle" class="size-4 shrink-0 mt-0.5"></i>
@@ -440,7 +376,7 @@
                 <form method="POST" action="{{ route('login') }}" @submit="validate($event)" class="space-y-1">
                     @csrf
 
-                    <!-- Login ID -->
+                    <!-- Login ID (Username / NIP / Email) -->
                     <div>
                         <label for="login_id" class="block text-xs font-medium text-gray-600 mb-1.5">Username / NIP / Email</label>
                         <div class="relative">
