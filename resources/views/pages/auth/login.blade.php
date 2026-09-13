@@ -19,6 +19,17 @@
         input[type="password"] {
             font-size: 16px !important;
         }
+
+        /* Sembunyikan scrollbar (jaring pengaman di layar sangat pendek),
+           konten tetap bisa discroll tanpa scrollbar terlihat */
+        .no-scrollbar {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 
@@ -48,8 +59,6 @@
 
         <!-- ═══ AKSEN BACKGROUND ═══ -->
         <div class="absolute inset-0 pointer-events-none z-0 flex flex-col justify-end" aria-hidden="true">
-            <!-- Garis merah di kanan -->
-            <div class="absolute right-0 top-[20%] w-2 h-[60%] bg-[#e31837] rounded-l-md"></div>
             <!-- Kurva biru dongker di bawah -->
             <svg class="w-full h-[40vh]" viewBox="0 0 100 50" preserveAspectRatio="none">
                 <path d="M0,25 Q50,45 100,5 L100,50 L0,50 Z" fill="#152c4f" />
@@ -57,7 +66,7 @@
         </div>
 
         <!-- ═══ CONTENT WRAPPER ═══ -->
-        <div class="relative z-10 flex flex-col h-full px-5 pt-8 pb-3 justify-between"
+        <div class="relative z-10 flex flex-col h-full px-5 pt-[3dvh] pb-[2dvh] overflow-y-auto no-scrollbar"
             x-show="ready" x-cloak
             x-transition:enter="transition ease-out duration-500"
             x-transition:enter-start="opacity-0 translate-y-3"
@@ -66,42 +75,45 @@
             <!-- ═══ HEADER ═══ -->
             <div class="shrink-0 flex flex-col items-center text-center">
                 <!-- Ikon Topi Wisuda -->
-                <div class="flex justify-center mb-3.5">
-                    <div class="size-[72px] rounded-full bg-white border-[3px] border-[#152c4f]/10 shadow-md shadow-[#152c4f]/15 flex items-center justify-center relative">
+                <div class="flex justify-center mb-[clamp(12px,1.5dvh,24px)]">
+                    <div class="size-[clamp(56px,9dvh,88px)] rounded-full bg-white border-[3px] border-[#152c4f]/10 shadow-md shadow-[#152c4f]/15 flex items-center justify-center relative">
                         <div class="absolute inset-1 rounded-full bg-[#e31837] shadow-inner flex items-center justify-center">
-                            <i data-lucide="graduation-cap" class="size-8 text-white"></i>
+                            <i data-lucide="graduation-cap" class="size-[clamp(22px,3.2dvh,34px)] text-white"></i>
                         </div>
                     </div>
                 </div>
 
-                <h1 class="text-[#152c4f] text-[26px] font-black tracking-[0.08em] uppercase">
+                <h1 class="text-[#152c4f] text-[clamp(22px,3.4dvh,30px)] font-black tracking-[0.08em] uppercase">
                     PINTAR
                 </h1>
-                <div class="w-10 h-[3px] rounded-full bg-[#e31837] mt-1.5 mb-2"></div>
-                <p class="text-slate-600 text-[12.5px] font-medium mt-0 max-w-[210px] leading-snug">
+                <div class="w-10 h-[3px] rounded-full bg-[#e31837] mt-[clamp(4px,0.6dvh,10px)] mb-[clamp(6px,0.8dvh,12px)]"></div>
+                <p class="text-slate-600 text-[clamp(12.5px,1.7dvh,15px)] font-medium mt-0 max-w-[230px] leading-snug">
                     Platform Informasi Kesiswaan Terintegrasi
                 </p>
             </div>
 
+            <!-- Spacer: mendorong kartu turun mendekati footer, menyusut duluan di layar pendek -->
+            <div class="flex-1 min-h-[3dvh]"></div>
+
             <!-- ═══ KARTU LOGIN ═══ -->
-            <div class="w-full bg-white rounded-[24px] border border-[#152c4f]/10 shadow-[0_18px_45px_-12px_rgba(21,44,79,0.35)] px-6 py-6 mt-4">
-                <h2 class="text-lg font-bold text-slate-900 leading-tight">Selamat Datang Kembali!</h2>
-                <p class="text-[13px] text-slate-400 mt-1 mb-5">Masuk ke akun anda untuk melanjutkan</p>
+            <div class="w-full bg-white rounded-[24px] border border-[#152c4f]/10 shadow-[0_18px_45px_-12px_rgba(21,44,79,0.35)] px-6 py-[clamp(18px,3dvh,32px)] shrink-0">
+                <h2 class="text-[clamp(17px,2.2dvh,20px)] font-bold text-slate-900 leading-tight">Selamat Datang Kembali!</h2>
+                <p class="text-[clamp(12.5px,1.6dvh,14px)] text-slate-400 mt-1 mb-[clamp(14px,2dvh,24px)]">Masuk ke akun anda untuk melanjutkan</p>
 
                 <!-- Alert error umum -->
                 @if ($errors->any())
-                <div class="mb-4 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-100 px-3 py-2 text-red-700 text-xs">
+                <div class="mb-[clamp(12px,1.6dvh,20px)] flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-100 px-3 py-2 text-red-700 text-xs">
                     <i data-lucide="alert-circle" class="size-4 shrink-0"></i>
                     <span>{{ $errors->first() }}</span>
                 </div>
                 @endif
 
-                <form method="POST" action="{{ route('login') }}" @submit="validate($event)" class="space-y-4">
+                <form method="POST" action="{{ route('login') }}" @submit="validate($event)" class="space-y-[clamp(14px,1.8dvh,22px)]">
                     @csrf
 
                     <!-- Input Username -->
                     <div>
-                        <label for="login_id-m" class="block text-[13px] font-bold text-slate-800 mb-1.5">
+                        <label for="login_id-m" class="block text-[clamp(12.5px,1.6dvh,14px)] font-bold text-slate-800 mb-1.5">
                             Username / NIP / Email
                         </label>
                         <div class="relative">
@@ -115,7 +127,7 @@
                                 autofocus
                                 autocomplete="username"
                                 placeholder="Masukkan identitas..."
-                                class="w-full pl-10 pr-4 py-3 rounded-xl border text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#152c4f] focus:border-[#152c4f] transition-all bg-white"
+                                class="w-full pl-10 pr-4 py-[clamp(10px,1.6dvh,14px)] rounded-xl border text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#152c4f] focus:border-[#152c4f] transition-all bg-white"
                                 :class="loginIdError ? 'border-red-400' : 'border-slate-200'" />
                         </div>
                     </div>
@@ -123,10 +135,10 @@
                     <!-- Input Password -->
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
-                            <label for="password-m" class="text-[13px] font-bold text-slate-800">
+                            <label for="password-m" class="text-[clamp(12.5px,1.6dvh,14px)] font-bold text-slate-800">
                                 Password
                             </label>
-                            <a href="{{ Route::has('password.request') ? route('password.request') : '#' }}" class="text-[13px] font-bold text-[#e31837] hover:underline">
+                            <a href="{{ Route::has('password.request') ? route('password.request') : '#' }}" class="text-[clamp(12.5px,1.6dvh,14px)] font-bold text-[#e31837] hover:underline">
                                 Lupa password?
                             </a>
                         </div>
@@ -140,7 +152,7 @@
                                 name="password"
                                 autocomplete="current-password"
                                 placeholder="Masukkan password"
-                                class="w-full pl-10 pr-10 py-3 rounded-xl border text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#152c4f] focus:border-[#152c4f] transition-all bg-white"
+                                class="w-full pl-10 pr-10 py-[clamp(10px,1.6dvh,14px)] rounded-xl border text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#152c4f] focus:border-[#152c4f] transition-all bg-white"
                                 :class="passwordError ? 'border-red-400' : 'border-slate-200'" />
                             <button
                                 type="button"
@@ -153,8 +165,8 @@
                     </div>
 
                     <!-- Checkbox Ingat Saya -->
-                    <div class="pt-1">
-                        <label class="flex items-center gap-2 cursor-pointer select-none text-[13px] text-slate-600">
+                    <div class="pt-0.5">
+                        <label class="flex items-center gap-2 cursor-pointer select-none text-[clamp(12.5px,1.6dvh,14px)] text-slate-600">
                             <input type="checkbox" name="remember" class="size-[14px] rounded border-slate-300 text-[#e31837] focus:ring-[#e31837]/30" />
                             Ingat saya di perangkat ini
                         </label>
@@ -164,21 +176,21 @@
                     <button
                         type="submit"
                         :disabled="loading"
-                        class="w-full flex items-center justify-center gap-2 rounded-xl bg-[#e31837] text-white text-[15px] font-bold py-3 mt-1 shadow-lg shadow-[#e31837]/30 transition-all hover:bg-[#c71530] disabled:opacity-70 disabled:cursor-not-allowed">
+                        class="w-full flex items-center justify-center gap-2 rounded-xl bg-[#e31837] text-white text-[15px] font-bold py-[clamp(13px,2dvh,18px)] mt-1 shadow-lg shadow-[#e31837]/30 transition-all hover:bg-[#c71530] disabled:opacity-70 disabled:cursor-not-allowed">
                         <i data-lucide="loader-2" class="size-4 animate-spin" x-show="loading" x-cloak></i>
                         <span x-text="loading ? 'Memproses...' : 'Masuk Sekarang'"></span>
                     </button>
                 </form>
 
                 <!-- Divider Atau Masuk Dengan -->
-                <div class="flex items-center gap-3 my-4">
+                <div class="flex items-center gap-3 my-[clamp(14px,1.8dvh,22px)]">
                     <div class="flex-1 h-px bg-slate-100"></div>
                     <span class="text-[11px] text-slate-400 font-medium">Atau masuk dengan</span>
                     <div class="flex-1 h-px bg-slate-100"></div>
                 </div>
 
                 <!-- Tombol Google -->
-                <button type="button" class="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-slate-200 py-3 text-[14px] font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98]">
+                <button type="button" class="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-slate-200 py-[clamp(13px,2dvh,18px)] text-[14px] font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98]">
                     <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.56c2.08-1.92 3.28-4.74 3.28-8.1z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.77c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.28-1.93-6.15-4.52H2.18v2.84A11 11 0 0 0 12 23z" />
@@ -189,8 +201,11 @@
                 </button>
             </div>
 
+            <!-- Jarak aman antara kartu dan footer -->
+            <div class="shrink-0 h-[clamp(14px,2dvh,20px)]"></div>
+
             <!-- ═══ FOOTER ═══ -->
-            <div class="text-center pt-2">
+            <div class="text-center shrink-0">
                 <p class="text-[11px] text-slate-500">&copy; {{ date('Y') }} Pintar. Seluruh hak cipta dilindungi.</p>
             </div>
         </div>
