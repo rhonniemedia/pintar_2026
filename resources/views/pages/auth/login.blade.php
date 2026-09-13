@@ -27,7 +27,7 @@
     {{-- ══════════════════════════════════════════════
          VERSI MOBILE — Sesuai Referensi Gambar (1 Halaman, Tanpa Scroll)
          ══════════════════════════════════════════════ --}}
-    <div class="sm:hidden h-[100dvh] w-full relative overflow-hidden flex flex-col bg-[#fbfcff]" x-data="{ 
+    <div class="sm:hidden h-[100dvh] w-full relative overflow-hidden flex flex-col bg-[#eef1f7]" x-data="{ 
         loading: false, 
         showPassword: false,
         loginId: '{{ old('login_id') }}',
@@ -66,24 +66,25 @@
             <!-- ═══ HEADER ═══ -->
             <div class="shrink-0 flex flex-col items-center text-center">
                 <!-- Ikon Topi Wisuda -->
-                <div class="flex justify-center mb-3">
-                    <div class="size-16 rounded-full bg-white border-[3px] border-gray-100 shadow-sm flex items-center justify-center relative">
-                        <div class="absolute inset-1 rounded-full bg-[#e31837] flex items-center justify-center">
-                            <i data-lucide="graduation-cap" class="size-7 text-white"></i>
+                <div class="flex justify-center mb-3.5">
+                    <div class="size-[72px] rounded-full bg-white border-[3px] border-[#152c4f]/10 shadow-md shadow-[#152c4f]/15 flex items-center justify-center relative">
+                        <div class="absolute inset-1 rounded-full bg-[#e31837] shadow-inner flex items-center justify-center">
+                            <i data-lucide="graduation-cap" class="size-8 text-white"></i>
                         </div>
                     </div>
                 </div>
 
-                <h1 class="text-[#152c4f] text-[22px] font-extrabold tracking-wide uppercase">
+                <h1 class="text-[#152c4f] text-[26px] font-black tracking-[0.08em] uppercase">
                     PINTAR
                 </h1>
-                <p class="text-slate-500 text-[12px] mt-1 max-w-[200px] leading-snug">
+                <div class="w-10 h-[3px] rounded-full bg-[#e31837] mt-1.5 mb-2"></div>
+                <p class="text-slate-600 text-[12.5px] font-medium mt-0 max-w-[210px] leading-snug">
                     Platform Informasi Kesiswaan Terintegrasi
                 </p>
             </div>
 
             <!-- ═══ KARTU LOGIN ═══ -->
-            <div class="w-full bg-white rounded-[24px] shadow-2xl shadow-blue-900/10 px-6 py-6 mt-4">
+            <div class="w-full bg-white rounded-[24px] border border-[#152c4f]/10 shadow-[0_18px_45px_-12px_rgba(21,44,79,0.35)] px-6 py-6 mt-4">
                 <h2 class="text-lg font-bold text-slate-900 leading-tight">Selamat Datang Kembali!</h2>
                 <p class="text-[13px] text-slate-400 mt-1 mb-5">Masuk ke akun anda untuk melanjutkan</p>
 
